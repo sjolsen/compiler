@@ -306,8 +306,8 @@ matcher comment_p
 
 
 
-std::array <matcher, 6> token_predicates = {{identifier_p,
-                                             keyword_p,
+std::array <matcher, 6> token_predicates = {{keyword_p, // Check keywords first
+                                             identifier_p,
                                              int_literal_p,
                                              char_literal_p,
                                              string_literal_p,

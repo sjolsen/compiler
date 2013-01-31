@@ -49,10 +49,17 @@ build/token_predicates.o: include/token_predicates.hh \
                           src/token_predicates.cc
 	$(CXX) $(CXXFLAGS) src/token_predicates.cc -c -o build/token_predicates.o
 
+build/syntax_error.o: include/syntax_error.hh \
+                      include/text_processing.hh \
+                      src/syntax_error.cc
+	$(CXX) $(CXXFLAGS) src/syntax_error.cc -c -o build/syntax_error.o
+
 lib/tokenizer.a: include/tokenizer.hh \
-                 build/token_predicates.o
+                 build/token_predicates.o \
+                 build/syntax_error.o
 	$(AR) $(ARFLAGS) lib/tokenizer.a \
-                         build/token_predicates.o
+                         build/token_predicates.o \
+                         build/syntax_error.o
 
 
 

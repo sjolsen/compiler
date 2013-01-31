@@ -4,6 +4,8 @@
 #include <array>
 #include <cctype>
 #include <algorithm>
+#include <unordered_map>
+#include "syntax_error.hh"
 #include "tokendef.hh"
 #include "text_processing.hh"
 
@@ -11,10 +13,10 @@
 
 struct matcher
 {
-	token (*constructor) (char_range& token_range);
-	char_range (*match_p) (char_range& text);
+	token (*constructor) (char_range token_range);
+	char_range (*match_p) (char_range text);
 
-	inline char_range operator () (char_range& text)
+	inline char_range operator () (char_range text)
 	{ return (*match_p) (text); }
 };
 

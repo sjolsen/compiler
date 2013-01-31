@@ -27,6 +27,9 @@ public:
 
 	char& operator *();
 	itext_iter& operator->();
+	char& operator [] (std::size_t n);
+
+	itext_iter& operator = (const itext_iter& other) = default;
 
 	itext_iter& operator ++();
 	itext_iter operator++ (int);

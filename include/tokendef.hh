@@ -30,6 +30,7 @@ enum class symbol
 	equivalenet,
 	not_equiv,
 	equal,
+	bang,
 	lbracket,
 	rbracket,
 	lbrace,

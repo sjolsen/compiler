@@ -48,6 +48,14 @@ indexed_text::itext_iter::operator->()
 
 
 
+char&
+indexed_text::itext_iter::operator [] (std::size_t n)
+{
+	return *(*this + n);
+}
+
+
+
 typename indexed_text::itext_iter&
 indexed_text::itext_iter::operator ++()
 {

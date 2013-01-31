@@ -26,11 +26,14 @@ public:
 	iterator begin ();
 	iterator end ();
 
+	char& operator [] (std::size_t n);
+
 	std::size_t size ();
 	bool empty ();
 	operator bool ();
 
 	void drop_front (std::size_t n);
+	void drop_back (std::size_t n);
 };
 
 

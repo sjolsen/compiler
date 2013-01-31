@@ -37,6 +37,13 @@ char_range::end ()
 
 
 
+char& char_range::operator [] (std::size_t n)
+{
+	return begin () [n];
+}
+
+
+
 std::size_t char_range::size ()
 {
 	return _size;
@@ -63,5 +70,15 @@ void char_range::drop_front (std::size_t n)
 	if (n > _size)
 		throw std::logic_error ("Called char_range::drop_front with to great an 'n'");
 	_begin += n;
-	_size = _end - _begin;
+	_size -= n;
+}
+
+
+
+void char_range::drop_back (std::size_t n)
+{
+	if (n > _size)
+		throw std::logic_error ("Called char_range::drop_back with to great an 'n'");
+	_end -= n;
+	_size -= n;
 }

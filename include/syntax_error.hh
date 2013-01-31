@@ -1,8 +1,8 @@
 #ifndef SYNTAX_ERROR_HH
 #define SYNTAX_ERROR_HH
 
-#include <stdexcept>
 #include "text_processing.hh"
+#include <stdexcept>
 
 
 

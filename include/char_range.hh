@@ -1,7 +1,7 @@
 #ifndef CHAR_RANGE_HH
 #define CHAR_RANGE_HH
 
-#include <stdexcept>
+#include <string>
 
 
 

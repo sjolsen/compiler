@@ -3,9 +3,10 @@ The project directory is structured as follows:
 	./bin       Compiled executables
 	./build     Temporary directory for object files and the like
 	./include   Headers
-	./lib       Object archives for easier dependency management and library modularity
+	./lib       Object archives for easier dependency management
+                    and library modularity
 	./src       Library source code
 
-Currently, the only build targets are 'clean', 'all', and 'scanner'. The former two have the standard semantics, and the last builds bin/scanner, the current driver for the scanning facilities. This driver takes as its argument the name of the file to be tokenized. Output is a stream of tokens in the form "<type, value>", or a syntax error message accompanied by the offending location in the text in the form "(line, col)".
+Currently, the only build targets are 'clean', 'all', and 'scanner'. The former two have the standard semantics, and the last builds bin/scanner, the current driver for the scanning facilities. This driver takes as its argument the name of the file to be tokenized. Output is a stream of tokens in the form "<type, value>", or a syntax error message accompanied by the offending location in the text in the form "(line, col)" and the contents of the file from that point until the next newline or until the end of file, whichever comes first.
 
-Building this project requires a mostly C++11-compliant compiler and standard library. At this point, no third-party libraries are in use, and the build compiles under GCC 4.7.2.
+Building this project requires a mostly C++11-compliant compiler and standard library. At this point, no third-party libraries are in use, and the build compiles under GCC 4.6.3, accessible at athena.cs.txstate.edu.

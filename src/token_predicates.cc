@@ -1,4 +1,9 @@
 #include "../include/token_predicates.hh"
+#include <cctype>
+#include <algorithm>
+#include <unordered_map>
+
+using namespace std;
 
 
 
@@ -8,29 +13,29 @@ matcher identifier_p
 	{
 		token t;
 		t.type = token_type::identifier;
-		t.str = std::string (token_range.begin (), token_range.end ());
+		t.str = string (begin (token_range), end (token_range));
 		return t;
 	},
 
 	[] (char_range text) -> char_range
 	{
-		if (!std::isalpha (*text.begin ()))
+		if (!isalpha (*begin (text)))
 			return char_range ();
-		return char_range (text.begin (),
-		                   std::find_if_not (text.begin (), text.end (), (int (*) (int)) &std::isalnum));
+		return char_range (begin (text),
+		                   find_if_not (begin (text), end (text), (int (*) (int)) &isalnum));
 	}
 };
 
 
 
-const std::array <const std::string, 8> keywords = {{"if",
-                                                     "else",
-                                                     "while",
-                                                     "int",
-                                                     "string",
-                                                     "char",
-                                                     "return",
-                                                     "void"}};
+const array <const string, 8> keywords = {{"if",
+                                           "else",
+                                           "while",
+                                           "int",
+                                           "string",
+                                           "char",
+                                           "return",
+                                           "void"}};
 
 matcher keyword_p
 {
@@ -38,7 +43,7 @@ matcher keyword_p
 	{
 		token t;
 		t.type = token_type::keyword;
-		t.str = std::string (token_range.begin (), token_range.end ());
+		t.str = string (begin (token_range), end (token_range));
 		return t;
 	},
 
@@ -46,8 +51,8 @@ matcher keyword_p
 	{
 		auto token_range = identifier_p (text);
 		if (token_range)
-			for (const std::string& keyword : keywords)
-				if (std::string (token_range.begin (), token_range.end ()) == keyword)
+			for (const string& keyword : keywords)
+				if (string (begin (token_range), end (token_range)) == keyword)
 					return token_range;
 		return char_range ();
 	}
@@ -61,19 +66,19 @@ matcher int_literal_p
 	{
 		token t;
 		t.type = token_type::int_literal;
-		t.value = std::stoi (std::string (token_range.begin (), token_range.end ()));
+		t.value = stoi (string (begin (token_range), end (token_range)));
 		return t;
 	},
 
 	[] (char_range text) -> char_range
 	{
-		if (!std::isdigit (text [0]))
+		if (!isdigit (text [0]))
 			return char_range ();
 		if (text [0] == '0' && text.size () > 1 && isdigit (text [1]))
 			throw syntax_error ("Multidigit integer literals may not begin with '0'",
-			                    text.begin ());
-		return char_range (text.begin (),
-		                   std::find_if_not (text.begin (), text.end (), (int (*) (int)) &std::isdigit));
+			                    begin (text));
+		return char_range (begin (text),
+		                   find_if_not (begin (text), end (text), (int (*) (int)) &isdigit));
 	}
 };
 
@@ -97,10 +102,10 @@ matcher char_literal_p
 			case '\'':
 			case '\\':
 				t.value = token_range [2];
-				break;
+			break;
 			default:
 				throw syntax_error ("Unrecognized character escape-sequence",
-				                    token_range.begin ());
+				                    begin (token_range));
 			}
 		else
 			t.value = token_range [1];
@@ -115,24 +120,24 @@ matcher char_literal_p
 		// Unescaped character literal
 		if (text.size () < 3 || text [1] == '\n')
 			throw syntax_error ("Unterminated character literal",
-			                    text.begin ());
+			                    begin (text));
 		if (text [1] != '\\')
 		{
 			if (text [2] != '\'')
 				throw syntax_error ("Multicharacter characer literal",
-				                    text.begin ());
+				                    begin (text));
 			else
-				return char_range (text.begin (), text.begin () + 3);
+				return char_range (begin (text), begin (text) + 3);
 		}
 
 		// Escaped character literal
 		if (text.size () < 4 || text [2] == '\n')
 			throw syntax_error ("Unterminated character literal",
-			                    text.begin ());
+			                    begin (text));
 		if (text [3] != '\'')
 			throw syntax_error ("Multicharacter characer literal",
-			                    text.begin ());
-		return char_range (text.begin (), text.begin () + 4);
+			                    begin (text));
+		return char_range (begin (text), begin (text) + 4);
 	}
 };
 
@@ -149,10 +154,10 @@ matcher string_literal_p
 
 		while (token_range)
 		{
-			char_range escapeless_substr (token_range.begin (), find (token_range.begin (),
-			                                                          token_range.end (),
+			char_range escapeless_substr (begin (token_range), find (begin (token_range),
+			                                                          end (token_range),
 			                                                          '\\'));
-			t.str.append (escapeless_substr.begin (), escapeless_substr.end ());
+			t.str.append (begin (escapeless_substr), end (escapeless_substr));
 			token_range.drop_front (escapeless_substr.size ());
 			if (!token_range)
 				break;
@@ -169,10 +174,10 @@ matcher string_literal_p
 			case '"':
 			case '\\':
 				t.str.append (1, token_range [1]);
-				break;
+			break;
 			default:
 				throw syntax_error ("Unrecognized character escape sequence",
-				                    token_range.begin ());
+				                    begin (token_range));
 			};
 			token_range.drop_front (2);
 		}
@@ -185,45 +190,45 @@ matcher string_literal_p
 		if (text [0] != '"')
 			return char_range ();
 
-		auto str_end = text.begin ();
+		auto str_end = begin (text);
 		do
 		{
-			str_end = std::find_if (str_end + 1, text.end (),
-			                        [] (char c) { return c == '\n' || c == '"'; });
-			if (str_end == text.end ())
+			str_end = find_if (str_end + 1, end (text),
+			                   [] (char c) { return c == '\n' || c == '"'; });
+			if (str_end == end (text))
 				throw syntax_error ("Unterminated string literal",
-				                    text.begin ());
+				                    begin (text));
 			if (*str_end == '\n')
 				throw syntax_error ("Line-terminated string literal",
-				                    text.begin ());
+				                    begin (text));
 		} while (*(str_end - 1) == '\\');
 
-		return char_range (text.begin (), str_end + 1);
+		return char_range (begin (text), str_end + 1);
 	}
 };
 
 
 
-std::unordered_map <std::string, symbol> symbol_map = {{"+",  symbol::plus},
-                                                       {"-",  symbol::minus},
-                                                       {"*",  symbol::asterisk},
-                                                       {"/",  symbol::solidus},
-                                                       {"<",  symbol::less_than},
-                                                       {">",  symbol::greater_than},
-                                                       {"<=", symbol::lt_equiv},
-                                                       {">=", symbol::gt_equiv},
-                                                       {"==", symbol::equivalent},
-                                                       {"!=", symbol::not_equiv},
-                                                       {"=",  symbol::equal},
-                                                       {"!",  symbol::bang},
-                                                       {"[",  symbol::lbracket},
-                                                       {"]",  symbol::rbracket},
-                                                       {"{",  symbol::lbrace},
-                                                       {"}",  symbol::rbrace},
-                                                       {"(",  symbol::lparen},
-                                                       {")",  symbol::rparen},
-                                                       {",",  symbol::comma},
-                                                       {";",  symbol::semicolon}};
+unordered_map <string, symbol> symbol_map = {{"+",  symbol::plus},
+                                             {"-",  symbol::minus},
+                                             {"*",  symbol::asterisk},
+                                             {"/",  symbol::solidus},
+                                             {"<",  symbol::less_than},
+                                             {">",  symbol::greater_than},
+                                             {"<=", symbol::lt_equiv},
+                                             {">=", symbol::gt_equiv},
+                                             {"==", symbol::equivalent},
+                                             {"!=", symbol::not_equiv},
+                                             {"=",  symbol::equal},
+                                             {"!",  symbol::bang},
+                                             {"[",  symbol::lbracket},
+                                             {"]",  symbol::rbracket},
+                                             {"{",  symbol::lbrace},
+                                             {"}",  symbol::rbrace},
+                                             {"(",  symbol::lparen},
+                                             {")",  symbol::rparen},
+                                             {",",  symbol::comma},
+                                             {";",  symbol::semicolon}};
 
 matcher symbol_p
 {
@@ -231,7 +236,7 @@ matcher symbol_p
 	{
 		token t;
 		t.type = token_type::symbol;
-		t.op = symbol_map.at (std::string (token_range.begin (), token_range.end ()));
+		t.op = symbol_map.at (string (begin (token_range), end (token_range)));
 		return t;
 	},
 
@@ -244,7 +249,7 @@ matcher symbol_p
 		case '=':
 		case '!':
 			if (text.size () > 1 && text [1] == '=')
-				return char_range (text.begin (), text.begin () + 2);
+				return char_range (begin (text), begin (text) + 2);
 		case '+':
 		case '-':
 		case '*':
@@ -257,7 +262,7 @@ matcher symbol_p
 		case ')':
 		case ',':
 		case ';':
-			return char_range (text.begin (), text.begin () + 1);
+			return char_range (begin (text), begin (text) + 1);
 		default:
 			return char_range ();
 		}
@@ -270,14 +275,14 @@ matcher space_p
 {
 	[] (char_range token_range) -> token
 	{
-		throw std::logic_error ("Attempted to construct a token from a non-token range");
+		throw logic_error ("Attempted to construct a token from a non-token range");
 	},
 
 	[] (char_range text) -> char_range
 	{
-		return char_range (text.begin (),
-		                   std::find_if_not (text.begin (), text.end (),
-		                                     (int (*) (int)) &std::isspace));
+		return char_range (begin (text),
+		                   find_if_not (begin (text), end (text),
+		                                (int (*) (int)) &isspace));
 	}
 };
 
@@ -287,7 +292,7 @@ matcher comment_p
 {
 	[] (char_range token_range) -> token
 	{
-		throw std::logic_error ("Attempted to construct a token from a non-token range");
+		throw logic_error ("Attempted to construct a token from a non-token range");
 	},
 
 	[] (char_range text) -> char_range
@@ -295,23 +300,23 @@ matcher comment_p
 		if (text [0] != '/' || text [1] != '*')
 			return char_range ();
 
-		auto comment_close = std::adjacent_find (text.begin (), text.end (),
-		                                         [] (char a, char b) { return a == '*' && b == '/'; });
-		if (comment_close == text.end ())
+		auto comment_close = adjacent_find (begin (text), end (text),
+		                                    [] (char a, char b) { return a == '*' && b == '/'; });
+		if (comment_close == end (text))
 			throw syntax_error ("Unterminated comment",
-			                    text.begin ());
-		return char_range (text.begin (), comment_close + 2);
+			                    begin (text));
+		return char_range (begin (text), comment_close + 2);
 	}
 };
 
 
 
-std::array <matcher, 6> token_predicates = {{keyword_p, // Check keywords first
-                                             identifier_p,
-                                             int_literal_p,
-                                             char_literal_p,
-                                             string_literal_p,
-                                             symbol_p}};
+array <matcher, 6> token_predicates = {{keyword_p, // Check keywords first
+                                        identifier_p,
+                                        int_literal_p,
+                                        char_literal_p,
+                                        string_literal_p,
+                                        symbol_p}};
 
-std::array <matcher, 2> nontoken_predicates = {{space_p,
-                                                comment_p}};
+array <matcher, 2> nontoken_predicates = {{space_p,
+                                           comment_p}};

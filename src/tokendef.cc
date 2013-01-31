@@ -1,8 +1,10 @@
 #include "../include/tokendef.hh"
 
+using namespace std;
 
 
-std::string to_string (token t)
+
+string to_string (token t)
 {
 	switch (t.type)
 	{
@@ -11,7 +13,7 @@ std::string to_string (token t)
 	case token_type::keyword:
 		return "<keyword, " + t.str + '>';
 	case token_type::int_literal:
-		return "<int_literal, " + std::to_string (t.value) + '>';
+		return "<int_literal, " + to_string (t.value) + '>';
 	case token_type::char_literal:
 		return "<char_literal, " + (char) t.value + '>';
 	case token_type::string_literal:
@@ -23,7 +25,7 @@ std::string to_string (token t)
 
 
 
-std::string to_string (symbol s)
+string to_string (symbol s)
 {
 	switch (s)
 	{

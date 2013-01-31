@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include "include/text_processing.hh"
 #include "include/tokenizer.hh"
 
@@ -56,6 +57,8 @@ int main (int argc,
 	}
 	catch (const syntax_error& e)
 	{
-		cerr << e.what () << ' ' << file_position (text, e.where ()) << endl;
+		cerr << "Syntax error: " << e.what () << ' ' << file_position (text, e.where ()) << ":\n"
+		     << string (e.where (), find (e.where (), text.end (), '\n')) << endl;
+		return EXIT_FAILURE;
 	}
 }

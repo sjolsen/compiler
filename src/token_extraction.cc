@@ -1,5 +1,7 @@
 #include "../include/token_extraction.hh"
 
+using namespace std;
+
 
 
 void drop_nontokens (char_range& text)
@@ -35,19 +37,20 @@ token extract_token (char_range& text)
 		}
 	}
 
-	throw syntax_error ("Illegal token", text.begin ());
+	throw syntax_error ("Illegal token", begin (text));
 }
 
 
 
-std::vector <token> tokenize (char_range text)
+vector <token> tokenize (char_range text)
 {
-	std::vector <token> tokens;
+	vector <token> tokens;
 
 	while (text)
 	{
 		drop_nontokens (text);
-		tokens.push_back (extract_token (text));
+		if (text)
+			tokens.push_back (extract_token (text));
 	}
 
 	return tokens;

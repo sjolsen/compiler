@@ -1,10 +1,24 @@
 #include "../include/char_range.hh"
+#include <stdexcept>
+#include <iterator>
+
+using namespace std;
 
 
 
-char_range::char_range (std::string& text)
-	: _begin (text.begin ()),
-	  _end (text.end ())
+// Just using begin and end int char_range::char_range (string&)
+// results in a resolution error. This is used instead of string::begin
+// and string::end to preserve ADL
+inline string::iterator begin_proxy (string& s)
+{ return begin (s); }
+inline string::iterator end_proxy (string& s)
+{ return end (s); }
+
+
+
+char_range::char_range (string& text)
+	: _begin (begin_proxy (text)),
+	  _end (end_proxy (text))
 {
 }
 
@@ -35,14 +49,14 @@ char_range::end ()
 
 
 
-char& char_range::operator [] (std::size_t n)
+char& char_range::operator [] (size_t n)
 {
 	return _begin [n];
 }
 
 
 
-std::size_t char_range::size ()
+size_t char_range::size ()
 {
 	return _end - _begin;
 }
@@ -63,18 +77,18 @@ char_range::operator bool ()
 
 
 
-void char_range::drop_front (std::size_t n)
+void char_range::drop_front (size_t n)
 {
 	if (n > size ())
-		throw std::logic_error ("Called char_range::drop_front with to great an 'n'");
+		throw logic_error ("Called char_range::drop_front with to great an 'n'");
 	_begin += n;
 }
 
 
 
-void char_range::drop_back (std::size_t n)
+void char_range::drop_back (size_t n)
 {
 	if (n > size ())
-		throw std::logic_error ("Called char_range::drop_back with to great an 'n'");
+		throw logic_error ("Called char_range::drop_back with to great an 'n'");
 	_end -= n;
 }

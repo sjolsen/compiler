@@ -1,13 +1,10 @@
 #ifndef TOKEN_PREDICATES_HH
 #define TOKEN_PREDICATES_HH
 
-#include <array>
-#include <cctype>
-#include <algorithm>
-#include <unordered_map>
 #include "syntax_error.hh"
 #include "tokendef.hh"
 #include "text_processing.hh"
+#include <array>
 
 
 

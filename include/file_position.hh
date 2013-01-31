@@ -2,7 +2,8 @@
 #define FILE_POSITION_HH
 
 #include <utility>
-#include <algorithm>
+#include <string>
+#include <cstddef>
 
 
 

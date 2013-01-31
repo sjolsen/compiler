@@ -7,7 +7,7 @@ using namespace std;
 
 
 
-indexed_text get_text (string filename)
+string get_text (string filename)
 {
 	ifstream fin (filename.c_str ());
 
@@ -15,16 +15,15 @@ indexed_text get_text (string filename)
 	                ifstream::badbit |
 	                ifstream::eofbit);
 
-	return indexed_text (istreambuf_iterator <char> (fin),
-	                     istreambuf_iterator <char> ());
+	return string (istreambuf_iterator <char> (fin),
+	               istreambuf_iterator <char> ());
 }
 
 
 
-ostream& operator << (ostream& os, const typename indexed_text::char_iterator& i)
+ostream& operator << (ostream& os, file_position pos)
 {
-	os << '(' << i.line () << ", " << i.col () << ')';
-	return os;
+	return os << '(' << pos.first << ", " << pos.second << ')';
 }
 
 
@@ -38,7 +37,7 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	indexed_text text;
+	string text;
 	try
 	{
 		text = get_text (argv [1]);
@@ -57,6 +56,6 @@ int main (int argc,
 	}
 	catch (const syntax_error& e)
 	{
-		cerr << e.what () << ' ' << e.where () << endl;
+		cerr << e.what () << ' ' << file_position (text, e.where ()) << endl;
 	}
 }

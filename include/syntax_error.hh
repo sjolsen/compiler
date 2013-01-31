@@ -10,15 +10,15 @@ class syntax_error
 	: public std::runtime_error
 {
 private:
-	typename indexed_text::char_iterator _where_iter;
+	typename char_range::iterator _where_iter;
 
 public:
 	syntax_error (const std::string& what_str,
-	              typename indexed_text::char_iterator where_iter);
+	              typename char_range::iterator where_iter);
 	syntax_error (const char* const what_str,
-	              typename indexed_text::char_iterator where_iter);
+	              typename char_range::iterator where_iter);
 
-	virtual typename indexed_text::char_iterator where () const noexcept;
+	virtual typename char_range::iterator where () const noexcept;
 };
 
 

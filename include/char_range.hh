@@ -2,24 +2,22 @@
 #define CHAR_RANGE_HH
 
 #include <stdexcept>
-#include "indexed_text.hh"
 
 
 
 class char_range
 {
 public:
-	typedef typename indexed_text::char_iterator iterator;
+	typedef typename std::string::iterator iterator;
 
 private:
 	iterator _begin;
 	iterator _end;
-	std::size_t _size;
 
 public:
 	char_range () = default;
 	char_range (const char_range& other) = default;
-	char_range (indexed_text& text);
+	char_range (std::string& text);
 	char_range (iterator first,
 	            iterator last);
 

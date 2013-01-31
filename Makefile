@@ -18,30 +18,20 @@ clean:
 
 text_processing: lib/text_processing.a
 
-build/indexed_text.o: include/indexed_text.hh \
-                      include/itext_iter.hh \
-                      src/indexed_text.cc
-	$(CXX) $(CXXFLAGS) src/indexed_text.cc -c -o build/indexed_text.o
-
-build/itext_iter.o: include/itext_iter.hh \
-                    include/indexed_text.hh \
-                    src/itext_iter.cc
-	$(CXX) $(CXXFLAGS) src/itext_iter.cc -c -o build/itext_iter.o
-
 build/char_range.o: include/char_range.hh \
-                    include/indexed_text.hh \
-                    include/itext_iter.hh \
                     src/char_range.cc
 	$(CXX) $(CXXFLAGS) src/char_range.cc -c -o build/char_range.o
 
+build/file_position.o: include/file_position.hh \
+                       src/file_position.cc
+	$(CXX) $(CXXFLAGS) src/file_position.cc -c -o build/file_position.o
+
 lib/text_processing.a: include/text_processing.hh \
                        build/char_range.o \
-                       build/indexed_text.o \
-                       build/itext_iter.o
+                       build/file_position.o
 	$(AR) $(ARFLAGS) lib/text_processing.a \
                          build/char_range.o \
-                         build/indexed_text.o \
-                         build/itext_iter.o
+                         build/file_position.o
 
 
 

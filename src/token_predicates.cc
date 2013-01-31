@@ -23,14 +23,14 @@ matcher identifier_p
 
 
 
-const std::array <const std::string, 8> keywords = {"if",
-                                                    "else",
-                                                    "while",
-                                                    "int",
-                                                    "string",
-                                                    "char",
-                                                    "return",
-                                                    "void"};
+const std::array <const std::string, 8> keywords = {{"if",
+                                                     "else",
+                                                     "while",
+                                                     "int",
+                                                     "string",
+                                                     "char",
+                                                     "return",
+                                                     "void"}};
 
 matcher keyword_p
 {
@@ -117,11 +117,13 @@ matcher char_literal_p
 			throw syntax_error ("Unterminated character literal",
 			                    text.begin ());
 		if (text [1] != '\\')
+		{
 			if (text [2] != '\'')
 				throw syntax_error ("Multicharacter characer literal",
 				                    text.begin ());
 			else
 				return char_range (text.begin (), text.begin () + 3);
+		}
 
 		// Escaped character literal
 		if (text.size () < 4 || text [2] == '\n')
@@ -210,7 +212,7 @@ std::unordered_map <std::string, symbol> symbol_map = {{"+",  symbol::plus},
                                                        {">",  symbol::greater_than},
                                                        {"<=", symbol::lt_equiv},
                                                        {">=", symbol::gt_equiv},
-                                                       {"==", symbol::equivalenet},
+                                                       {"==", symbol::equivalent},
                                                        {"!=", symbol::not_equiv},
                                                        {"=",  symbol::equal},
                                                        {"!",  symbol::bang},
@@ -264,9 +266,9 @@ matcher symbol_p
 
 
 
-std::array <matcher, 6> token_predicates = {identifier_p,
-                                            keyword_p,
-                                            int_literal_p,
-                                            char_literal_p,
-                                            string_literal_p,
-                                            symbol_p};
+std::array <matcher, 6> token_predicates = {{identifier_p,
+                                             keyword_p,
+                                             int_literal_p,
+                                             char_literal_p,
+                                             string_literal_p,
+                                             symbol_p}};

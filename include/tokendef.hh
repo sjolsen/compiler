@@ -27,7 +27,7 @@ enum class symbol
 	greater_than,
 	lt_equiv,
 	gt_equiv,
-	equivalenet,
+	equivalent,
 	not_equiv,
 	equal,
 	bang,

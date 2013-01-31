@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS += -std=c++0x
+CXXFLAGS += -std=c++0x #-Wall -Wextra
 AR = ar
 ARFLAGS = rvs
 

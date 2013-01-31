@@ -24,7 +24,7 @@ public:
 		for (InputIter i = first; i != last; ++i)
 		{
 			text.back ().push_back (*i);
-			if (*i == '\n')
+			if (*i == delim)
 				text.emplace_back ();
 		}
 	}

@@ -6,6 +6,6 @@ The project directory is structured as follows:
 	./lib       Object archives for easier dependency management and library modularity
 	./src       Library source code
 
-Currently, the only build targets are 'clean', 'all', and 'scanner'. The former two have the standard semantics, and the last builds bin/scanner, the current driver for the scanning facilities. This driver takes as its argument the name of the file to be tokenized and will eventually implement more complete error handling and produce usable output. At the moment, it's just full of junk debugging stubs for the rest of the library.
+Currently, the only build targets are 'clean', 'all', and 'scanner'. The former two have the standard semantics, and the last builds bin/scanner, the current driver for the scanning facilities. This driver takes as its argument the name of the file to be tokenized. Output is a stream of tokens in the form "<type, value>", or a syntax error message accompanied by the offending location in the text in the form "(line, col)".
 
 Building this project requires a mostly C++11-compliant compiler and standard library. At this point, no third-party libraries are in use, and the build compiles under GCC 4.7.2.

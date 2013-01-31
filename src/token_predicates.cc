@@ -266,9 +266,52 @@ matcher symbol_p
 
 
 
+matcher space_p
+{
+	[] (char_range token_range) -> token
+	{
+		throw std::logic_error ("Attempted to construct a token from a non-token range");
+	},
+
+	[] (char_range text) -> char_range
+	{
+		return char_range (text.begin (),
+		                   std::find_if_not (text.begin (), text.end (),
+		                                     (int (*) (int)) &std::isspace));
+	}
+};
+
+
+
+matcher comment_p
+{
+	[] (char_range token_range) -> token
+	{
+		throw std::logic_error ("Attempted to construct a token from a non-token range");
+	},
+
+	[] (char_range text) -> char_range
+	{
+		if (text [0] != '/' || text [1] != '*')
+			return char_range ();
+
+		auto comment_close = std::adjacent_find (text.begin (), text.end (),
+		                                         [] (char a, char b) { return a == '*' && b == '/'; });
+		if (comment_close == text.end ())
+			throw syntax_error ("Unterminated comment",
+			                    text.begin ());
+		return char_range (text.begin (), comment_close + 2);
+	}
+};
+
+
+
 std::array <matcher, 6> token_predicates = {{identifier_p,
                                              keyword_p,
                                              int_literal_p,
                                              char_literal_p,
                                              string_literal_p,
                                              symbol_p}};
+
+std::array <matcher, 2> nontoken_predicates = {{space_p,
+                                                comment_p}};

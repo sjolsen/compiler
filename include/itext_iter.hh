@@ -50,9 +50,9 @@ public:
 	bool operator <= (const itext_iter& other);
 	bool operator >= (const itext_iter& other);
 
-	std::size_t line ()
+	std::size_t line () const
 	{ return _line; }
-	std::size_t col ()
+	std::size_t col () const
 	{ return _col; }
 };
 

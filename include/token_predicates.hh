@@ -13,7 +13,7 @@
 
 struct matcher
 {
-	token (*constructor) (char_range token_range);
+	token (*token_constructor) (char_range token_range);
 	char_range (*match_p) (char_range text);
 
 	inline char_range operator () (char_range text)

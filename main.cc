@@ -3,8 +3,6 @@
 #include "include/text_processing.hh"
 #include "include/tokenizer.hh"
 
-#include <algorithm>
-
 using namespace std;
 
 
@@ -19,6 +17,14 @@ indexed_text get_text (string filename)
 
 	return indexed_text (istreambuf_iterator <char> (fin),
 	                     istreambuf_iterator <char> ());
+}
+
+
+
+ostream& operator << (ostream& os, const typename indexed_text::char_iterator& i)
+{
+	os << '(' << i.line () << ", " << i.col () << ')';
+	return os;
 }
 
 
@@ -43,7 +49,14 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	char_range r (text);
-	char_range token_r = identifier_p (r);
-	cout << string (begin (token_r), end (token_r)) << endl;
+	try
+	{
+		auto tokens = tokenize (char_range (text));
+		for (auto& token : tokens)
+			cout << to_string (token) << endl;
+	}
+	catch (const syntax_error& e)
+	{
+		cerr << e.what () << ' ' << e.where () << endl;
+	}
 }

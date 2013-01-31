@@ -43,6 +43,10 @@ enum class symbol
 
 
 
+std::string to_string (symbol s);
+
+
+
 struct token
 {
 	token_type type;
@@ -51,6 +55,10 @@ struct token
 	int value;
 	symbol op;
 };
+
+
+
+std::string to_string (token t);
 
 
 

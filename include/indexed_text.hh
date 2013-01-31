@@ -42,6 +42,8 @@ public:
 	line_iterator line_begin ();
 	line_iterator line_end ();
 
+	std::size_t size ();
+
 	char_iterator construct_iterator (std::size_t line,
 	                                  std::size_t col);
 	line_iterator construct_iterator (std::size_t line);

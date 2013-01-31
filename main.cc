@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
-#include "include/indexed_text.hh"
-#include "include/char_range.hh"
+#include "include/text_processing.hh"
+#include "include/tokenizer.hh"
 
 #include <algorithm>
 
@@ -44,7 +44,6 @@ int main (int argc,
 	}
 
 	char_range r (text);
-	reverse (r.begin (), r.end ());
-	for (char c : text)
-		cout << c;
+	char_range token_r = identifier_p (r);
+	cout << string (begin (token_r), end (token_r)) << endl;
 }

@@ -51,15 +51,21 @@ indexed_text::itext_iter::operator->()
 typename indexed_text::itext_iter&
 indexed_text::itext_iter::operator ++()
 {
-	if (_line < (*_text).size () && _col == (*_text) [_line - 1].size ())
-	{
-		++_line;
-		_col = 1;
-	}
-	else if (_col > (*_text) [_line - 1].size ())
-		throw std::logic_error ("Incremented an indexed_text::iterator past the end");
+	if (_line == (*_text).size ())
+		if (_col > (*_text) [_line - 1].size ())
+			throw std::logic_error ("Incremented an indexed_text::iterator past the end");
+		else
+			++_col;
 	else
-		++_col;
+		if (_col == (*_text) [_line - 1].size ())
+		{
+			++_line;
+			_col = 1;
+		}
+		else
+			++_col;
+
+
 	return *this;
 }
 
@@ -81,11 +87,11 @@ indexed_text::itext_iter::operator --()
 	if (_col == 1)
 		if (_line == 1)
 			throw std::logic_error ("Decremented an indexed_text::iterator past the beginning");
-			else
-			{
-				--_line;
-				_col = (*_text) [_line - 1].size ();
-			}
+		else
+		{
+			--_line;
+			_col = (*_text) [_line - 1].size ();
+		}
 	else
 		--_col;
 	return *this;
@@ -187,10 +193,10 @@ indexed_text::itext_iter::operator - (const itext_iter& other)
 	std::size_t difference = 0;
 
 	difference += _col;
-	for (typename std::vector <std::string>::size_type i = 0; i < _line; ++i)
+	for (typename std::vector <std::string>::size_type i = 0; i < _line - 1; ++i)
 		difference += (*_text) [i].size ();
 	difference -= other._col;
-	for (typename std::vector <std::string>::size_type i = 0; i < other._line; ++i)
+	for (typename std::vector <std::string>::size_type i = 0; i < other._line - 1; ++i)
 		difference -= (*other._text) [i].size ();
 
 	return difference;

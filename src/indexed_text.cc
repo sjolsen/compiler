@@ -73,6 +73,17 @@ indexed_text::line_end ()
 
 
 
+std::size_t
+indexed_text::size ()
+{
+	size_t size = 0;
+	for (const std::string& line : text)
+		size += line.size ();
+	return size;
+}
+
+
+
 typename indexed_text::char_iterator
 indexed_text::construct_iterator (std::size_t line,
                                   std::size_t col)

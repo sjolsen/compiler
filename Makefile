@@ -42,14 +42,33 @@ lib/text_processing.a: include/text_processing.hh \
 
 
 
+# Build the tokenizer facilities
+
+build/token_predicates.o: include/token_predicates.hh \
+                          include/tokendef.hh \
+                          src/token_predicates.cc
+	$(CXX) $(CXXFLAGS) src/token_predicates.cc -c -o build/token_predicates.o
+
+lib/tokenizer.a: include/tokenizer.hh \
+                 build/token_predicates.o
+	$(AR) $(ARFLAGS) lib/tokenizer.a \
+                         build/token_predicates.o
+
+
+
 # Build the scanner-driver
 
 scanner: bin/scanner
 
 build/main.o: main.cc \
-              include/text_processing.hh
+              include/text_processing.hh \
+              include/tokenizer.hh
 	$(CXX) $(CXXFLAGS) main.cc -c -o build/main.o
 
 bin/scanner: build/main.o \
-             lib/text_processing.a
-	$(CXX) $(CXXFLAGS) build/main.o lib/text_processing.a -o bin/scanner
+             lib/text_processing.a \
+             lib/tokenizer.a
+	$(CXX) $(CXXFLAGS) build/main.o \
+                           lib/text_processing.a \
+                           lib/tokenizer.a \
+                           -o bin/scanner

@@ -8,7 +8,7 @@
 class char_range
 {
 public:
-	typedef typename std::string::iterator iterator;
+	typedef typename std::string::const_iterator iterator;
 
 private:
 	iterator _begin;
@@ -17,14 +17,14 @@ private:
 public:
 	char_range () = default;
 	char_range (const char_range& other) = default;
-	char_range (std::string& text);
+	char_range (const std::string& text);
 	char_range (iterator first,
 	            iterator last);
 
-	iterator begin ();
-	iterator end ();
+	iterator begin () const;
+	iterator end () const;
 
-	char& operator [] (std::size_t n);
+	const char& operator [] (std::size_t n);
 
 	std::size_t size ();
 	bool empty ();

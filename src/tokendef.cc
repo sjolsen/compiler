@@ -15,7 +15,7 @@ string to_string (token t)
 	case token_type::int_literal:
 		return "<int_literal, " + to_string (t.value) + '>';
 	case token_type::char_literal:
-		return "<char_literal, " + (char) t.value + '>';
+		return "<char_literal, " + string (1, t.cvalue) + '>';
 	case token_type::string_literal:
 		return "<string_literal, " + t.str + '>';
 	case token_type::symbol:

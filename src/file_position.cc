@@ -5,8 +5,8 @@ using namespace std;
 
 
 
-file_position::file_position (string& file,
-                              typename string::iterator position,
+file_position::file_position (char_range file,
+                              char_range::iterator position,
                               char delim)
 {
 	first = count (begin (file), position, delim) + 1;

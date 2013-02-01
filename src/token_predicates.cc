@@ -2,6 +2,7 @@
 #include <cctype>
 #include <algorithm>
 #include <unordered_map>
+#include <iterator>
 
 using namespace std;
 
@@ -77,8 +78,12 @@ matcher int_literal_p
 		if (text [0] == '0' && text.size () > 1 && isdigit (text [1]))
 			throw syntax_error ("Multidigit integer literals may not begin with '0'",
 			                    begin (text));
-		return char_range (begin (text),
-		                   find_if_not (begin (text), end (text), (int (*) (int)) &isdigit));
+
+		auto token_end = find_if_not (begin (text), end (text), (int (*) (int)) &isdigit);
+		if (token_end == end (text) && !isalpha (*token_end))
+			return char_range (begin (text), token_end);
+		throw syntax_error ("Identifiers must begin with a letter",
+		                    begin (text));
 	}
 };
 
@@ -94,21 +99,21 @@ matcher char_literal_p
 			switch (token_range [2])
 			{
 			case 'n':
-				t.value = '\n';
+				t.cvalue = '\n';
 				break;
 			case 't':
-				t.value = '\t';
+				t.cvalue = '\t';
 				break;
 			case '\'':
 			case '\\':
-				t.value = token_range [2];
+				t.cvalue = token_range [2];
 			break;
 			default:
 				throw syntax_error ("Unrecognized character escape-sequence",
 				                    begin (token_range));
 			}
 		else
-			t.value = token_range [1];
+			t.cvalue = token_range [1];
 		return t;
 	},
 
@@ -116,16 +121,22 @@ matcher char_literal_p
 	{
 		if (text [0] != '\'')
 			return char_range ();
-
-		// Unescaped character literal
 		if (text.size () < 3 || text [1] == '\n')
 			throw syntax_error ("Unterminated character literal",
 			                    begin (text));
+
+		// Unescaped character literal
 		if (text [1] != '\\')
 		{
 			if (text [2] != '\'')
-				throw syntax_error ("Multicharacter characer literal",
-				                    begin (text));
+			{
+				if (text [2] == '\n')
+					throw syntax_error ("Unterminated character literal",
+					                    begin (text));
+				else
+					throw syntax_error ("Multicharacter characer literal",
+					                    begin (text));
+			}
 			else
 				return char_range (begin (text), begin (text) + 3);
 		}
@@ -190,6 +201,16 @@ matcher string_literal_p
 		if (text [0] != '"')
 			return char_range ();
 
+		auto escaped = [text] (char_range::iterator i) // For determining whether or the double-quote found is escaped
+		{
+			auto first_non_backslash = find_if_not (reverse_iterator <decltype (i)> (i),
+			                                        reverse_iterator <decltype (begin (text))> (begin (text)),
+			                                        [] (char c) { return c == '\\'; });
+			if ((first_non_backslash - reverse_iterator <decltype (i)> (i)) % 2 == 0) // All immediately adjacent backslashes are escaped
+				return false;
+			return true;
+		};
+
 		auto str_end = begin (text);
 		do
 		{
@@ -201,7 +222,7 @@ matcher string_literal_p
 			if (*str_end == '\n')
 				throw syntax_error ("Line-terminated string literal",
 				                    begin (text));
-		} while (*(str_end - 1) == '\\');
+		} while (escaped (str_end));
 
 		return char_range (begin (text), str_end + 1);
 	}

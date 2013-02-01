@@ -52,8 +52,13 @@ struct token
 	token_type type;
 
 	std::string str;
-	int value;
-	symbol op;
+
+	union
+	{
+		int value;
+		char cvalue;
+		symbol op;
+	};
 };
 
 

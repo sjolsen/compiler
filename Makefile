@@ -23,6 +23,7 @@ build/char_range.o: include/char_range.hh \
 	$(CXX) $(CXXFLAGS) src/char_range.cc -c -o build/char_range.o
 
 build/file_position.o: include/file_position.hh \
+                       include/char_range.hh \
                        src/file_position.cc
 	$(CXX) $(CXXFLAGS) src/file_position.cc -c -o build/file_position.o
 

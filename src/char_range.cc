@@ -6,19 +6,9 @@ using namespace std;
 
 
 
-// Just using begin and end int char_range::char_range (string&)
-// results in a resolution error. This is used instead of string::begin
-// and string::end to preserve ADL
-inline string::iterator begin_proxy (string& s)
-{ return begin (s); }
-inline string::iterator end_proxy (string& s)
-{ return end (s); }
-
-
-
-char_range::char_range (string& text)
-	: _begin (begin_proxy (text)),
-	  _end (end_proxy (text))
+char_range::char_range (const string& text)
+	: _begin (text.cbegin ()),
+	  _end (text.cend ())
 {
 }
 
@@ -34,7 +24,7 @@ char_range::char_range (iterator first,
 
 
 typename char_range::iterator
-char_range::begin ()
+char_range::begin () const
 {
 	return _begin;
 }
@@ -42,14 +32,14 @@ char_range::begin ()
 
 
 typename char_range::iterator
-char_range::end ()
+char_range::end () const
 {
 	return _end;
 }
 
 
 
-char& char_range::operator [] (size_t n)
+const char& char_range::operator [] (size_t n)
 {
 	return _begin [n];
 }

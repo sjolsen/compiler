@@ -8,7 +8,7 @@ using namespace std;
 
 
 
-string get_text (string filename)
+string get_file (string filename)
 {
 	ifstream fin (filename.c_str ());
 
@@ -38,10 +38,10 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	string text;
+	string file;
 	try
 	{
-		text = get_text (argv [1]);
+		file = get_file (argv [1]);
 	}
 	catch (typename ios_base::failure)
 	{
@@ -49,9 +49,11 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
+	char_range text (file);
+
 	try
 	{
-		auto tokens = tokenize (char_range (text));
+		auto tokens = tokenize (text);
 		for (auto& token : tokens)
 			cout << to_string (token) << endl;
 	}

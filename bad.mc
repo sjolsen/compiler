@@ -1,1 +1,0 @@
-include main int () 'abc'

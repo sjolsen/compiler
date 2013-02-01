@@ -80,7 +80,7 @@ matcher int_literal_p
 			                    begin (text));
 
 		auto token_end = find_if_not (begin (text), end (text), (int (*) (int)) &isdigit);
-		if (token_end == end (text) && !isalpha (*token_end))
+		if (token_end == end (text) || !isalpha (*token_end))
 			return char_range (begin (text), token_end);
 		throw syntax_error ("Identifiers must begin with a letter",
 		                    begin (text));

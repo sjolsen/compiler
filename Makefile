@@ -1,7 +1,15 @@
-CXX = g++
+PROJECT_DIR = $(CURDIR)
+BIN         = $(PROJECT_DIR)/bin
+BUILD       = $(PROJECT_DIR)/build
+INCLUDE     = $(PROJECT_DIR)/include
+LIB         = $(PROJECT_DIR)/lib
+SRC         = $(PROJECT_DIR)/src
+TEST        = $(PROJECT_DIR)/test
+
+CXX      = g++
 CXXFLAGS += -std=c++0x #-Wall -Wextra
-AR = ar
-ARFLAGS = rvs
+AR       = ar
+ARFLAGS  = rvs
 
 
 
@@ -10,86 +18,93 @@ all: text_processing \
      scanner
 
 clean:
-	rm -f build/* bin/* lib/*
+	rm -f $(BUILD)/* $(BIN)/* $(LIB)/*
 
 
 
 # Build the text processing library
 
-text_processing: lib/text_processing.a
+text_processing: $(LIB)/text_processing.a
 
-build/char_range.o: include/char_range.hh \
-                    src/char_range.cc
-	$(CXX) $(CXXFLAGS) src/char_range.cc -c -o build/char_range.o
+$(BUILD)/char_range.o: $(INCLUDE)/char_range.hh \
+                       $(SRC)/char_range.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/char_range.cc -c -o $(BUILD)/char_range.o
 
-build/file_position.o: include/file_position.hh \
-                       include/char_range.hh \
-                       src/file_position.cc
-	$(CXX) $(CXXFLAGS) src/file_position.cc -c -o build/file_position.o
+$(BUILD)/file_position.o: $(INCLUDE)/file_position.hh \
+                          $(INCLUDE)/char_range.hh \
+                          $(SRC)/file_position.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/file_position.cc -c -o $(BUILD)/file_position.o
 
-lib/text_processing.a: include/text_processing.hh \
-                       build/char_range.o \
-                       build/file_position.o
-	$(AR) $(ARFLAGS) lib/text_processing.a \
-                         build/char_range.o \
-                         build/file_position.o
+$(LIB)/text_processing.a: $(INCLUDE)/text_processing.hh \
+                          $(BUILD)/char_range.o \
+                          $(BUILD)/file_position.o
+	$(AR) $(ARFLAGS) $(LIB)/text_processing.a \
+                         $(BUILD)/char_range.o \
+                         $(BUILD)/file_position.o
 
 
 
 # Build the tokenizer facilities
 
-tokenizer: lib/tokenizer.a
+tokenizer: $(LIB)/tokenizer.a
 
-build/syntax_error.o: lib/text_processing.a \
-                      include/syntax_error.hh \
-                      src/syntax_error.cc
-	$(CXX) $(CXXFLAGS) src/syntax_error.cc -c -o build/syntax_error.o
+$(BUILD)/syntax_error.o: $(LIB)/text_processing.a \
+                         $(INCLUDE)/syntax_error.hh \
+                         $(SRC)/syntax_error.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/syntax_error.cc -c -o $(BUILD)/syntax_error.o
 
-build/tokendef.o: include/tokendef.hh \
-                  src/tokendef.cc
-	$(CXX) $(CXXFLAGS) src/tokendef.cc -c -o build/tokendef.o
+$(BUILD)/tokendef.o: $(INCLUDE)/tokendef.hh \
+                     $(SRC)/tokendef.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/tokendef.cc -c -o $(BUILD)/tokendef.o
 
-build/token_predicates.o: lib/text_processing.a \
-                          include/token_predicates.hh \
-                          include/tokendef.hh \
-                          include/syntax_error.hh \
-                          src/token_predicates.cc
-	$(CXX) $(CXXFLAGS) src/token_predicates.cc -c -o build/token_predicates.o
+$(BUILD)/token_predicates.o: $(LIB)/text_processing.a \
+                             $(INCLUDE)/token_predicates.hh \
+                             $(INCLUDE)/tokendef.hh \
+                             $(INCLUDE)/syntax_error.hh \
+                             $(SRC)/token_predicates.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/token_predicates.cc -c -o $(BUILD)/token_predicates.o
 
-build/token_extraction.o: lib/text_processing.a \
-                          include/token_extraction.hh \
-                          include/tokendef.hh \
-                          include/token_predicates.hh \
-                          include/syntax_error.hh \
-                          src/token_extraction.cc
-	$(CXX) $(CXXFLAGS) src/token_extraction.cc -c -o build/token_extraction.o
+$(BUILD)/token_extraction.o: $(LIB)/text_processing.a \
+                             $(INCLUDE)/token_extraction.hh \
+                             $(INCLUDE)/tokendef.hh \
+                             $(INCLUDE)/token_predicates.hh \
+                             $(INCLUDE)/syntax_error.hh \
+                             $(SRC)/token_extraction.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/token_extraction.cc -c -o $(BUILD)/token_extraction.o
 
-lib/tokenizer.a: include/tokenizer.hh \
-                 build/syntax_error.o \
-                 build/tokendef.o \
-                 build/token_predicates.o \
-                 build/token_extraction.o
-	$(AR) $(ARFLAGS) lib/tokenizer.a \
-                         build/syntax_error.o \
-                         build/tokendef.o \
-                         build/token_predicates.o \
-                         build/token_extraction.o
+$(LIB)/tokenizer.a: $(INCLUDE)/tokenizer.hh \
+                    $(BUILD)/syntax_error.o \
+                    $(BUILD)/tokendef.o \
+                    $(BUILD)/token_predicates.o \
+                    $(BUILD)/token_extraction.o
+	$(AR) $(ARFLAGS) $(LIB)/tokenizer.a \
+                         $(BUILD)/syntax_error.o \
+                         $(BUILD)/tokendef.o \
+                         $(BUILD)/token_predicates.o \
+                         $(BUILD)/token_extraction.o
 
 
 
 # Build the scanner-driver
 
-scanner: bin/scanner
+scanner: $(BIN)/scanner
 
-build/main.o: main.cc \
-              include/text_processing.hh \
-              include/tokenizer.hh
-	$(CXX) $(CXXFLAGS) main.cc -c -o build/main.o
+$(BUILD)/main.o: $(PROJECT_DIR)/main.cc \
+                 $(INCLUDE)/text_processing.hh \
+                 $(INCLUDE)/tokenizer.hh
+	$(CXX) $(CXXFLAGS) main.cc -c -o $(BUILD)/main.o
 
-bin/scanner: build/main.o \
-             lib/text_processing.a \
-             lib/tokenizer.a
-	$(CXX) $(CXXFLAGS) build/main.o \
-                           lib/text_processing.a \
-                           lib/tokenizer.a \
-                           -o bin/scanner
+$(BIN)/scanner: $(BUILD)/main.o \
+                $(LIB)/text_processing.a \
+                $(LIB)/tokenizer.a
+	$(CXX) $(CXXFLAGS) $(BUILD)/main.o \
+                           $(LIB)/text_processing.a \
+                           $(LIB)/tokenizer.a \
+                           -o $(BIN)/scanner
+
+
+
+# Run tests
+
+test: scanner
+	$(TEST)/run_tests.bash

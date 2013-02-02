@@ -1,7 +1,7 @@
 #ifndef TEXT_PROCESSING_HH
 #define TEXT_PROCESSING_HH
 
-#include "char_range.hh"
-#include "file_position.hh"
+#include "text_processing/char_range.hh"
+#include "text_processing/file_position.hh"
 
 #endif

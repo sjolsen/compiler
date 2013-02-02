@@ -1,4 +1,4 @@
-#include "../include/file_position.hh"
+#include "../../include/text_processing/file_position.hh"
 #include <algorithm>
 
 using namespace std;

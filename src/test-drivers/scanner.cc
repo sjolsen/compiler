@@ -1,8 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include "include/text_processing.hh"
-#include "include/tokenizer.hh"
+#include "../../include/text_processing.hh"
+#include "../../include/tokenizer.hh"
 
 using namespace std;
 

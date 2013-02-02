@@ -4,13 +4,42 @@ The project directory is structured as follows:
 	./build     Temporary directory for object files and the like
 	./include   Headers
 	./lib       Object archives for easier dependency management
-                    and library modularity
+	            and library modularity
 	./src       Library source code
+	./test      Contains test input files and scripts for testing
+                    component-drivers against those files
 
-Currently, the only build targets are 'clean', 'all', 'scanner', and test. The former two have the standard semantics, the next builds bin/scanner, the current driver for the scanning facilities, and the last runs the scanner on a series of test input files.
+The available make targets are:
 
-The scanner-driver takes as its argument the name of the file to be tokenized. Output is a stream of tokens in the form "<type, value>", or a syntax error message accompanied by the offending location in the text in the form "(line, col)" and the contents of the file from that point until the next newline or until the end of file, whichever comes first.
+	all               Builds all library and driver binaries
+	clean             Removes binary and object files
 
-Testing may be performed through make, or 'test/run_tests.bash' may be invoked directly, though direct invocation requires that the script be executed from the top-level project directory. The test script may be run in verbose mode (via -v), displaying the scanner's output as normal.
+	text_processing   Builds the text processing library
+	tokenizer         Builds the tokenization library (depends
+	                  on the text processing library)
 
-Building this project requires a mostly C++11-compliant compiler and standard library. At this point, no third-party libraries are in use, and the build compiles under GCC 4.6.3, accessible at athena.cs.txstate.edu.
+	scanner           Builds the scanner-driver
+
+	testall           Runs all available top-level tests
+	test-scanner      Runs the test script for the scanner-driver
+
+Additional arguments may be passed to the compiler by setting the
+CXXFLAGS environment variable.
+
+The scanner-driver takes as its argument the name of the file to be
+tokenized. Output is a stream of tokens in the form "<type, value>",
+or a syntax error message accompanied by the offending location in
+the text in the form "(line, col)" and the contents of the file from
+that point until the next newline or until the end of file, whichever
+comes first.
+
+Testing may be performed through make, or
+'test/[component]/run_tests.bash' may be invoked directly, though
+direct invocation requires that the script be executed from the top-
+level project directory. The test script may be run in verbose mode
+(via -v), displaying the component's output as normal.
+
+Building this project requires a mostly C++11-compliant compiler and
+standard library. At this point, no third-party libraries are in use,
+and the build compiles under GCC 4.6.3, accessible at
+athena.cs.txstate.edu.

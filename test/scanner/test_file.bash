@@ -9,7 +9,7 @@ while getopts "vf:" OPT; do
 done
 
 if $VERBOSE; then
-    bin/scanner $FILENAME
+    bin/scanner $FILENAME 2>&1
 else
     bin/scanner $FILENAME 1>/dev/null 2>/dev/null
 fi

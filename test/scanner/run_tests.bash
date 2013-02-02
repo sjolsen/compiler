@@ -1,8 +1,8 @@
 #!/bin/bash
 
-for file in $(find test/good/ -name '*.mC'); do
+for file in $(find test/scanner/good/ -name '*.mC'); do
     echo "Testing" $file "..."
-    test/test_file.bash $@ -f $file
+    test/scanner/test_file.bash $@ -f $file
     STATUS=$?
 
     if [[ $STATUS == 0 ]]; then
@@ -13,9 +13,9 @@ for file in $(find test/good/ -name '*.mC'); do
     fi
 done
 
-for file in $(find test/bad/ -name '*.mC'); do
+for file in $(find test/scanner/bad/ -name '*.mC'); do
     echo "Testing" $file "..."
-    test/test_file.bash $@ -f $file
+    test/scanner/test_file.bash $@ -f $file
     STATUS=$?
 
     if [[ $STATUS != 0 ]]; then

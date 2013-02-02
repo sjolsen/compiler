@@ -1,4 +1,4 @@
-#include "../include/char_range.hh"
+#include "../../include/text_processing/char_range.hh"
 #include <stdexcept>
 #include <iterator>
 

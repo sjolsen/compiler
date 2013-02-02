@@ -1,3 +1,3 @@
 "ABCD""EFG"
 "Hello, World!\n"
-"\"TEST\"" "C:\\WINDOWS\\"
+"\"TEST\":\t C:\\WINDOWS\\"

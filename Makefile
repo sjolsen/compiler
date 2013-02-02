@@ -9,7 +9,7 @@ TEST        = $(PROJECT_DIR)/test
 CXX      = g++
 CXXFLAGS += -std=c++0x #-Wall -Wextra
 AR       = ar
-ARFLAGS  = rvs
+ARFLAGS  += rvs
 
 
 
@@ -20,20 +20,22 @@ all: text_processing \
 clean:
 	rm -f $(BUILD)/* $(BIN)/* $(LIB)/*
 
+testall: test-scanner
+
 
 
 # Build the text processing library
 
 text_processing: $(LIB)/text_processing.a
 
-$(BUILD)/char_range.o: $(INCLUDE)/char_range.hh \
-                       $(SRC)/char_range.cc
-	$(CXX) $(CXXFLAGS) $(SRC)/char_range.cc -c -o $(BUILD)/char_range.o
+$(BUILD)/char_range.o: $(INCLUDE)/text_processing/char_range.hh \
+                       $(SRC)/text_processing/char_range.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/text_processing/char_range.cc -c -o $(BUILD)/char_range.o
 
-$(BUILD)/file_position.o: $(INCLUDE)/file_position.hh \
-                          $(INCLUDE)/char_range.hh \
-                          $(SRC)/file_position.cc
-	$(CXX) $(CXXFLAGS) $(SRC)/file_position.cc -c -o $(BUILD)/file_position.o
+$(BUILD)/file_position.o: $(INCLUDE)/text_processing/file_position.hh \
+                          $(INCLUDE)/text_processing/char_range.hh \
+                          $(SRC)/text_processing/file_position.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/text_processing/file_position.cc -c -o $(BUILD)/file_position.o
 
 $(LIB)/text_processing.a: $(INCLUDE)/text_processing.hh \
                           $(BUILD)/char_range.o \
@@ -49,28 +51,28 @@ $(LIB)/text_processing.a: $(INCLUDE)/text_processing.hh \
 tokenizer: $(LIB)/tokenizer.a
 
 $(BUILD)/syntax_error.o: $(LIB)/text_processing.a \
-                         $(INCLUDE)/syntax_error.hh \
-                         $(SRC)/syntax_error.cc
-	$(CXX) $(CXXFLAGS) $(SRC)/syntax_error.cc -c -o $(BUILD)/syntax_error.o
+                         $(INCLUDE)/tokenizer/syntax_error.hh \
+                         $(SRC)/tokenizer/syntax_error.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/tokenizer/syntax_error.cc -c -o $(BUILD)/syntax_error.o
 
-$(BUILD)/tokendef.o: $(INCLUDE)/tokendef.hh \
-                     $(SRC)/tokendef.cc
-	$(CXX) $(CXXFLAGS) $(SRC)/tokendef.cc -c -o $(BUILD)/tokendef.o
+$(BUILD)/tokendef.o: $(INCLUDE)/tokenizer/tokendef.hh \
+                     $(SRC)/tokenizer/tokendef.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/tokenizer/tokendef.cc -c -o $(BUILD)/tokendef.o
 
 $(BUILD)/token_predicates.o: $(LIB)/text_processing.a \
-                             $(INCLUDE)/token_predicates.hh \
-                             $(INCLUDE)/tokendef.hh \
-                             $(INCLUDE)/syntax_error.hh \
-                             $(SRC)/token_predicates.cc
-	$(CXX) $(CXXFLAGS) $(SRC)/token_predicates.cc -c -o $(BUILD)/token_predicates.o
+                             $(INCLUDE)/tokenizer/token_predicates.hh \
+                             $(INCLUDE)/tokenizer/tokendef.hh \
+                             $(INCLUDE)/tokenizer/syntax_error.hh \
+                             $(SRC)/tokenizer/token_predicates.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/tokenizer/token_predicates.cc -c -o $(BUILD)/token_predicates.o
 
 $(BUILD)/token_extraction.o: $(LIB)/text_processing.a \
-                             $(INCLUDE)/token_extraction.hh \
-                             $(INCLUDE)/tokendef.hh \
-                             $(INCLUDE)/token_predicates.hh \
-                             $(INCLUDE)/syntax_error.hh \
-                             $(SRC)/token_extraction.cc
-	$(CXX) $(CXXFLAGS) $(SRC)/token_extraction.cc -c -o $(BUILD)/token_extraction.o
+                             $(INCLUDE)/tokenizer/token_extraction.hh \
+                             $(INCLUDE)/tokenizer/tokendef.hh \
+                             $(INCLUDE)/tokenizer/token_predicates.hh \
+                             $(INCLUDE)/tokenizer/syntax_error.hh \
+                             $(SRC)/tokenizer/token_extraction.cc
+	$(CXX) $(CXXFLAGS) $(SRC)/tokenizer/token_extraction.cc -c -o $(BUILD)/token_extraction.o
 
 $(LIB)/tokenizer.a: $(INCLUDE)/tokenizer.hh \
                     $(BUILD)/syntax_error.o \
@@ -89,22 +91,22 @@ $(LIB)/tokenizer.a: $(INCLUDE)/tokenizer.hh \
 
 scanner: $(BIN)/scanner
 
-$(BUILD)/main.o: $(PROJECT_DIR)/main.cc \
-                 $(INCLUDE)/text_processing.hh \
-                 $(INCLUDE)/tokenizer.hh
-	$(CXX) $(CXXFLAGS) main.cc -c -o $(BUILD)/main.o
+$(BUILD)/scanner.o: $(SRC)/test-drivers/scanner.cc \
+                    $(INCLUDE)/text_processing.hh \
+                    $(INCLUDE)/tokenizer.hh
+	$(CXX) $(CXXFLAGS) $(SRC)/test-drivers/scanner.cc -c -o $(BUILD)/scanner.o
 
-$(BIN)/scanner: $(BUILD)/main.o \
+$(BIN)/scanner: $(BUILD)/scanner.o \
                 $(LIB)/text_processing.a \
                 $(LIB)/tokenizer.a
-	$(CXX) $(CXXFLAGS) $(BUILD)/main.o \
+	$(CXX) $(CXXFLAGS) $(BUILD)/scanner.o \
                            $(LIB)/text_processing.a \
                            $(LIB)/tokenizer.a \
                            -o $(BIN)/scanner
 
 
 
-# Run tests
+# Run unit tests
 
-test: scanner
-	$(TEST)/run_tests.bash
+test-scanner: $(BIN)/scanner
+	$(TEST)/scanner/run_tests.bash

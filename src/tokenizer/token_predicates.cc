@@ -1,4 +1,4 @@
-#include "../include/token_predicates.hh"
+#include "../../include/tokenizer/token_predicates.hh"
 #include <cctype>
 #include <algorithm>
 #include <unordered_map>
@@ -20,10 +20,19 @@ matcher identifier_p
 
 	[] (char_range text) -> char_range
 	{
+		if (*begin (text) == '_')
+			throw syntax_error ("Identifiers may not contain underscores",
+			                    begin (text));
 		if (!isalpha (*begin (text)))
 			return char_range ();
-		return char_range (begin (text),
-		                   find_if_not (begin (text), end (text), (int (*) (int)) &isalnum));
+
+		auto token_end = find_if_not (begin (text), end (text), (int (*) (int)) &isalnum);
+		if (token_end != end (text) && *token_end == '_')
+			throw syntax_error ("Identifiers may not contain underscores",
+			                    begin (text));
+
+		return char_range (begin (text), token_end);
+
 	}
 };
 

@@ -3,7 +3,7 @@
 
 #include "syntax_error.hh"
 #include "tokendef.hh"
-#include "text_processing.hh"
+#include "../text_processing.hh"
 #include <array>
 
 

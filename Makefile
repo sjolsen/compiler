@@ -1,15 +1,15 @@
-PROJECT_DIR = $(CURDIR)
-BIN         = $(PROJECT_DIR)/bin
-BUILD       = $(PROJECT_DIR)/build
-INCLUDE     = $(PROJECT_DIR)/include
-LIB         = $(PROJECT_DIR)/lib
-SRC         = $(PROJECT_DIR)/src
-TEST        = $(PROJECT_DIR)/test
+PROJECT_DIR := $(CURDIR)
+BIN         := $(PROJECT_DIR)/bin
+BUILD       := $(PROJECT_DIR)/build
+INCLUDE     := $(PROJECT_DIR)/include
+LIB         := $(PROJECT_DIR)/lib
+SRC         := $(PROJECT_DIR)/src
+TEST        := $(PROJECT_DIR)/test
 
-CXX      = g++
+CXX      := g++
 CXXFLAGS += -std=c++0x #-Wall -Wextra
-AR       = ar
-ARFLAGS  += rvs
+AR       := ar
+ARFLAGS  := $(ARFLAGS)s
 
 
 

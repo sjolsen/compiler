@@ -43,3 +43,6 @@ Building this project requires a mostly C++11-compliant compiler and
 standard library. At this point, no third-party libraries are in use,
 and the build compiles under GCC 4.6.3, accessible at
 athena.cs.txstate.edu.
+
+Information about the internal workings of the scanner may be found
+in the ABOUT file.

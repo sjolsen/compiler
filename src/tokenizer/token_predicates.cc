@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <iterator>
 
+//#define SYNTAX_NO_BANG
+
 using namespace std;
 
 
@@ -274,10 +276,15 @@ matcher symbol_p
 	{
 		switch (text [0])
 		{
+		case '!':
+		#ifdef SYNTAX_NO_BANG
+			if (text.size () < 2 || text [1] != '=')
+				throw syntax_error ("mC does not specify the '!' operator",
+				                    begin (text));
+		#endif
 		case '<':
 		case '>':
 		case '=':
-		case '!':
 			if (text.size () > 1 && text [1] == '=')
 				return char_range (begin (text), begin (text) + 2);
 		case '+':

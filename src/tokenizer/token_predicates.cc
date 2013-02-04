@@ -4,7 +4,8 @@
 #include <unordered_map>
 #include <iterator>
 
-//#define SYNTAX_NO_BANG
+// Disallow the '!' operator
+#define SYNTAX_NO_BANG
 
 using namespace std;
 
@@ -61,6 +62,7 @@ matcher keyword_p
 
 	[] (char_range text) -> char_range
 	{
+		// Treat keywords as a subset of identifiers
 		auto token_range = identifier_p (text);
 		if (token_range)
 			for (const string& keyword : keywords)
@@ -176,9 +178,10 @@ matcher string_literal_p
 
 		while (token_range)
 		{
+			// Pull out the most unescaped text possible
 			char_range escapeless_substr (begin (token_range), find (begin (token_range),
-			                                                          end (token_range),
-			                                                          '\\'));
+			                                                         end (token_range),
+			                                                         '\\'));
 			t.str.append (begin (escapeless_substr), end (escapeless_substr));
 			token_range.drop_front (escapeless_substr.size ());
 			if (!token_range)
@@ -212,7 +215,7 @@ matcher string_literal_p
 		if (text [0] != '"')
 			return char_range ();
 
-		auto escaped = [text] (char_range::iterator i) // For determining whether or the double-quote found is escaped
+		auto escaped = [text] (char_range::iterator i) // For determining whether not or the double-quote found is escaped
 		{
 			auto first_non_backslash = find_if_not (reverse_iterator <decltype (i)> (i),
 			                                        reverse_iterator <decltype (begin (text))> (begin (text)),

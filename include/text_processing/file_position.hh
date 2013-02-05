@@ -2,17 +2,19 @@
 #define FILE_POSITION_HH
 
 #include "char_range.hh"
-#include <utility>
 #include <cstddef>
 
 
 
 struct file_position // first represents line, second, col
-	: std::pair <std::size_t, std::size_t>
 {
+	const char_range _file;
+	const char_range::iterator _pos;
+	const std::size_t _line;
+	const std::size_t _col;
+
 	file_position (char_range file,
-	               char_range::iterator position,
-	               char delim = '\n');
+	               char_range::iterator position);
 };
 
 

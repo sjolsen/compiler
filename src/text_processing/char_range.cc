@@ -1,6 +1,7 @@
 #include "../../include/text_processing/char_range.hh"
 #include <stdexcept>
 #include <iterator>
+#include <algorithm>
 
 using namespace std;
 
@@ -81,4 +82,13 @@ void char_range::drop_back (size_t n)
 	if (n > size ())
 		throw logic_error ("Called char_range::drop_back with to great an 'n'");
 	_end -= n;
+}
+
+
+
+ostream& operator << (ostream& os,
+                      const char_range& r)
+{
+	copy (begin (r), end (r), ostream_iterator <char> (os));
+	return os;
 }

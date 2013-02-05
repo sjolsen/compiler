@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <algorithm>
 #include "../../include/text_processing.hh"
 #include "../../include/tokenizer.hh"
@@ -24,7 +25,18 @@ string get_file (string filename)
 
 ostream& operator << (ostream& os, file_position pos)
 {
-	return os << '(' << pos.first << ", " << pos.second << ')';
+	return os << '(' << pos._line << ", " << pos._col << ')';
+}
+
+
+
+char_range containing_line (file_position pos)
+{
+	auto line_begin = find (reverse_iterator <typename char_range::iterator> (pos._pos),
+	                        reverse_iterator <typename char_range::iterator> (begin (pos._file)),
+	                        '\n').base ();
+	auto line_end = find (pos._pos, end (pos._file), '\n');
+	return char_range (line_begin, line_end);
 }
 
 
@@ -59,8 +71,11 @@ int main (int argc,
 	}
 	catch (const syntax_error& e)
 	{
-		cerr << "Syntax error: " << e.what () << ' ' << file_position (text, e.where ()) << ":\n"
-		     << string (e.where (), find (e.where (), text.end (), '\n')) << endl;
+		auto error_point = file_position (text, e.where ());
+		cerr << "Syntax error: " << e.what () << ' ' << error_point << ':' << endl
+		     << containing_line (error_point) << endl;
+		fill_n (ostream_iterator <char> (cerr), error_point._col - 1, ' ');
+		cerr << '^' << endl;
 		return EXIT_FAILURE;
 	}
 }

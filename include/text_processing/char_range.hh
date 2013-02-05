@@ -2,6 +2,7 @@
 #define CHAR_RANGE_HH
 
 #include <string>
+#include <iostream>
 
 
 
@@ -33,6 +34,11 @@ public:
 	void drop_front (std::size_t n);
 	void drop_back (std::size_t n);
 };
+
+
+
+std::ostream& operator << (std::ostream& os,
+                           const char_range& r);
 
 
 

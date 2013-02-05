@@ -5,7 +5,9 @@
 #include <iterator>
 
 // Disallow the '!' operator
-#define SYNTAX_NO_BANG
+#define __SYNTAX_NO_BANG
+// Disallow C99-style comments
+//#define __SYNTAX_NO_C99_COMMENTS
 
 using namespace std;
 
@@ -280,7 +282,7 @@ matcher symbol_p
 		switch (text [0])
 		{
 		case '!':
-		#ifdef SYNTAX_NO_BANG
+		#ifdef __SYNTAX_NO_BANG
 			if (text.size () < 2 || text [1] != '=')
 				throw syntax_error ("mC does not specify the '!' operator",
 				                    begin (text));
@@ -337,7 +339,15 @@ matcher comment_p
 
 	[] (char_range text) -> char_range
 	{
-		if (text [0] != '/' || text [1] != '*')
+		if (text [0] != '/' || text.size () < 2)
+			return char_range ();
+
+		#ifndef __SYNTAX_NO_C99_COMMENTS
+		if (text [1] == '/')
+			return char_range (begin (text), find (begin (text), end (text), '\n'));
+		#endif
+
+		if (text [1] != '*')
 			return char_range ();
 
 		auto comment_close = adjacent_find (begin (text), end (text),

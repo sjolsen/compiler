@@ -34,7 +34,7 @@ matcher identifier_p
 		auto token_end = find_if_not (begin (text), end (text), (int (*) (int)) &isalnum);
 		if (token_end != end (text) && *token_end == '_')
 			throw syntax_error ("Identifiers may not contain underscores",
-			                    begin (text));
+			                    token_end);
 
 		return char_range (begin (text), token_end);
 
@@ -125,7 +125,7 @@ matcher char_literal_p
 			break;
 			default:
 				throw syntax_error ("Unrecognized character escape-sequence",
-				                    begin (token_range));
+				                    begin (token_range) + 1);
 			}
 		else
 			t.cvalue = token_range [1];

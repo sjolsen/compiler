@@ -18,11 +18,11 @@ of the working range, accessible via the 'where' function, analogous
 to std::exception's 'what'. The text processing library provides a
 class called 'file position' for converting an iterator to a
 <line, col> pair. It may be constructed from a char_range representing
-the underlying file, the iterator representing the position, and
-optionally a single-character line delimiter, defaulted to '\n'. The
-line represented by the file_position object thus created may be
-accessed through member 'first', and the column through member
-'second'.
+the underlying file, and the iterator representing the position. The
+line number associated with the file_position object thus created may
+be accessed through member '_line', and the column through member
+'_col'. The file and position from which it was constructed may be
+retrieved via members '_file' and '_pos', respectively.
 
 Token matching is performed by a set of token predicates, represented
 as the struct 'matcher'. These matchers implement operator (), which

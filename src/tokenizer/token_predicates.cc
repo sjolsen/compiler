@@ -4,7 +4,10 @@
 #include <unordered_map>
 #include <iterator>
 
-//#define SYNTAX_NO_BANG
+// Disallow the '!' operator
+#define __SYNTAX_NO_BANG
+// Disallow C99-style comments
+//#define __SYNTAX_NO_C99_COMMENTS
 
 using namespace std;
 
@@ -61,6 +64,7 @@ matcher keyword_p
 
 	[] (char_range text) -> char_range
 	{
+		// Treat keywords as a subset of identifiers
 		auto token_range = identifier_p (text);
 		if (token_range)
 			for (const string& keyword : keywords)
@@ -176,9 +180,10 @@ matcher string_literal_p
 
 		while (token_range)
 		{
+			// Pull out the most unescaped text possible
 			char_range escapeless_substr (begin (token_range), find (begin (token_range),
-			                                                          end (token_range),
-			                                                          '\\'));
+			                                                         end (token_range),
+			                                                         '\\'));
 			t.str.append (begin (escapeless_substr), end (escapeless_substr));
 			token_range.drop_front (escapeless_substr.size ());
 			if (!token_range)
@@ -212,7 +217,7 @@ matcher string_literal_p
 		if (text [0] != '"')
 			return char_range ();
 
-		auto escaped = [text] (char_range::iterator i) // For determining whether or the double-quote found is escaped
+		auto escaped = [text] (char_range::iterator i) // For determining whether not or the double-quote found is escaped
 		{
 			auto first_non_backslash = find_if_not (reverse_iterator <decltype (i)> (i),
 			                                        reverse_iterator <decltype (begin (text))> (begin (text)),
@@ -277,7 +282,7 @@ matcher symbol_p
 		switch (text [0])
 		{
 		case '!':
-		#ifdef SYNTAX_NO_BANG
+		#ifdef __SYNTAX_NO_BANG
 			if (text.size () < 2 || text [1] != '=')
 				throw syntax_error ("mC does not specify the '!' operator",
 				                    begin (text));
@@ -334,7 +339,15 @@ matcher comment_p
 
 	[] (char_range text) -> char_range
 	{
-		if (text [0] != '/' || text [1] != '*')
+		if (text [0] != '/' || text.size () < 2)
+			return char_range ();
+
+		#ifndef __SYNTAX_NO_C99_COMMENTS
+		if (text [1] == '/')
+			return char_range (begin (text), find (begin (text), end (text), '\n'));
+		#endif
+
+		if (text [1] != '*')
 			return char_range ();
 
 		auto comment_close = adjacent_find (begin (text), end (text),

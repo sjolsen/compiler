@@ -9,13 +9,10 @@ using namespace std;
 
 
 
-string get_file (string filename)
+string get_text (istream& fin)
 {
-	ifstream fin (filename.c_str ());
-
-	fin.exceptions (ifstream::failbit |
-	                ifstream::badbit |
-	                ifstream::eofbit);
+	if (!fin.good ())
+		throw runtime_error ("Bad input file");
 
 	return string (istreambuf_iterator <char> (fin),
 	               istreambuf_iterator <char> ());
@@ -44,25 +41,25 @@ char_range containing_line (file_position pos)
 int main (int argc,
           char** argv)
 {
-	if (argc < 2)
-	{
-		cerr << "No input files\n";
-		return EXIT_FAILURE;
-	}
-
 	string file;
-	try
+
+	if (argc < 2)
+		file = get_text (cin);
+	else
 	{
-		file = get_file (argv [1]);
-	}
-	catch (typename ios_base::failure)
-	{
-		cerr << "Invalid filename\n";
-		return EXIT_FAILURE;
+		try
+		{
+			ifstream fin (argv [1]);
+			file = get_text (fin);
+		}
+		catch (const runtime_error& e)
+		{
+			cerr << e.what () << endl;
+			return EXIT_FAILURE;
+		}
 	}
 
 	char_range text (file);
-
 	try
 	{
 		auto tokens = tokenize (text);

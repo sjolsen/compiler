@@ -27,11 +27,12 @@ Additional arguments may be passed to the compiler by setting the
 CXXFLAGS environment variable.
 
 The scanner-driver takes as its argument the name of the file to be
-tokenized. Output is a stream of tokens in the form "<type, value>",
-or a syntax error message accompanied by the offending location in
-the text in the form "(line, col)" and the contents of the file from
-that point until the next newline or until the end of file, whichever
-comes first.
+tokenized, but may be run by piping a program to its standard input,
+omitting the filename argument. Output is a stream of tokens in the
+form "<type, value>", or a syntax error message accompanied by the
+offending location in the text in the form "(line, col)" and the
+contents of the file from that point until the next newline or until
+the end of file, whichever comes first.
 
 Testing may be performed through make, or
 'test/[component]/run_tests.bash' may be invoked directly, though

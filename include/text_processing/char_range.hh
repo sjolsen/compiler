@@ -10,6 +10,7 @@ class char_range
 {
 public:
 	typedef typename std::string::const_iterator iterator;
+	typedef typename std::string::const_reverse_iterator reverse_iterator;
 
 private:
 	iterator _begin;
@@ -24,6 +25,8 @@ public:
 
 	iterator begin () const;
 	iterator end () const;
+	reverse_iterator rbegin () const;
+	reverse_iterator rend () const;
 
 	const char& operator [] (std::size_t n);
 

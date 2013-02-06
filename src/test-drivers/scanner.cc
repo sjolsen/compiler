@@ -29,8 +29,8 @@ ostream& operator << (ostream& os, file_position pos)
 
 char_range containing_line (file_position pos)
 {
-	auto line_begin = find (reverse_iterator <typename char_range::iterator> (pos._pos),
-	                        reverse_iterator <typename char_range::iterator> (begin (pos._file)),
+	auto line_begin = find (typename char_range::reverse_iterator (pos._pos),
+	                        pos._file.rend (),
 	                        '\n').base ();
 	auto line_end = find (pos._pos, end (pos._file), '\n');
 	return char_range (line_begin, line_end);

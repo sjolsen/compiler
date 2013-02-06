@@ -219,10 +219,10 @@ matcher string_literal_p
 
 		auto escaped = [text] (char_range::iterator i) -> bool // For determining whether not or the double-quote found is escaped
 		{
-			auto first_non_backslash = find_if_not (reverse_iterator <decltype (i)> (i),
-			                                        reverse_iterator <decltype (begin (text))> (begin (text)),
+			auto first_non_backslash = find_if_not (typename char_range::reverse_iterator (i),
+			                                        text.rend (),
 			                                        [] (char c) { return c == '\\'; });
-			if ((first_non_backslash - reverse_iterator <decltype (i)> (i)) % 2 == 0) // All immediately adjacent backslashes are escaped
+			if ((first_non_backslash - typename char_range::reverse_iterator (i)) % 2 == 0) // All immediately adjacent backslashes are escaped
 				return false;
 			return true;
 		};

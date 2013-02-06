@@ -41,9 +41,10 @@ level project directory. The test script may be run in verbose mode
 (via -v), displaying the component's output as normal.
 
 Building this project requires a mostly C++11-compliant compiler and
-standard library. At this point, no third-party libraries are in use,
-and the build compiles under GCC 4.6.3, accessible at
-athena.cs.txstate.edu.
+standard library. At this point, no third-party libraries are in use.
+The project compiles successfully under GCC/libstdc++ 4.6.3,
+accessible at athena.cs.txstate.edu, and under Clang/LLVM 3.1 and
+libc++1.0.
 
 Information about the internal workings of the scanner may be found
 in the ABOUT file.

@@ -217,7 +217,7 @@ matcher string_literal_p
 		if (text [0] != '"')
 			return char_range ();
 
-		auto escaped = [text] (char_range::iterator i) // For determining whether not or the double-quote found is escaped
+		auto escaped = [text] (char_range::iterator i) -> bool // For determining whether not or the double-quote found is escaped
 		{
 			auto first_non_backslash = find_if_not (reverse_iterator <decltype (i)> (i),
 			                                        reverse_iterator <decltype (begin (text))> (begin (text)),
@@ -315,7 +315,7 @@ matcher symbol_p
 
 matcher space_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range) -> token
 	{
 		throw logic_error ("Attempted to construct a token from a non-token range");
 	},
@@ -332,7 +332,7 @@ matcher space_p
 
 matcher comment_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range) -> token
 	{
 		throw logic_error ("Attempted to construct a token from a non-token range");
 	},

@@ -1,4 +1,4 @@
-PROJECT_DIR := $(CURDIR)
+PROJECT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 BIN         := $(PROJECT_DIR)/bin
 BUILD       := $(PROJECT_DIR)/build
 INCLUDE     := $(PROJECT_DIR)/include

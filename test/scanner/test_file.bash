@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TEST_SCANNER="$(dirname "$0")"
+
 VERBOSE=false
 while getopts "vf:" OPT; do
     case $OPT in
@@ -9,9 +11,9 @@ while getopts "vf:" OPT; do
 done
 
 if $VERBOSE; then
-    bin/scanner $FILENAME 2>&1
+    $TEST_SCANNER/../../bin/scanner $FILENAME 2>&1
 else
-    bin/scanner $FILENAME 1>/dev/null 2>/dev/null
+    $TEST_SCANNER/../../bin/scanner $FILENAME 1>/dev/null 2>/dev/null
 fi
 
 exit $?

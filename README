@@ -35,10 +35,9 @@ contents of the file from that point until the next newline or until
 the end of file, whichever comes first.
 
 Testing may be performed through make, or
-'test/[component]/run_tests.bash' may be invoked directly, though
-direct invocation requires that the script be executed from the top-
-level project directory. The test script may be run in verbose mode
-(via -v), displaying the component's output as normal.
+'test/[component]/run_tests.bash' may be invoked directly The test
+script may be run in verbose mode (via -v), displaying the
+component's output as normal.
 
 Building this project requires a mostly C++11-compliant compiler and
 standard library. At this point, no third-party libraries are in use.

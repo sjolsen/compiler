@@ -40,6 +40,22 @@ char_range::end () const
 
 
 
+typename char_range::reverse_iterator
+char_range::rbegin () const
+{
+	return reverse_iterator (_end);
+}
+
+
+
+typename char_range::reverse_iterator
+char_range::rend () const
+{
+	return reverse_iterator (_begin);
+}
+
+
+
 const char& char_range::operator [] (size_t n)
 {
 	return _begin [n];

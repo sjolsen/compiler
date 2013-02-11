@@ -69,10 +69,14 @@ int main (int argc,
 	catch (const syntax_error& e)
 	{
 		auto error_point = file_position (text, e.where ());
+		auto line = containing_line (error_point);
+
 		cerr << "Syntax error: " << e.what () << ' ' << error_point << ':' << endl
 		     << containing_line (error_point) << endl;
-		fill_n (ostream_iterator <char> (cerr), error_point._col - 1, ' ');
+		transform (line.begin (), error_point._pos, ostream_iterator <char> (cerr),
+		           [] (char c) { return c == '\t'? '\t' : ' '; });
 		cerr << '^' << endl;
+
 		return EXIT_FAILURE;
 	}
 }

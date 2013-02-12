@@ -72,7 +72,7 @@ int main (int argc,
 		auto line = containing_line (error_point);
 
 		cerr << "Syntax error: " << e.what () << ' ' << error_point << ':' << endl
-		     << containing_line (error_point) << endl;
+		     << line << endl;
 		transform (line.begin (), error_point._pos, ostream_iterator <char> (cerr),
 		           [] (char c) { return c == '\t'? '\t' : ' '; });
 		cerr << '^' << endl;

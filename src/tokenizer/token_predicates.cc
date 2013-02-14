@@ -113,12 +113,31 @@ matcher char_literal_p
 		if (token_range [1] == '\\')
 			switch (token_range [2])
 			{
+			case 'a':
+				t.cvalue = '\a';
+				break;
+			case 'b':
+				t.cvalue = '\b';
+				break;
+			case 'f':
+				t.cvalue = '\f';
+				break;
 			case 'n':
 				t.cvalue = '\n';
+				break;
+			case 'r':
+				t.cvalue = '\r';
 				break;
 			case 't':
 				t.cvalue = '\t';
 				break;
+			case 'v':
+				t.cvalue = '\v';
+				break;
+			case '0':
+				t.cvalue = '\0';
+				break;
+			case '\?':
 			case '\'':
 			case '\\':
 				t.cvalue = token_range [2];
@@ -192,12 +211,31 @@ matcher string_literal_p
 			// Handle an escape sequence
 			switch (token_range [1])
 			{
+			case 'a':
+				t.str.append (1, '\a');
+				break;
+			case 'b':
+				t.str.append (1, '\b');
+				break;
+			case 'f':
+				t.str.append (1, '\f');
+				break;
 			case 'n':
 				t.str.append (1, '\n');
+				break;
+			case 'r':
+				t.str.append (1, '\r');
 				break;
 			case 't':
 				t.str.append (1, '\t');
 				break;
+			case 'v':
+				t.str.append (1, '\v');
+				break;
+			case '0':
+				t.str.append (1, '\0');
+				break;
+			case '\?':
 			case '"':
 			case '\\':
 				t.str.append (1, token_range [1]);

@@ -15,7 +15,8 @@ _ARFLAGS  := $(ARFLAGS)s
 
 all: text_processing \
      tokenizer \
-     scanner
+     symbol \
+     mcc
 
 clean:
 	rm -f $(BUILD)/* $(BIN)/* $(LIB)/*
@@ -41,8 +42,8 @@ $(LIB)/text_processing.a: $(INCLUDE)/text_processing.hh \
                           $(BUILD)/char_range.o \
                           $(BUILD)/file_position.o
 	$(AR) $(_ARFLAGS) $(LIB)/text_processing.a \
-                         $(BUILD)/char_range.o \
-                         $(BUILD)/file_position.o
+                          $(BUILD)/char_range.o \
+                          $(BUILD)/file_position.o
 
 
 
@@ -55,7 +56,8 @@ $(BUILD)/syntax_error.o: $(LIB)/text_processing.a \
                          $(SRC)/tokenizer/syntax_error.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/syntax_error.cc -c -o $(BUILD)/syntax_error.o
 
-$(BUILD)/tokendef.o: $(INCLUDE)/tokenizer/tokendef.hh \
+$(BUILD)/tokendef.o: $(LIB)/text_processing.a \
+                     $(INCLUDE)/tokenizer/tokendef.hh \
                      $(SRC)/tokenizer/tokendef.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/tokendef.cc -c -o $(BUILD)/tokendef.o
 
@@ -80,33 +82,46 @@ $(LIB)/tokenizer.a: $(INCLUDE)/tokenizer.hh \
                     $(BUILD)/token_predicates.o \
                     $(BUILD)/token_extraction.o
 	$(AR) $(_ARFLAGS) $(LIB)/tokenizer.a \
-                         $(BUILD)/syntax_error.o \
-                         $(BUILD)/tokendef.o \
-                         $(BUILD)/token_predicates.o \
-                         $(BUILD)/token_extraction.o
+                          $(BUILD)/syntax_error.o \
+                          $(BUILD)/tokendef.o \
+                          $(BUILD)/token_predicates.o \
+                          $(BUILD)/token_extraction.o
+
+# Build the symbol table facilities
+
+symbol: $(LIB)/symbol.a
+
+$(BUILD)/symbol_table.o: $(INCLUDE)/symbol/symbol_table.hh \
+                         $(SRC)/symbol/symbol_table.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/symbol/symbol_table.cc -c -o $(BUILD)/symbol_table.o
+
+$(LIB)/symbol.a: $(INCLUDE)/symbol.hh \
+                 $(BUILD)/symbol_table.o
+	$(AR) $(ARFLAGS) $(LIB)/symbol.a \
+                         $(BUILD)/symbol_table.o
 
 
 
 # Build the scanner-driver
 
-scanner: $(BIN)/scanner
+mcc: $(BIN)/mcc
 
-$(BUILD)/scanner.o: $(SRC)/test-drivers/scanner.cc \
-                    $(INCLUDE)/text_processing.hh \
-                    $(INCLUDE)/tokenizer.hh
-	$(CXX) $(_CXXFLAGS) $(SRC)/test-drivers/scanner.cc -c -o $(BUILD)/scanner.o
+$(BUILD)/mcc.o: $(SRC)/mcc.cc \
+                $(INCLUDE)/text_processing.hh \
+                $(INCLUDE)/tokenizer.hh
+	$(CXX) $(_CXXFLAGS) $(SRC)/mcc.cc -c -o $(BUILD)/mcc.o
 
-$(BIN)/scanner: $(BUILD)/scanner.o \
-                $(LIB)/text_processing.a \
-                $(LIB)/tokenizer.a
-	$(CXX) $(_CXXFLAGS) $(BUILD)/scanner.o \
-                           $(LIB)/text_processing.a \
-                           $(LIB)/tokenizer.a \
-                           -o $(BIN)/scanner
+$(BIN)/mcc: $(BUILD)/mcc.o \
+            $(LIB)/text_processing.a \
+            $(LIB)/tokenizer.a
+	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
+                            $(LIB)/text_processing.a \
+                            $(LIB)/tokenizer.a \
+                            -o $(BIN)/mcc
 
 
 
 # Run unit tests
 
-test-scanner: $(BIN)/scanner
+test-scanner: $(BIN)/mcc
 	$(TEST)/scanner/run_tests.bash

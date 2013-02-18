@@ -11,9 +11,9 @@ while getopts "vf:" OPT; do
 done
 
 if $VERBOSE; then
-    $TEST_SCANNER/../../bin/scanner $FILENAME 2>&1
+    $TEST_SCANNER/../../bin/mcc $FILENAME -Tscanner 2>&1
 else
-    $TEST_SCANNER/../../bin/scanner $FILENAME 1>/dev/null 2>/dev/null
+    $TEST_SCANNER/../../bin/mcc $FILENAME -Tscanner 1>/dev/null 2>/dev/null
 fi
 
 exit $?

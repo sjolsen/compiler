@@ -46,11 +46,17 @@ vector <token> tokenize (char_range text)
 {
 	vector <token> tokens;
 
-	while (text)
+	char_range working_set = text;
+	while (working_set)
 	{
-		drop_nontokens (text);
-		if (text)
-			tokens.push_back (extract_token (text));
+		drop_nontokens (working_set);
+		if (working_set)
+		{
+			auto token_start = begin (working_set);
+			token t = extract_token (working_set);
+			t.pos = file_position (text, token_start);
+			tokens.emplace_back (move (t));
+		}
 	}
 
 	return tokens;

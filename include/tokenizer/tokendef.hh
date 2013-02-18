@@ -1,6 +1,7 @@
 #ifndef TOKENDEF_HH
 #define TOKENDEF_HH
 
+#include "../text_processing.hh"
 #include <string>
 
 
@@ -52,13 +53,16 @@ struct token
 	token_type type;
 
 	std::string str;
-
 	union
 	{
 		int value;
 		char cvalue;
 		symbol op;
 	};
+
+	file_position pos;
+
+	token () = default;
 };
 
 

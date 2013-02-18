@@ -16,3 +16,28 @@ file_position::file_position (char_range file,
 	        - typename char_range::reverse_iterator (position) + 1)
 {
 }
+
+
+
+string to_string (file_position pos)
+{
+	return ('(' + to_string (pos._line) + ", " + to_string (pos._col) + ')');
+}
+
+
+
+ostream& operator << (ostream& os, file_position pos)
+{
+	return os << to_string (pos);
+}
+
+
+
+char_range containing_line (file_position pos)
+{
+	auto line_begin = find (typename char_range::reverse_iterator (pos._pos),
+	                        pos._file.rend (),
+	                        '\n').base ();
+	auto line_end = find (pos._pos, end (pos._file), '\n');
+	return char_range (line_begin, line_end);
+}

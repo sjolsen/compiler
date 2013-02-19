@@ -4,7 +4,8 @@ using namespace std;
 
 
 
-void drop_nontokens (char_range& text)
+void drop_nontokens (char_range& working_set,
+                     char_range file)
 {
 	bool dropped;
 	do
@@ -12,10 +13,10 @@ void drop_nontokens (char_range& text)
 		dropped = false;
 		for (auto match_p : nontoken_predicates)
 		{
-			auto nontoken_range = match_p (text);
+			auto nontoken_range = match_p (working_set, file);
 			if (nontoken_range)
 			{
-				text.drop_front (nontoken_range.size ());
+				working_set.drop_front (nontoken_range.size ());
 				dropped = true;
 			}
 		}
@@ -25,36 +26,37 @@ void drop_nontokens (char_range& text)
 
 
 
-token extract_token (char_range& text)
+token extract_token (char_range& working_set,
+                     char_range file)
 {
 	for (auto match_p : token_predicates)
 	{
-		auto token_range = match_p (text);
+		auto token_range = match_p (working_set, file);
 		if (token_range)
 		{
-			text.drop_front (token_range.size ());
-			return match_p.token_constructor (token_range);
+			working_set.drop_front (token_range.size ());
+			return match_p.token_constructor (token_range, file);
 		}
 	}
 
-	throw syntax_error ("Illegal token", begin (text));
+	throw syntax_error ("Illegal token", file_position (file, begin (working_set)));
 }
 
 
 
-vector <token> tokenize (char_range text)
+deque <token> tokenize (char_range file)
 {
-	vector <token> tokens;
+	deque <token> tokens;
 
-	char_range working_set = text;
+	char_range working_set = file;
 	while (working_set)
 	{
-		drop_nontokens (working_set);
+		drop_nontokens (working_set, file);
 		if (working_set)
 		{
 			auto token_start = begin (working_set);
-			token t = extract_token (working_set);
-			t.pos = file_position (text, token_start);
+			token t = extract_token (working_set, file);
+			t.pos = file_position (file, token_start);
 			tokens.emplace_back (move (t));
 		}
 	}

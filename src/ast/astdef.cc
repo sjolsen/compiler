@@ -6,6 +6,23 @@ using namespace std;
 
 
 
+AST::AST (AST_type node_type,
+          vector <shared_ptr <AST>>&& child_nodes)
+	: type (node_type),
+	  children (move (child_nodes))
+{
+}
+
+
+
+AST::AST (const token& t)
+	: type (AST_type::terminal),
+	  terminal_data (t)
+{
+}
+
+
+
 namespace
 {
 	vector <string> AST_to_string_impl (const AST& tree)

@@ -8,7 +8,7 @@
 #include <vector>
 
 
-
+/*
 struct symbol_entry
 {
 	std::string name;
@@ -21,9 +21,9 @@ struct symbol_entry
 struct symbol_table
 	: std::unordered_map <std::string, symbol_entry>
 {
-	symbol_table (const std::vector <token>& tokens);
+	symbol_table (const std:: deque <token>& tokens);
 };
-
+*/
 
 
 #endif

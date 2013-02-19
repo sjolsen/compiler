@@ -11,11 +11,14 @@
 
 struct matcher
 {
-	token (*token_constructor) (char_range token_range);
-	char_range (*match_p) (char_range text);
+	token (*token_constructor) (char_range token_range,
+	                            char_range file);
+	char_range (*match_p) (char_range text,
+	                       char_range file);
 
-	inline char_range operator () (char_range text)
-	{ return (*match_p) (text); }
+	inline char_range operator () (char_range text,
+	                               char_range file)
+	{ return (*match_p) (text, file); }
 };
 
 

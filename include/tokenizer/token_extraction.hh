@@ -5,13 +5,16 @@
 #include <tokenizer/tokendef.hh>
 #include <tokenizer/token_predicates.hh>
 
-#include <vector>
+#include <deque>
 
 
 
-void drop_nontokens (char_range& text);
-token extract_token (char_range& text);
-std::vector <token> tokenize (char_range text);
+void drop_nontokens (char_range& working_set,
+                     char_range file);
+token extract_token (char_range& working_set,
+                     char_range file);
+std::deque <token> tokenize (char_range working_set,
+                             char_range file);
 
 
 

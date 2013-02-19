@@ -16,7 +16,8 @@ using namespace std;
 
 matcher identifier_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range token_range,
+	    char_range file) -> token
 	{
 		token t;
 		t.type = token_type::identifier;
@@ -24,20 +25,21 @@ matcher identifier_p
 		return t;
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		if (*begin (text) == '_')
+		if (*begin (working_set) == '_')
 			throw syntax_error ("Identifiers may not contain underscores",
-			                    begin (text));
-		if (!isalpha (*begin (text)))
+			                    file_position (file, begin (working_set)));
+		if (!isalpha (*begin (working_set)))
 			return char_range ();
 
-		auto token_end = find_if_not (begin (text), end (text), (int (*) (int)) &isalnum);
-		if (token_end != end (text) && *token_end == '_')
+		auto token_end = find_if_not (begin (working_set), end (working_set), (int (*) (int)) &isalnum);
+		if (token_end != end (working_set) && *token_end == '_')
 			throw syntax_error ("Identifiers may not contain underscores",
-			                    token_end);
+			                    file_position (file, token_end));
 
-		return char_range (begin (text), token_end);
+		return char_range (begin (working_set), token_end);
 
 	}
 };
@@ -55,7 +57,8 @@ const array <const string, 8> keywords = {{"if",
 
 matcher keyword_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range token_range,
+	    char_range file) -> token
 	{
 		token t;
 		t.type = token_type::keyword;
@@ -63,10 +66,11 @@ matcher keyword_p
 		return t;
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
 		// Treat keywords as a subset of identifiers
-		auto token_range = identifier_p (text);
+		auto token_range = identifier_p (working_set, file);
 		if (token_range)
 			for (const string& keyword : keywords)
 				if (to_string (token_range) == keyword)
@@ -79,7 +83,8 @@ matcher keyword_p
 
 matcher int_literal_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range token_range,
+	    char_range file) -> token
 	{
 		token t;
 		t.type = token_type::int_literal;
@@ -91,25 +96,26 @@ matcher int_literal_p
 		catch (const out_of_range& e)
 		{
 			throw syntax_error ("Integer literal exceeds value limits",
-			                    begin (token_range));
+			                    file_position (file, begin (token_range)));
 		}
 
 		return t;
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		if (!isdigit (text [0]))
+		if (!isdigit (working_set [0]))
 			return char_range ();
-		if (text [0] == '0' && text.size () > 1 && isdigit (text [1]))
+		if (working_set [0] == '0' && working_set.size () > 1 && isdigit (working_set [1]))
 			throw syntax_error ("Multidigit integer literals may not begin with '0'",
-			                    begin (text));
+			                    file_position (file, begin (working_set)));
 
-		auto token_end = find_if_not (begin (text), end (text), (int (*) (int)) &isdigit);
-		if (token_end == end (text) || !isalpha (*token_end))
-			return char_range (begin (text), token_end);
+		auto token_end = find_if_not (begin (working_set), end (working_set), (int (*) (int)) &isdigit);
+		if (token_end == end (working_set) || !isalpha (*token_end))
+			return char_range (begin (working_set), token_end);
 		throw syntax_error ("Identifiers must begin with a letter",
-		                    begin (text));
+		                    file_position (file, begin (working_set)));
 	}
 };
 
@@ -117,7 +123,8 @@ matcher int_literal_p
 
 matcher char_literal_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range token_range,
+	    char_range file) -> token
 	{
 		token t;
 		t.type = token_type::char_literal;
@@ -157,7 +164,7 @@ matcher char_literal_p
 			break;
 			default:
 				throw syntax_error ("Unrecognized character escape-sequence",
-				                    begin (token_range) + 1);
+				                    file_position (file, begin (token_range) + 1));
 			}
 		else
 			t.value = token_range [1];
@@ -165,38 +172,39 @@ matcher char_literal_p
 		return t;
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		if (text [0] != '\'')
+		if (working_set [0] != '\'')
 			return char_range ();
-		if (text.size () < 3 || text [1] == '\n')
+		if (working_set.size () < 3 || working_set [1] == '\n')
 			throw syntax_error ("Unterminated character literal",
-			                    begin (text));
+			                    file_position (file, begin (working_set)));
 
 		// Unescaped character literal
-		if (text [1] != '\\')
+		if (working_set [1] != '\\')
 		{
-			if (text [2] != '\'')
+			if (working_set [2] != '\'')
 			{
-				if (text [2] == '\n')
+				if (working_set [2] == '\n')
 					throw syntax_error ("Unterminated character literal",
-					                    begin (text));
+					                    file_position (file, begin (working_set)));
 				else
 					throw syntax_error ("Multicharacter characer literal",
-					                    begin (text));
+					                    file_position (file, begin (working_set)));
 			}
 			else
-				return char_range (begin (text), begin (text) + 3);
+				return char_range (begin (working_set), begin (working_set) + 3);
 		}
 
 		// Escaped character literal
-		if (text.size () < 4 || text [2] == '\n')
+		if (working_set.size () < 4 || working_set [2] == '\n')
 			throw syntax_error ("Unterminated character literal",
-			                    begin (text));
-		if (text [3] != '\'')
+			                    file_position (file, begin (working_set)));
+		if (working_set [3] != '\'')
 			throw syntax_error ("Multicharacter characer literal",
-			                    begin (text));
-		return char_range (begin (text), begin (text) + 4);
+			                    file_position (file, begin (working_set)));
+		return char_range (begin (working_set), begin (working_set) + 4);
 	}
 };
 
@@ -204,7 +212,8 @@ matcher char_literal_p
 
 matcher string_literal_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range token_range,
+	    char_range file) -> token
 	{
 		token t;
 		t.type = token_type::string_literal;
@@ -215,7 +224,7 @@ matcher string_literal_p
 
 		while (token_range)
 		{
-			// Pull out the most unescaped text possible
+			// Pull out the most unescaped working_set possible
 			char_range escapeless_substr (begin (token_range), find (begin (token_range),
 			                                                         end (token_range),
 			                                                         '\\'));
@@ -258,7 +267,7 @@ matcher string_literal_p
 			break;
 			default:
 				throw syntax_error ("Unrecognized character escape sequence",
-				                    begin (token_range));
+				                    file_position (file, begin (token_range)));
 			};
 			token_range.drop_front (2);
 		}
@@ -266,35 +275,36 @@ matcher string_literal_p
 		return t;
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		if (text [0] != '"')
+		if (working_set [0] != '"')
 			return char_range ();
 
-		auto escaped = [text] (char_range::iterator i) -> bool // For determining whether not or the double-quote found is escaped
+		auto escaped = [working_set] (char_range::iterator i) -> bool // For determining whether not or the double-quote found is escaped
 		{
 			auto first_non_backslash = find_if_not (typename char_range::reverse_iterator (i),
-			                                        text.rend (),
+			                                        working_set.rend (),
 			                                        [] (char c) { return c == '\\'; });
 			if ((first_non_backslash - typename char_range::reverse_iterator (i)) % 2 == 0) // All immediately adjacent backslashes are escaped
 				return false;
 			return true;
 		};
 
-		auto str_end = begin (text);
+		auto str_end = begin (working_set);
 		do
 		{
-			str_end = find_if (str_end + 1, end (text),
+			str_end = find_if (str_end + 1, end (working_set),
 			                   [] (char c) { return c == '\n' || c == '"'; });
-			if (str_end == end (text))
+			if (str_end == end (working_set))
 				throw syntax_error ("Unterminated string literal",
-				                    begin (text));
+				                    file_position (file, begin (working_set)));
 			if (*str_end == '\n')
 				throw syntax_error ("Line-terminated string literal",
-				                    begin (text));
+				                    file_position (file, begin (working_set)));
 		} while (escaped (str_end));
 
-		return char_range (begin (text), str_end + 1);
+		return char_range (begin (working_set), str_end + 1);
 	}
 };
 
@@ -323,7 +333,8 @@ unordered_map <string, symbol> symbol_map = {{"+",  symbol::plus},
 
 matcher symbol_p
 {
-	[] (char_range token_range) -> token
+	[] (char_range token_range,
+	    char_range file) -> token
 	{
 		token t;
 		t.type = token_type::symbol;
@@ -331,21 +342,22 @@ matcher symbol_p
 		return t;
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		switch (text [0])
+		switch (working_set [0])
 		{
 		case '!':
 		#ifdef __SYNTAX_NO_BANG
-			if (text.size () < 2 || text [1] != '=')
+			if (working_set.size () < 2 || working_set [1] != '=')
 				throw syntax_error ("mC does not specify the '!' operator",
-				                    begin (text));
+				                    file_position (file, begin (working_set)));
 		#endif
 		case '<':
 		case '>':
 		case '=':
-			if (text.size () > 1 && text [1] == '=')
-				return char_range (begin (text), begin (text) + 2);
+			if (working_set.size () > 1 && working_set [1] == '=')
+				return char_range (begin (working_set), begin (working_set) + 2);
 		case '+':
 		case '-':
 		case '*':
@@ -358,7 +370,7 @@ matcher symbol_p
 		case ')':
 		case ',':
 		case ';':
-			return char_range (begin (text), begin (text) + 1);
+			return char_range (begin (working_set), begin (working_set) + 1);
 		default:
 			return char_range ();
 		}
@@ -369,15 +381,17 @@ matcher symbol_p
 
 matcher space_p
 {
-	[] (char_range) -> token
+	[] (char_range,
+	    char_range) -> token
 	{
 		throw logic_error ("Attempted to construct a token from a non-token range");
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		return char_range (begin (text),
-		                   find_if_not (begin (text), end (text),
+		return char_range (begin (working_set),
+		                   find_if_not (begin (working_set), end (working_set),
 		                                (int (*) (int)) &isspace));
 	}
 };
@@ -386,30 +400,32 @@ matcher space_p
 
 matcher comment_p
 {
-	[] (char_range) -> token
+	[] (char_range,
+	    char_range) -> token
 	{
 		throw logic_error ("Attempted to construct a token from a non-token range");
 	},
 
-	[] (char_range text) -> char_range
+	[] (char_range working_set,
+	    char_range file) -> char_range
 	{
-		if (text [0] != '/' || text.size () < 2)
+		if (working_set [0] != '/' || working_set.size () < 2)
 			return char_range ();
 
 		#ifndef __SYNTAX_NO_C99_COMMENTS
-		if (text [1] == '/')
-			return char_range (begin (text), find (begin (text), end (text), '\n'));
+		if (working_set [1] == '/')
+			return char_range (begin (working_set), find (begin (working_set), end (working_set), '\n'));
 		#endif
 
-		if (text [1] != '*')
+		if (working_set [1] != '*')
 			return char_range ();
 
-		auto comment_close = adjacent_find (begin (text), end (text),
+		auto comment_close = adjacent_find (begin (working_set), end (working_set),
 		                                    [] (char a, char b) { return a == '*' && b == '/'; });
-		if (comment_close == end (text))
+		if (comment_close == end (working_set))
 			throw syntax_error ("Unterminated comment",
-			                    begin (text));
-		return char_range (begin (text), comment_close + 2);
+			                    file_position (file, begin (working_set)));
+		return char_range (begin (working_set), comment_close + 2);
 	}
 };
 

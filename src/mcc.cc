@@ -35,7 +35,7 @@ string get_file (const string& filename)
 void print_syntax_error (char_range text,
                          const syntax_error& e)
 {
-	auto error_point = file_position (text, e.where ());
+	auto error_point = e.where ();
 	auto line = containing_line (error_point);
 
 	cerr << "Syntax error: " << e.what () << ' ' << error_point << ':' << endl
@@ -77,7 +77,7 @@ int main (int argc,
 
 	// Tokenize the input file
 
-	vector <token> tokens;
+	deque <token> tokens;
 	try
 	{
 		tokens = tokenize (text);

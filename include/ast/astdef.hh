@@ -54,6 +54,11 @@ struct AST
 
 	std::weak_ptr <AST> parent;
 	std::vector <std::shared_ptr <AST>> children;
+
+	AST () = default;
+	AST (AST_type node_type,
+	     std::vector <std::shared_ptr <AST>>&& child_nodes);
+	AST (const token& t);
 };
 
 

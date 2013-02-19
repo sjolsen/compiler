@@ -11,15 +11,15 @@ class syntax_error
 	: public std::runtime_error
 {
 private:
-	typename char_range::iterator _where_iter;
+	file_position _where_pos;
 
 public:
 	syntax_error (const std::string& what_str,
-	              typename char_range::iterator where_iter);
+	              file_position where_pos);
 	syntax_error (const char* const what_str,
-	              typename char_range::iterator where_iter);
+	              file_position where_pos);
 
-	virtual typename char_range::iterator where () const noexcept;
+	virtual file_position where () const noexcept;
 };
 
 

@@ -1,0 +1,102 @@
+program : decl declList
+
+declList : decl declList
+         | ε
+
+decl : varDeclStmt
+     | funDecl
+
+varDeclStmt : varDecl ;
+
+varDecl : intTypeSpec ID
+        | intTypeSpec ID = expression
+        | intTypeSpec ID [ expression ]
+        | intTypeSpec ID [ expression ] = initBraceList
+        | intTypeSpec ID [ ] = initBraceList
+        | char ID [ expression ] = STRING
+        | char ID [ ] = STRING
+
+intTypeSpec : int
+            | char
+
+typeSpecifier : intTypeSpec
+              | void
+
+initBraceList : { exprList }
+              | { }
+
+exprList : expression , exprList
+         | expression
+
+funDecl : typeSpecifier ID ( formalDeclList ) compoundStmt
+        | typeSpecifier ID ( ) compoundStmt
+
+formalDeclList : formalDecl , formalDeclList
+               | formalDecl
+
+formalDecl : varDecl
+           | typeSpecifier ID [ ]
+
+statementList : statement statementList
+              | ε
+
+statement : varDeclStmt
+          | compoundStmt
+          | condStmt
+          | loopStmt
+          | returnStmt
+          | expression ;
+
+compoundStmt : { statementList }
+
+condStmt : if ( expression ) statement else statement
+         | if ( expression ) statement
+
+loopStmt : while ( expression ) statement
+
+returnStmt : return expression ;
+           | return ;
+
+lvalue : ID [ expression ]
+       | ID
+
+rvalue : ( expression )
+       | lvalue
+       | funcCallExpr
+       | NUM
+       | CHAR
+       | STRING
+
+expression : lvalue = expression ;
+           | equivExpr ;
+
+equivExpr : equivExpr equivop relExpr
+          | relExpr
+
+equivop : ==
+        | !=
+
+relExpr : relExpr relop addExpr
+        | addExpr
+
+relop : <=
+      | <
+      | >
+      | >=
+
+addExpr : addExpr addop term
+        | term
+
+addop : +
+      | -
+
+term : term mulop rvalue
+     | rvalue
+
+mulop : *
+      | /
+
+funcCallExpr : ID argList
+
+argList : ( exprList )
+        | ( )

@@ -109,10 +109,17 @@ $(BUILD)/astdef.o: $(INCLUDE)/ast/astdef.hh \
                    $(SRC)/ast/astdef.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/ast/astdef.cc -c -o $(BUILD)/astdef.o
 
+$(BUILD)/ast_predicates.o: $(INCLUDE)/ast/astdef.hh \
+                           $(INCLUDE)/ast/ast_predicates.hh \
+                           $(SRC)/ast/ast_predicates.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/ast/ast_predicates.cc -c -o $(BUILD)/ast_predicates.o
+
 $(LIB)/libast.a: $(INCLUDE)/ast.hh \
-              $(BUILD)/astdef.o
+              $(BUILD)/astdef.o \
+              $(BUILD)/ast_predicates.o
 	$(AR) $(ARFLAGS) $(LIB)/libast.a \
-                         $(BUILD)/astdef.o
+                         $(BUILD)/astdef.o \
+                         $(BUILD)/ast_predicates.o
 
 
 

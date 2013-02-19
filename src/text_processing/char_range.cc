@@ -1,4 +1,5 @@
-#include "../../include/text_processing/char_range.hh"
+#include <text_processing/char_range.hh>
+
 #include <stdexcept>
 #include <iterator>
 #include <algorithm>

@@ -1,4 +1,4 @@
-#include "../../include/tokenizer/tokendef.hh"
+#include <tokenizer/tokendef.hh>
 
 using namespace std;
 

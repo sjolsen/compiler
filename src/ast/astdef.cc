@@ -1,4 +1,5 @@
-#include "../../include/ast/astdef.hh"
+#include <ast/astdef.hh>
+
 #include <algorithm>
 
 using namespace std;

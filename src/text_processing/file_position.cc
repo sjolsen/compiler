@@ -1,4 +1,5 @@
-#include "../../include/text_processing/file_position.hh"
+#include <text_processing/file_position.hh>
+
 #include <algorithm>
 
 using namespace std;

@@ -1,15 +1,17 @@
+#include <text_processing.hh>
+#include <tokenizer.hh>
+
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <algorithm>
-#include "../include/text_processing.hh"
-#include "../include/tokenizer.hh"
 
 using namespace std;
 
 
 
-const char usage [] = "Must supply an input file (FIXME)\n";
+const char usage [] =
+	"Usage: mcc [ inputfile | - ] [ -Tscanner ]\n";
 
 
 

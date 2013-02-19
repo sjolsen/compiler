@@ -1,4 +1,4 @@
-#include "../../include/tokenizer/syntax_error.hh"
+#include <tokenizer/syntax_error.hh>
 
 using namespace std;
 

@@ -1,7 +1,8 @@
 #ifndef SYMBOL_TABLE_HH
 #define SYMBOL_TABLE_HH
 
-#include "../tokenizer.hh"
+#include <tokenizer.hh>
+
 #include <string>
 #include <unordered_map>
 #include <vector>

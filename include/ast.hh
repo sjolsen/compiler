@@ -1,6 +1,6 @@
 #ifndef AST_HH
 #define AST_HH
 
-#include "ast/astdef.hh"
+#include <ast/astdef.hh>
 
 #endif

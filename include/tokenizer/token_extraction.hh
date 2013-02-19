@@ -1,9 +1,10 @@
 #ifndef TOKEN_EXTRACTION_HH
 #define TOKEN_EXTRACTION_HH
 
-#include "tokendef.hh"
-#include "token_predicates.hh"
-#include "../text_processing.hh"
+#include <text_processing.hh>
+#include <tokenizer/tokendef.hh>
+#include <tokenizer/token_predicates.hh>
+
 #include <vector>
 
 

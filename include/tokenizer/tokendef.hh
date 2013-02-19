@@ -1,7 +1,8 @@
 #ifndef TOKENDEF_HH
 #define TOKENDEF_HH
 
-#include "../text_processing.hh"
+#include <text_processing.hh>
+
 #include <string>
 
 

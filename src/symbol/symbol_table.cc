@@ -1,4 +1,4 @@
-#include "../../include/symbol/symbol_table.hh"
+#include <symbol/symbol_table.hh>
 
 using namespace std;
 

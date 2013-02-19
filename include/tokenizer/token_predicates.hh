@@ -1,9 +1,10 @@
 #ifndef TOKEN_PREDICATES_HH
 #define TOKEN_PREDICATES_HH
 
-#include "syntax_error.hh"
-#include "tokendef.hh"
-#include "../text_processing.hh"
+#include <text_processing.hh>
+#include <tokenizer/syntax_error.hh>
+#include <tokenizer/tokendef.hh>
+
 #include <array>
 
 

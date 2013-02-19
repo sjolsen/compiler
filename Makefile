@@ -7,7 +7,7 @@ SRC         := $(PROJECT_DIR)/src
 TEST        := $(PROJECT_DIR)/test
 
 CXX       := g++
-_CXXFLAGS := $(CXXFLAGS) -std=c++0x #-Wall -Wextra
+_CXXFLAGS := $(CXXFLAGS) -std=c++0x -I$(INCLUDE) #-Wall -Wextra
 AR        := ar
 _ARFLAGS  := $(ARFLAGS)s
 
@@ -28,7 +28,7 @@ testall: test-scanner
 
 # Build the text processing library
 
-text_processing: $(LIB)/text_processing.a
+text_processing: $(LIB)/libtext_processing.a
 
 $(BUILD)/char_range.o: $(INCLUDE)/text_processing/char_range.hh \
                        $(SRC)/text_processing/char_range.cc
@@ -39,10 +39,10 @@ $(BUILD)/file_position.o: $(INCLUDE)/text_processing/file_position.hh \
                           $(SRC)/text_processing/file_position.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/text_processing/file_position.cc -c -o $(BUILD)/file_position.o
 
-$(LIB)/text_processing.a: $(INCLUDE)/text_processing.hh \
+$(LIB)/libtext_processing.a: $(INCLUDE)/text_processing.hh \
                           $(BUILD)/char_range.o \
                           $(BUILD)/file_position.o
-	$(AR) $(_ARFLAGS) $(LIB)/text_processing.a \
+	$(AR) $(_ARFLAGS) $(LIB)/libtext_processing.a \
                           $(BUILD)/char_range.o \
                           $(BUILD)/file_position.o
 
@@ -50,26 +50,26 @@ $(LIB)/text_processing.a: $(INCLUDE)/text_processing.hh \
 
 # Build the tokenizer facilities
 
-tokenizer: $(LIB)/tokenizer.a
+tokenizer: $(LIB)/libtokenizer.a
 
-$(BUILD)/syntax_error.o: $(LIB)/text_processing.a \
+$(BUILD)/syntax_error.o: $(LIB)/libtext_processing.a \
                          $(INCLUDE)/tokenizer/syntax_error.hh \
                          $(SRC)/tokenizer/syntax_error.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/syntax_error.cc -c -o $(BUILD)/syntax_error.o
 
-$(BUILD)/tokendef.o: $(LIB)/text_processing.a \
+$(BUILD)/tokendef.o: $(LIB)/libtext_processing.a \
                      $(INCLUDE)/tokenizer/tokendef.hh \
                      $(SRC)/tokenizer/tokendef.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/tokendef.cc -c -o $(BUILD)/tokendef.o
 
-$(BUILD)/token_predicates.o: $(LIB)/text_processing.a \
+$(BUILD)/token_predicates.o: $(LIB)/libtext_processing.a \
                              $(INCLUDE)/tokenizer/token_predicates.hh \
                              $(INCLUDE)/tokenizer/tokendef.hh \
                              $(INCLUDE)/tokenizer/syntax_error.hh \
                              $(SRC)/tokenizer/token_predicates.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_predicates.cc -c -o $(BUILD)/token_predicates.o
 
-$(BUILD)/token_extraction.o: $(LIB)/text_processing.a \
+$(BUILD)/token_extraction.o: $(LIB)/libtext_processing.a \
                              $(INCLUDE)/tokenizer/token_extraction.hh \
                              $(INCLUDE)/tokenizer/tokendef.hh \
                              $(INCLUDE)/tokenizer/token_predicates.hh \
@@ -77,12 +77,12 @@ $(BUILD)/token_extraction.o: $(LIB)/text_processing.a \
                              $(SRC)/tokenizer/token_extraction.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_extraction.cc -c -o $(BUILD)/token_extraction.o
 
-$(LIB)/tokenizer.a: $(INCLUDE)/tokenizer.hh \
+$(LIB)/libtokenizer.a: $(INCLUDE)/tokenizer.hh \
                     $(BUILD)/syntax_error.o \
                     $(BUILD)/tokendef.o \
                     $(BUILD)/token_predicates.o \
                     $(BUILD)/token_extraction.o
-	$(AR) $(_ARFLAGS) $(LIB)/tokenizer.a \
+	$(AR) $(_ARFLAGS) $(LIB)/libtokenizer.a \
                           $(BUILD)/syntax_error.o \
                           $(BUILD)/tokendef.o \
                           $(BUILD)/token_predicates.o \
@@ -90,28 +90,28 @@ $(LIB)/tokenizer.a: $(INCLUDE)/tokenizer.hh \
 
 # Build the symbol table facilities
 
-symbol: $(LIB)/symbol.a
+symbol: $(LIB)/libsymbol.a
 
 $(BUILD)/symbol_table.o: $(INCLUDE)/symbol/symbol_table.hh \
                          $(SRC)/symbol/symbol_table.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/symbol/symbol_table.cc -c -o $(BUILD)/symbol_table.o
 
-$(LIB)/symbol.a: $(INCLUDE)/symbol.hh \
+$(LIB)/libsymbol.a: $(INCLUDE)/symbol.hh \
                  $(BUILD)/symbol_table.o
-	$(AR) $(ARFLAGS) $(LIB)/symbol.a \
+	$(AR) $(ARFLAGS) $(LIB)/libsymbol.a \
                          $(BUILD)/symbol_table.o
 
 # Build the AST facilities
 
-ast: $(LIB)/ast.a
+ast: $(LIB)/libast.a
 
 $(BUILD)/astdef.o: $(INCLUDE)/ast/astdef.hh \
                    $(SRC)/ast/astdef.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/ast/astdef.cc -c -o $(BUILD)/astdef.o
 
-$(LIB)/ast.a: $(INCLUDE)/ast.hh \
+$(LIB)/libast.a: $(INCLUDE)/ast.hh \
               $(BUILD)/astdef.o
-	$(AR) $(ARFLAGS) $(LIB)/ast.a \
+	$(AR) $(ARFLAGS) $(LIB)/libast.a \
                          $(BUILD)/astdef.o
 
 
@@ -126,11 +126,12 @@ $(BUILD)/mcc.o: $(SRC)/mcc.cc \
 	$(CXX) $(_CXXFLAGS) $(SRC)/mcc.cc -c -o $(BUILD)/mcc.o
 
 $(BIN)/mcc: $(BUILD)/mcc.o \
-            $(LIB)/text_processing.a \
-            $(LIB)/tokenizer.a
+            $(LIB)/libtext_processing.a \
+            $(LIB)/libtokenizer.a
 	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
-                            $(LIB)/text_processing.a \
-                            $(LIB)/tokenizer.a \
+                            -L$(LIB) \
+                            -ltext_processing \
+                            -ltokenizer \
                             -o $(BIN)/mcc
 
 

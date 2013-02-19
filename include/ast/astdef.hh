@@ -1,7 +1,8 @@
 #ifndef ASTDEF_HH
 #define ASTDEF_HH
 
-#include "../tokenizer.hh"
+#include <tokenizer.hh>
+
 #include <vector>
 #include <memory>
 #include <string>

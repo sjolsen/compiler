@@ -1,4 +1,4 @@
-#include "../../include/tokenizer/token_extraction.hh"
+#include <tokenizer/token_extraction.hh>
 
 using namespace std;
 

@@ -1,4 +1,5 @@
-#include "../../include/tokenizer/token_predicates.hh"
+#include <tokenizer/token_predicates.hh>
+
 #include <cctype>
 #include <algorithm>
 #include <unordered_map>
@@ -82,7 +83,17 @@ matcher int_literal_p
 	{
 		token t;
 		t.type = token_type::int_literal;
-		t.value = stoi (to_string (token_range));
+
+		try
+		{
+			t.value = stoi (to_string (token_range));
+		}
+		catch (const out_of_range& e)
+		{
+			throw syntax_error ("Integer literal exceeds value limits",
+			                    begin (token_range));
+		}
+
 		return t;
 	},
 

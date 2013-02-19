@@ -1,7 +1,8 @@
 #ifndef FILE_POSITION_HH
 #define FILE_POSITION_HH
 
-#include "char_range.hh"
+#include <text_processing/char_range.hh>
+
 #include <iostream>
 #include <cstddef>
 

@@ -51,16 +51,16 @@ std::string to_string (symbol s);
 struct token
 {
 	token_type type;
+	file_position pos;
 
 	std::string str;
+	std::string literal;
+
 	union
 	{
 		int value;
-		char cvalue;
 		symbol op;
 	};
-
-	file_position pos;
 
 	token () = default;
 };

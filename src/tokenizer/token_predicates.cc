@@ -19,7 +19,7 @@ matcher identifier_p
 	{
 		token t;
 		t.type = token_type::identifier;
-		t.str = string (begin (token_range), end (token_range));
+		t.str = to_string (token_range);
 		return t;
 	},
 
@@ -58,7 +58,7 @@ matcher keyword_p
 	{
 		token t;
 		t.type = token_type::keyword;
-		t.str = string (begin (token_range), end (token_range));
+		t.str = to_string (token_range);
 		return t;
 	},
 
@@ -68,7 +68,7 @@ matcher keyword_p
 		auto token_range = identifier_p (text);
 		if (token_range)
 			for (const string& keyword : keywords)
-				if (string (begin (token_range), end (token_range)) == keyword)
+				if (to_string (token_range) == keyword)
 					return token_range;
 		return char_range ();
 	}
@@ -82,7 +82,7 @@ matcher int_literal_p
 	{
 		token t;
 		t.type = token_type::int_literal;
-		t.value = stoi (string (begin (token_range), end (token_range)));
+		t.value = stoi (to_string (token_range));
 		return t;
 	},
 
@@ -110,44 +110,47 @@ matcher char_literal_p
 	{
 		token t;
 		t.type = token_type::char_literal;
+		t.literal = to_string (token_range);
+
 		if (token_range [1] == '\\')
 			switch (token_range [2])
 			{
 			case 'a':
-				t.cvalue = '\a';
+				t.value = '\a';
 				break;
 			case 'b':
-				t.cvalue = '\b';
+				t.value = '\b';
 				break;
 			case 'f':
-				t.cvalue = '\f';
+				t.value = '\f';
 				break;
 			case 'n':
-				t.cvalue = '\n';
+				t.value = '\n';
 				break;
 			case 'r':
-				t.cvalue = '\r';
+				t.value = '\r';
 				break;
 			case 't':
-				t.cvalue = '\t';
+				t.value = '\t';
 				break;
 			case 'v':
-				t.cvalue = '\v';
+				t.value = '\v';
 				break;
 			case '0':
-				t.cvalue = '\0';
+				t.value = '\0';
 				break;
 			case '\?':
 			case '\'':
 			case '\\':
-				t.cvalue = token_range [2];
+				t.value = token_range [2];
 			break;
 			default:
 				throw syntax_error ("Unrecognized character escape-sequence",
 				                    begin (token_range) + 1);
 			}
 		else
-			t.cvalue = token_range [1];
+			t.value = token_range [1];
+
 		return t;
 	},
 
@@ -194,6 +197,8 @@ matcher string_literal_p
 	{
 		token t;
 		t.type = token_type::string_literal;
+		t.literal = to_string (token_range);
+
 		token_range.drop_front (1);
 		token_range.drop_back (1);
 
@@ -311,7 +316,7 @@ matcher symbol_p
 	{
 		token t;
 		t.type = token_type::symbol;
-		t.op = symbol_map.at (string (begin (token_range), end (token_range)));
+		t.op = symbol_map.at (to_string (token_range));
 		return t;
 	},
 

@@ -102,6 +102,13 @@ void char_range::drop_back (size_t n)
 
 
 
+string to_string (const char_range& r)
+{
+	return string (begin (r), end (r));
+}
+
+
+
 ostream& operator << (ostream& os,
                       const char_range& r)
 {

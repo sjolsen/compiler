@@ -40,6 +40,7 @@ public:
 
 
 
+std::string to_string (const char_range& r);
 std::ostream& operator << (std::ostream& os,
                            const char_range& r);
 

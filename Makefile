@@ -16,6 +16,7 @@ _ARFLAGS  := $(ARFLAGS)s
 all: text_processing \
      tokenizer \
      symbol \
+     ast \
      mcc
 
 clean:
@@ -99,6 +100,19 @@ $(LIB)/symbol.a: $(INCLUDE)/symbol.hh \
                  $(BUILD)/symbol_table.o
 	$(AR) $(ARFLAGS) $(LIB)/symbol.a \
                          $(BUILD)/symbol_table.o
+
+# Build the AST facilities
+
+ast: $(LIB)/ast.a
+
+$(BUILD)/astdef.o: $(INCLUDE)/ast/astdef.hh \
+                   $(SRC)/ast/astdef.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/ast/astdef.cc -c -o $(BUILD)/astdef.o
+
+$(LIB)/ast.a: $(INCLUDE)/ast.hh \
+              $(BUILD)/astdef.o
+	$(AR) $(ARFLAGS) $(LIB)/ast.a \
+                         $(BUILD)/astdef.o
 
 
 

@@ -6,7 +6,14 @@
 
 
 
-std::shared_ptr <AST> program_p (std::deque <token>& working_set);
+typedef std::shared_ptr <AST> AST_node;
+
+AST program_p (const std::deque <token>& tokens);
+
+AST_node declList_p    (token_range& tokens);
+AST_node decl_p        (token_range& tokens);
+AST_node varDeclStmt_p (token_range& tokens);
+AST_node varDecl_p     (token_range& tokens);
 
 
 

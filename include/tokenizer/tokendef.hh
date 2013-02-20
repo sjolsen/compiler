@@ -70,6 +70,11 @@ struct token
 
 std::string to_string (token t);
 
+bool operator == (const token& a,
+                  const token& b);
+bool operator != (const token& a,
+                  const token& b);
+
 
 
 #endif

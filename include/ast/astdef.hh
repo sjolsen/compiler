@@ -16,6 +16,7 @@ enum class AST_type
 	decl,
 	varDeclStmt,
 	varDecl,
+	stringDecl,
 	intTypeSpec,
 	typeSpecifier,
 	initBraceList,
@@ -42,7 +43,8 @@ enum class AST_type
 	mulop,
 	funcCallExpr,
 	argList,
-	terminal
+	terminal,
+	epsilon
 };
 
 
@@ -50,15 +52,24 @@ enum class AST_type
 struct AST
 {
 	AST_type type;
-	token terminal_data;
+	const token* tokenp;
 
 	std::weak_ptr <AST> parent;
 	std::vector <std::shared_ptr <AST>> children;
 
-	AST () = default;
-	AST (AST_type node_type,
-	     std::vector <std::shared_ptr <AST>>&& child_nodes);
+	AST ();
 	AST (const token& t);
+
+	AST (AST&&) = default;
+
+	template <typename... Args>
+	AST (AST_type node_type,
+	     Args...&& args)
+		: type (node_type),
+		  tokenp (nullptr),
+		  children {std::forward <Args> (args)...}
+	{
+	}
 };
 
 

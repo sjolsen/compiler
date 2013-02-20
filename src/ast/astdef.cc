@@ -6,10 +6,9 @@ using namespace std;
 
 
 
-AST::AST (AST_type node_type,
-          vector <shared_ptr <AST>>&& child_nodes)
-	: type (node_type),
-	  children (move (child_nodes))
+AST::AST ()
+	: type (AST_type::epsilon),
+	  tokenp (nullptr)
 {
 }
 
@@ -17,7 +16,7 @@ AST::AST (AST_type node_type,
 
 AST::AST (const token& t)
 	: type (AST_type::terminal),
-	  terminal_data (t)
+	  tokenp (&t)
 {
 }
 
@@ -28,7 +27,7 @@ namespace
 	vector <string> AST_to_string_impl (const AST& tree)
 	{
 		if (tree.type == AST_type::terminal)
-			return {to_string (tree.terminal_data)};
+			return {to_string (*tree.tokenp)};
 
 		vector <string> lines;
 		for (auto child : tree.children)
@@ -73,6 +72,8 @@ std::string to_string (AST_type type)
 		return "varDeclStmt";
 	case AST_type::varDecl:
 		return "varDecl";
+	case AST_type::stringDecl:
+		return "stringDecl";
 	case AST_type::intTypeSpec:
 		return "intTypeSpec";
 	case AST_type::typeSpecifier:
@@ -125,5 +126,7 @@ std::string to_string (AST_type type)
 		return "funcCallExpr";
 	case AST_type::argList:
 		return "argList";
+	case AST_type::epsilon:
+		return "epsilon";
 	};
 }

@@ -8,13 +8,15 @@ decl : varDeclStmt
 
 varDeclStmt : varDecl ;
 
-varDecl : intTypeSpec ID
+varDecl : stringDecl
+        | intTypeSpec ID
         | intTypeSpec ID = expression
+        | intTypeSpec ID [ ] = initBraceList
         | intTypeSpec ID [ expression ]
         | intTypeSpec ID [ expression ] = initBraceList
-        | intTypeSpec ID [ ] = initBraceList
-        | char ID [ expression ] = STRING
-        | char ID [ ] = STRING
+
+stringDecl : char ID [ expression ] = STRING
+           | char ID [ ] = STRING
 
 intTypeSpec : int
             | char

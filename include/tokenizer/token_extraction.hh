@@ -13,8 +13,7 @@ void drop_nontokens (char_range& working_set,
                      char_range file);
 token extract_token (char_range& working_set,
                      char_range file);
-std::deque <token> tokenize (char_range working_set,
-                             char_range file);
+std::deque <token> tokenize (char_range file);
 
 
 

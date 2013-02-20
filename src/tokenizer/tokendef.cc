@@ -71,3 +71,33 @@ string to_string (symbol s)
 		return ";";
 	};
 }
+
+
+
+bool operator == (const token& a,
+                  const token& b)
+{
+	if (a.type != b.type)
+		return false;
+
+	switch (a.type)
+	{
+	case token_type::identifier:
+	case token_type::keyword:
+	case token_type::string_literal:
+		return a.str == b.str;
+	case token_type::int_literal:
+	case token_type::char_literal:
+		return a.value == b.value;
+	case token_type::symbol:
+		return a.op == b.op;
+	};
+}
+
+
+
+bool operator != (const token& a,
+                  const token& b)
+{
+	return !(a == b);
+}

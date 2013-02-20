@@ -88,7 +88,7 @@ char_range::operator bool ()
 void char_range::drop_front (size_t n)
 {
 	if (n > size ())
-		throw logic_error ("Called char_range::drop_front with to great an 'n'");
+		throw logic_error ("Called char_range::drop_front with too great an 'n'");
 	_begin += n;
 }
 
@@ -97,7 +97,7 @@ void char_range::drop_front (size_t n)
 void char_range::drop_back (size_t n)
 {
 	if (n > size ())
-		throw logic_error ("Called char_range::drop_back with to great an 'n'");
+		throw logic_error ("Called char_range::drop_back with too great an 'n'");
 	_end -= n;
 }
 

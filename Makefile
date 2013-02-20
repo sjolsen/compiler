@@ -77,16 +77,23 @@ $(BUILD)/token_extraction.o: $(LIB)/libtext_processing.a \
                              $(SRC)/tokenizer/token_extraction.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_extraction.cc -c -o $(BUILD)/token_extraction.o
 
+$(BUILD)/token_range.o: $(INCLUDE)/tokenizer/tokendef.hh \
+                        $(INCLUDE)/tokenizer/token_range.hh \
+                        $(SRC)/tokenizer/token_range.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_range.cc -c -o $(BUILD)/token_range.o
+
 $(LIB)/libtokenizer.a: $(INCLUDE)/tokenizer.hh \
                     $(BUILD)/syntax_error.o \
                     $(BUILD)/tokendef.o \
                     $(BUILD)/token_predicates.o \
-                    $(BUILD)/token_extraction.o
+                    $(BUILD)/token_extraction.o \
+                    $(BUILD)/token_range.o
 	$(AR) $(_ARFLAGS) $(LIB)/libtokenizer.a \
                           $(BUILD)/syntax_error.o \
                           $(BUILD)/tokendef.o \
                           $(BUILD)/token_predicates.o \
-                          $(BUILD)/token_extraction.o
+                          $(BUILD)/token_extraction.o \
+                          $(BUILD)/token_range.o
 
 # Build the symbol table facilities
 

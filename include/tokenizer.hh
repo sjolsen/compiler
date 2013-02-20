@@ -5,5 +5,6 @@
 #include <tokenizer/token_predicates.hh>
 #include <tokenizer/syntax_error.hh>
 #include <tokenizer/token_extraction.hh>
+#include <tokenizer/token_range.hh>
 
 #endif

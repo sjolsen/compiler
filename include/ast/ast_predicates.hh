@@ -25,7 +25,6 @@ AST_node formalDecl_p     (token_range& tokens);
 AST_node statementList_p  (token_range& tokens);
 AST_node statement_p      (token_range& tokens);
 AST_node compoundStmt_p   (token_range& tokens);
-
 AST_node condStmt_p       (token_range& tokens);
 AST_node loopStmt_p       (token_range& tokens);
 AST_node returnStmt_p     (token_range& tokens);

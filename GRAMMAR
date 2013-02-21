@@ -47,6 +47,7 @@ statement : varDeclStmt
           | condStmt
           | loopStmt
           | returnStmt
+          | ;
           | expression ;
 
 compoundStmt : { statementList }
@@ -62,15 +63,15 @@ returnStmt : return expression ;
 lvalue : ID [ expression ]
        | ID
 
-rvalue : ( expression )
+rvalue : funcCallExpr
        | lvalue
-       | funcCallExpr
        | NUM
        | CHAR
        | STRING
+       | ( expression )
 
-expression : lvalue = expression ;
-           | equivExpr ;
+expression : lvalue = expression
+           | equivExpr
 
 equivExpr : equivExpr equivop relExpr
           | relExpr
@@ -81,10 +82,10 @@ equivop : ==
 relExpr : relExpr relop addExpr
         | addExpr
 
-relop : <=
-      | <
+relop : >=
       | >
-      | >=
+      | <=
+      | <
 
 addExpr : addExpr addop term
         | term

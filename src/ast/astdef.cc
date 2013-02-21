@@ -8,6 +8,7 @@ using namespace std;
 
 AST::AST ()
 	: type (AST_type::epsilon),
+	  parent (nullptr),
 	  tokenp (nullptr)
 {
 }
@@ -16,6 +17,7 @@ AST::AST ()
 
 AST::AST (const token& t)
 	: type (AST_type::terminal),
+	  parent (nullptr),
 	  tokenp (&t)
 {
 }
@@ -28,16 +30,16 @@ namespace
 	{
 		if (tree.type == AST_type::terminal)
 			return {to_string (*tree.tokenp)};
+		if (tree.type == AST_type::epsilon)
+			return {};
 
-		vector <string> lines;
+		if (tree.children.size () == 1)
+			return AST_to_string_impl (*tree.children.front ());
+
+		vector <string> lines = {'(' + to_string (tree.type)};
 		for (auto child : tree.children)
 			for (string& line : AST_to_string_impl (*child))
-				lines.emplace_back (move (line));
-
-		auto sexp_prefix = '(' + to_string (tree.type) + ' ';
-		lines.front () = sexp_prefix + lines.front ();
-		transform (begin (lines) + 1, end (lines), begin (lines) + 1,
-		           [&] (const string& line) { return string (sexp_prefix.size (), ' ') + line; });
+				lines.emplace_back ("  " + move (line));
 
 		lines.back () += ')';
 		return lines;

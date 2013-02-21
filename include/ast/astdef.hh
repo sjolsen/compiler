@@ -54,13 +54,14 @@ struct AST
 	AST_type type;
 	const token* tokenp;
 
-	std::weak_ptr <AST> parent;
+	AST* parent;
 	std::vector <std::shared_ptr <AST>> children;
 
 	AST ();
 	AST (const token& t);
 
 	AST (AST&&) = default;
+	AST& operator = (AST&&) = default;
 
 	template <typename... Args>
 	AST (AST_type node_type,
@@ -69,6 +70,8 @@ struct AST
 		  tokenp (nullptr),
 		  children {std::forward <Args> (args)...}
 	{
+		for (auto& child : children)
+			child->parent = this;
 	}
 };
 

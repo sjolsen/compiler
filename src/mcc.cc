@@ -1,5 +1,6 @@
 #include <text_processing.hh>
 #include <tokenizer.hh>
+#include <ast.hh>
 
 #include <fstream>
 #include <iostream>
@@ -93,6 +94,19 @@ int main (int argc,
 			cout << to_string (token) << endl;
 		return EXIT_SUCCESS;
 	}
+
+	AST program;
+	try
+	{
+		program = program_p (tokens);
+	}
+	catch (const syntax_error& e)
+	{
+		print_syntax_error (text, e);
+		return EXIT_FAILURE;
+	}
+
+	cout << to_string (program) << endl;
 
 	// Build symbol table
 }

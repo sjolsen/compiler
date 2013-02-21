@@ -141,10 +141,12 @@ $(BUILD)/mcc.o: $(SRC)/mcc.cc \
 
 $(BIN)/mcc: $(BUILD)/mcc.o \
             $(LIB)/libtext_processing.a \
-            $(LIB)/libtokenizer.a
+            $(LIB)/libtokenizer.a \
+            $(LIB)/libast.a
 	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
                             -L$(LIB) \
                             -ltext_processing \
+                            -last \
                             -ltokenizer \
                             -o $(BIN)/mcc
 

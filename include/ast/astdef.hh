@@ -64,7 +64,7 @@ struct AST
 
 	template <typename... Args>
 	AST (AST_type node_type,
-	     Args...&& args)
+	     Args&&... args)
 		: type (node_type),
 		  tokenp (nullptr),
 		  children {std::forward <Args> (args)...}

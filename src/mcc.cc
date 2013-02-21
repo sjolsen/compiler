@@ -77,7 +77,7 @@ int main (int argc,
 
 	// Tokenize the input file
 
-	deque <token> tokens;
+	vector <token> tokens;
 	try
 	{
 		tokens = tokenize (text);

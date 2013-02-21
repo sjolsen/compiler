@@ -62,18 +62,11 @@ struct token
 		int value;
 		symbol op;
 	};
-
-	token () = default;
 };
 
 
 
 std::string to_string (token t);
-
-bool operator == (const token& a,
-                  const token& b);
-bool operator != (const token& a,
-                  const token& b);
 
 
 

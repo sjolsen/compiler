@@ -3,15 +3,15 @@
 
 #include <tokenizer/tokendef.hh>
 
-#include <deque>
+#include <vector>
 
 
 
 class token_range
 {
 public:
-	typedef typename std::deque <token>::const_iterator iterator;
-	typedef typename std::deque <token>::const_reverse_iterator reverse_iterator;
+	typedef typename std::vector <token>::const_iterator iterator;
+	typedef typename std::vector <token>::const_reverse_iterator reverse_iterator;
 
 private:
 	iterator _begin;
@@ -20,7 +20,7 @@ private:
 public:
 	token_range () = default;
 	token_range (const token_range& other) = default;
-	token_range (const std::deque <token>& tokens);
+	token_range (const std::vector <token>& tokens);
 	token_range (iterator first,
 	             iterator last);
 

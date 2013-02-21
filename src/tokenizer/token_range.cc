@@ -8,7 +8,7 @@ using namespace std;
 
 
 
-token_range::token_range (const deque <token>& tokens)
+token_range::token_range (const vector <token>& tokens)
 	: _begin (tokens.cbegin ()),
 	  _end (tokens.cend ())
 {

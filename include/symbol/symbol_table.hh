@@ -21,7 +21,7 @@ struct symbol_entry
 struct symbol_table
 	: std::unordered_map <std::string, symbol_entry>
 {
-	symbol_table (const std:: deque <token>& tokens);
+	symbol_table (const std:: vector <token>& tokens);
 };
 */
 

@@ -44,9 +44,9 @@ token extract_token (char_range& working_set,
 
 
 
-deque <token> tokenize (char_range file)
+vector <token> tokenize (char_range file)
 {
-	deque <token> tokens;
+	vector <token> tokens;
 
 	char_range working_set = file;
 	while (working_set)

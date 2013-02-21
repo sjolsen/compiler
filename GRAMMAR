@@ -9,11 +9,11 @@ decl : varDeclStmt
 varDeclStmt : varDecl ;
 
 varDecl : stringDecl
-        | intTypeSpec ID
         | intTypeSpec ID = expression
+        | intTypeSpec ID
         | intTypeSpec ID [ ] = initBraceList
-        | intTypeSpec ID [ expression ]
         | intTypeSpec ID [ expression ] = initBraceList
+        | intTypeSpec ID [ expression ]
 
 stringDecl : char ID [ expression ] = STRING
            | char ID [ ] = STRING

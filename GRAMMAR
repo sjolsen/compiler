@@ -15,8 +15,9 @@ varDecl : stringDecl
         | intTypeSpec ID [ expression ] = initBraceList
         | intTypeSpec ID [ expression ]
 
-stringDecl : char ID [ expression ] = STRING
-           | char ID [ ] = STRING
+stringDecl : char ID [ ] = STRING
+           | char ID [ expression ] = STRING
+           | char ID [ expression ] // Equivalent to last rule of varDecl for char
 
 intTypeSpec : int
             | char
@@ -63,12 +64,12 @@ returnStmt : return expression ;
 lvalue : ID [ expression ]
        | ID
 
-rvalue : funcCallExpr
+rvalue : ( expression )
+       | funcCallExpr
        | lvalue
        | NUM
        | CHAR
        | STRING
-       | ( expression )
 
 expression : lvalue = expression
            | equivExpr

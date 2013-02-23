@@ -9,17 +9,17 @@ string to_string (token t)
 	switch (t.type)
 	{
 	case token_type::identifier:
-		return "<identifier, "     + t.str               + ", " + to_string (t.pos) + '>';
+		return "<identifier, "     + t.str               + ", "  + to_string (t.pos) + '>';
 	case token_type::keyword:
-		return "<keyword, "        + t.str               + ", " + to_string (t.pos) + '>';
+		return "<keyword, "        + t.str               + ", "  + to_string (t.pos) + '>';
 	case token_type::int_literal:
-		return "<int_literal, "    + to_string (t.value) + ", " + to_string (t.pos) + '>';
+		return "<int_literal, "    + to_string (t.value) + ", "  + to_string (t.pos) + '>';
 	case token_type::char_literal:
-		return "<char_literal, "   + t.literal           + ", " + to_string (t.pos) + '>';
+		return "<char_literal, "   + t.literal           + ", "  + to_string (t.pos) + '>';
 	case token_type::string_literal:
-		return "<string_literal, " + t.literal           + ", " + to_string (t.pos) + '>';
+		return "<string_literal, " + t.literal           + ", "  + to_string (t.pos) + '>';
 	case token_type::symbol:
-		return "<symbol, "         + to_string (t.op)    + ", " + to_string (t.pos) + '>';
+		return "<symbol, '"        + to_string (t.op)    + "', " + to_string (t.pos) + '>';
 	};
 }
 

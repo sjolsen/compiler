@@ -24,6 +24,9 @@ clean:
 
 testall: test-scanner
 
+debug: _CXXFLAGS := $(_CXXFLAGS) -DDEBUG
+debug: mcc
+
 
 
 # Build the text processing library
@@ -130,13 +133,16 @@ $(LIB)/libast.a: $(INCLUDE)/ast.hh \
 
 
 
-# Build the scanner-driver
+# Build the main executable
 
+mcc:
+	rm $(BIN)/mcc
 mcc: $(BIN)/mcc
 
 $(BUILD)/mcc.o: $(SRC)/mcc.cc \
                 $(INCLUDE)/text_processing.hh \
-                $(INCLUDE)/tokenizer.hh
+                $(INCLUDE)/tokenizer.hh \
+                $(INCLUDE)/ast.hh
 	$(CXX) $(_CXXFLAGS) $(SRC)/mcc.cc -c -o $(BUILD)/mcc.o
 
 $(BIN)/mcc: $(BUILD)/mcc.o \

@@ -1,0 +1,72 @@
+program        : declList
+
+declList       : decl+
+
+decl           : varDecl
+               | funDecl
+
+varDecl        : typeSpecifier ID ("[" NUM "]")? ";"
+
+typeSpecifier  : "int"
+               | "char"
+               | "void"
+
+funDecl        : typeSpecifier ID "(" formalDeclList? ")" funBody
+
+formalDeclList : formalDecl ("," formalDecl)*
+
+formalDecl     : typeSpecifier ID ("[" "]")?
+
+funBody        : "{" localDeclList? statementList "}"
+
+localDeclList  : varDecl*
+
+statementList  : statement*
+
+statement      : compoundStmt
+               | assignStmt
+               | condStmt
+               | loopStmt
+               | returnStmt
+
+compoundStmt   : "{" statementList "}"
+
+assignStmt     : (var "=")? expression ";"
+
+condStmt       : "if" "(" expression ")" statement ("else" statement)?
+
+loopStmt       : "while" "(" expression ")" statement
+
+returnStmt     : "return" expression? ";"
+
+var            : ID ("[" addExpr "]")?
+
+expression     : (expression relop)? addExpr
+
+relop          : "<="
+               | "<"
+               | ">"
+               | ">="
+               | "=="
+               | "!="
+
+addExpr        : (addExpr addop)? term
+
+addop          : "+"
+               | "-"
+
+term           : (term mulop)? factor
+
+mulop          : "*"
+               | "/"
+
+factor         : "(" expression ")"
+               | funcCallExpr
+               | var
+               | NUM
+               | CHAR
+               | STRING
+
+funcCallExpr   : ID "(" argList? ")"
+
+argList        : expression ("," expression)*

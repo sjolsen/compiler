@@ -14,37 +14,31 @@ enum class AST_type
 	program,
 	declList,
 	decl,
-	varDeclStmt,
 	varDecl,
-	stringDecl,
-	intTypeSpec,
 	typeSpecifier,
-	initBraceList,
-	exprList,
 	funDecl,
 	formalDeclList,
 	formalDecl,
+	funBody,
+	localDeclList,
 	statementList,
 	statement,
 	compoundStmt,
+	assignStmt,
 	condStmt,
 	loopStmt,
 	returnStmt,
-	lvalue,
-	rvalue,
+	var,
 	expression,
-	equivExpr,
-	equivop,
-	relExpr,
 	relop,
 	addExpr,
 	addop,
 	term,
 	mulop,
+	factor,
 	funcCallExpr,
 	argList,
 	terminal,
-	epsilon
 };
 
 
@@ -77,7 +71,8 @@ struct AST
 
 
 
-std::string to_string (const AST& tree);
+std::string to_string (const AST& tree,
+                       std::string line_prefix = "");
 std::string to_string (AST_type type);
 
 

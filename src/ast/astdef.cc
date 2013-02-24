@@ -7,8 +7,7 @@ using namespace std;
 
 
 AST::AST ()
-	: type (AST_type::epsilon),
-	  parent (nullptr),
+	: parent (nullptr),
 	  tokenp (nullptr)
 {
 }
@@ -30,11 +29,9 @@ namespace
 	{
 		if (tree.type == AST_type::terminal)
 			return {to_string (*tree.tokenp)};
-		if (tree.type == AST_type::epsilon)
-			return {};
 
-		if (tree.children.size () == 1)
-			return AST_to_string_impl (*tree.children.front ());
+		// if (tree.children.size () == 1)
+		// 	return AST_to_string_impl (*tree.children.front ());
 
 		vector <string> lines = {'(' + to_string (tree.type)};
 		for (auto child : tree.children)
@@ -48,12 +45,13 @@ namespace
 
 
 
-string to_string (const AST& tree)
+string to_string (const AST& tree,
+                  string line_prefix)
 {
 	auto lines = AST_to_string_impl (tree);
 	string output;
 	for (const string& line : lines)
-		output += line + '\n';
+		output += line_prefix + line + '\n';
 
 	return output;
 }
@@ -70,50 +68,38 @@ std::string to_string (AST_type type)
 		return "declList";
 	case AST_type::decl:
 		return "decl";
-	case AST_type::varDeclStmt:
-		return "varDeclStmt";
 	case AST_type::varDecl:
 		return "varDecl";
-	case AST_type::stringDecl:
-		return "stringDecl";
-	case AST_type::intTypeSpec:
-		return "intTypeSpec";
 	case AST_type::typeSpecifier:
 		return "typeSpecifier";
-	case AST_type::initBraceList:
-		return "initBraceList";
-	case AST_type::exprList:
-		return "exprList";
 	case AST_type::funDecl:
 		return "funDecl";
 	case AST_type::formalDeclList:
 		return "formalDeclList";
 	case AST_type::formalDecl:
 		return "formalDecl";
+	case AST_type::funBody:
+		return "funBody";
+	case AST_type::localDeclList:
+		return "localDeclList";
 	case AST_type::statementList:
 		return "statementList";
 	case AST_type::statement:
 		return "statement";
 	case AST_type::compoundStmt:
 		return "compoundStmt";
+	case AST_type::assignStmt:
+		return "assignStmt";
 	case AST_type::condStmt:
 		return "condStmt";
 	case AST_type::loopStmt:
 		return "loopStmt";
 	case AST_type::returnStmt:
 		return "returnStmt";
-	case AST_type::lvalue:
-		return "lvalue";
-	case AST_type::rvalue:
-		return "rvalue";
+	case AST_type::var:
+		return "var";
 	case AST_type::expression:
 		return "expression";
-	case AST_type::equivExpr:
-		return "equivExpr";
-	case AST_type::equivop:
-		return "equivop";
-	case AST_type::relExpr:
-		return "relExpr";
 	case AST_type::relop:
 		return "relop";
 	case AST_type::addExpr:
@@ -124,11 +110,11 @@ std::string to_string (AST_type type)
 		return "term";
 	case AST_type::mulop:
 		return "mulop";
+	case AST_type::factor:
+		return "factor";
 	case AST_type::funcCallExpr:
 		return "funcCallExpr";
 	case AST_type::argList:
 		return "argList";
-	case AST_type::epsilon:
-		return "epsilon";
 	};
 }

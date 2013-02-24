@@ -6,29 +6,60 @@ using namespace std;
 
 #include <fstream>
 #include <algorithm>
-#include <iterator>
+#include <stack>
+#include <chrono>
+
+
+
+#ifdef DEBUG
+	#define LOGFILESTR logfile_name ()
+	#define throw_error(str, pos) throw syntax_error (string (__FUNCTION__) + ": " str, pos)
+	#define CALL(funcall) [&] { logfile << string (ident_level, '\t') << "Calling " #funcall << endl; \
+	                            ++ident_level; \
+	                            auto result = funcall; \
+	                            --ident_level; \
+	                            logfile << string (ident_level, '\t') << "Done" << endl; \
+	                            return result; } ()
+#else
+	#define LOGFILESTR "/dev/null"
+	#define throw_error(str, pos) throw syntax_error (str, pos)
+	#define CALL(funcall) funcall
+#endif
+
+
+
+#define validate(node) if (!node) return nullptr;
 
 
 
 namespace
 {
-	ofstream logfile ("logfile");
-
-	string to_string (AST_node& n)
+	string logfile_name ()
 	{
-		if (!n)
-			throw logic_error ("Tried to print a null node");
-		return to_string (*n);
+		using namespace chrono;
+		return to_string (duration_cast <milliseconds> (system_clock::now ().time_since_epoch ()).count ()) + ".mcclog";
+	}
+
+	ofstream logfile (LOGFILESTR);
+	int ident_level = 0;
+
+	string to_string (const AST_node& node)
+	{
+		if (!node)
+			throw logic_error ("Tried to dereference a null AST_node");
+		return to_string (*node, string (ident_level, '\t'));
 	}
 
 	void printargs ()
-	{}
-
-	template <typename T, typename... Args>
-	void printargs (T&& t, Args&&... args)
 	{
-		logfile << to_string (t) << endl;
-		printargs (args...);
+	}
+
+	template <typename... Rest>
+	void printargs (const AST_node& first,
+	                Rest&&... rest)
+	{
+		logfile << to_string (first);
+		printargs (rest...);
 	}
 }
 
@@ -37,13 +68,26 @@ namespace
 namespace
 {
 	template <typename... Args>
-	AST_node make_node (Args&&... args)
+	AST_node make_node (AST_type type,
+	                    Args&&... args)
 	{
-		logfile << "Making node =======================\n";
-		printargs (args...);
-		auto node = make_shared <AST> (forward <Args> (args)...);
-		logfile << "============================== Done\n";
+		logfile << string (ident_level, '\t')
+		        << "Making node (" << to_string (type) << "):\n";
+		++ident_level;
+		printargs (forward <Args> (args)...);
+
+		auto node = make_shared <AST> (type, forward <Args> (args)...);
+
+		--ident_level;
+		logfile << string (ident_level, '\t')
+		        << "Done\n";
+
 		return node;
+	}
+
+	AST_node make_node (const token& t)
+	{
+		return make_shared <AST> (t);
 	}
 
 	AST_node pop_front (token_range& working_set)
@@ -53,87 +97,113 @@ namespace
 		return front;
 	}
 
-	AST_node get_identifier (token_range& working_set)
+	AST_node get_token (token_range& working_set,
+	                    token_type type)
 	{
-		if (working_set.empty () ||
-		    working_set [0].type != token_type::identifier)
-			throw syntax_error ("Expected identifier",
-			                    begin (working_set)->pos);
+		if (working_set.empty ())
+			return nullptr;
+		if (working_set [0].type != type)
+			return nullptr;
+
 		return pop_front (working_set);
 	}
 
-	AST_node get_string (token_range& working_set)
-	{
-		if (working_set.empty () ||
-		    working_set [0].type != token_type::string_literal)
-			throw syntax_error ("Expected string literal",
-			                    begin (working_set)->pos);
-		return pop_front (working_set);
-	}
-
-	AST_node get_int_l (token_range& working_set)
-	{
-		if (working_set.empty () ||
-		    working_set [0].type != token_type::int_literal)
-			throw syntax_error ("Expected int literal",
-			                    begin (working_set)->pos);
-		return pop_front (working_set);
-	}
-
-	AST_node get_char_l (token_range& working_set)
-	{
-		if (working_set.empty () ||
-		    working_set [0].type != token_type::char_literal)
-			throw syntax_error ("Expected char literal",
-			                    begin (working_set)->pos);
-		return pop_front (working_set);
-	}
-
-	AST_node get_token (string f,
-	                    token_range& working_set,
+	AST_node get_token (token_range& working_set,
 	                    symbol sym)
 	{
-		if (working_set.empty () ||
-		    working_set [0].type != token_type::symbol ||
-		    working_set [0].op != sym)
-			throw syntax_error (f + " Expected '" + to_string (sym) + "'",
-			                    begin (working_set)->pos);
+		if (working_set.empty ())
+			return nullptr;
+		if (working_set [0].type != token_type::symbol)
+			return nullptr;
+		if (working_set [0].op != sym)
+			return nullptr;
+
 		return pop_front (working_set);
 	}
 
-	AST_node get_token (string f,
-	                    token_range& working_set,
+	AST_node get_token (token_range& working_set,
 	                    string keyword)
 	{
-		if (working_set.empty () ||
-		    working_set [0].type != token_type::keyword ||
-		    working_set [0].str != keyword)
-			throw syntax_error (f + " Expected '" + keyword + "'",
-			                    begin (working_set)->pos);
+		if (working_set.empty ())
+			return nullptr;
+		if (working_set [0].type != token_type::keyword)
+			return nullptr;
+		if (working_set [0].str != keyword)
+			return nullptr;
+
 		return pop_front (working_set);
 	}
 
-	typename token_range::iterator
-	find_close (token_range r, symbol open, symbol close)
+	// typename token_range::iterator
+	// find_close (token_range r, symbol open, symbol close)
+	// {
+	// 	for (int i = 1; r; r.drop_front (1))
+	// 	{
+	// 		if (t.type == token_type::symbol)
+	// 			if (t.op == open)
+	// 				++i;
+	// 			else if (t.op == close)
+	// 				--i;
+	// 		if (i == 0)
+	// 			break;
+	// 	}
+	// 	return begin (r);
+	// }
+
+	void validate_pairs (token_range tokens)
 	{
-		int i = 1;
+		stack <const token*> open_tokens;
 
-		auto pred = [&] (const token& t)
+		while (tokens)
 		{
-			if (t.type == token_type::symbol)
-				if (t.op == open)
-					++i;
-				else if (t.op == close)
-					--i;
-			return i == 0;
-		};
+			if (tokens [0].type == token_type::symbol)
+				switch (tokens [0].op)
+				{
+				case symbol::lparen:
+					open_tokens.push (&tokens [0]);
+					break;
+				case symbol::lbrace:
+					open_tokens.push (&tokens [0]);
+					break;
+				case symbol::lbracket:
+					open_tokens.push (&tokens [0]);
+					break;
 
-		while (r)
-			if (pred (r [0]))
-				return begin (r);
-			else
-				r.drop_front (1);
-		return end (r);
+				case symbol::rparen:
+					if (open_tokens.empty ())
+						throw_error ("Unmatched ')'",
+						             tokens [0].pos);
+					if (open_tokens.top ()->op != symbol::lparen)
+						throw_error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
+						             open_tokens.top ()->pos);
+					open_tokens.pop ();
+					break;
+				case symbol::rbrace:
+					if (open_tokens.empty ())
+						throw_error ("Unmatched '}'",
+						             tokens [0].pos);
+					if (open_tokens.top ()->op != symbol::lbrace)
+						throw_error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
+						             open_tokens.top ()->pos);
+					open_tokens.pop ();
+					break;
+				case symbol::rbracket:
+					if (open_tokens.empty ())
+						throw_error ("Unmatched ']'",
+						             tokens [0].pos);
+					if (open_tokens.top ()->op != symbol::lbracket)
+						throw_error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
+						             open_tokens.top ()->pos);
+					open_tokens.pop ();
+					break;
+				}
+
+			tokens.drop_front (1);
+		}
+
+		if (!open_tokens.empty ())
+			throw_error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
+			             open_tokens.top ()->pos);
 	}
 }
 
@@ -141,994 +211,548 @@ namespace
 
 AST program_p (const vector <token>& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	token_range working_set (tokens);
+	token_range working_set = tokens;
 
-	AST_node decl = decl_p (working_set);
-	AST_node declList = declList_p (working_set);
-	if (!decl || !declList_p)
-		throw syntax_error ("Expected declaration",
-		                    begin (working_set)->pos);
+	validate_pairs (working_set);
+	logfile << "Finished validating\n";
+	AST_node declList = CALL (declList_p (working_set));
+	if (!declList)
+		throw_error ("Expected a declaration",
+		             begin (working_set)->pos);
 
-	return AST (AST_type::program, decl, declList);
+	return AST (move (*declList));
 }
 
 
 
 AST_node declList_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node decl = decl_p (working_set);
-	if (!decl)
-		return make_node ();
+	AST_node decl_list = make_node (AST_type::declList);
 
-	AST_node declList = declList_p (working_set);
-	if (!declList)
-		return make_node ();
+	AST_node next_decl = CALL (decl_p (working_set));
+	validate (next_decl);
+	decl_list->children.push_back (next_decl);
 
-	tokens = working_set;
-	return make_node (AST_type::declList, decl, declList);
+	for (;;)
+	{
+		next_decl = CALL (decl_p (working_set));
+		if (next_decl)
+			decl_list->children.push_back (next_decl);
+		else
+		{
+			tokens = working_set;
+			return decl_list;
+		}
+	}
 }
 
 
 
 AST_node decl_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node sub_decl = funDecl_p (tokens);
-	if (sub_decl)
-		return make_node (AST_type::decl, sub_decl);
+	AST_node sub_decl = CALL (varDecl_p (tokens));
+	if (!sub_decl)
+		sub_decl = CALL (funDecl_p (tokens));
+	validate (sub_decl);
 
-	sub_decl = varDeclStmt_p (tokens);
-	if (sub_decl)
-		return make_node (AST_type::decl, sub_decl);
-
-	return nullptr;
-}
-
-
-
-AST_node varDeclStmt_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	token_range working_set = tokens;
-
-	AST_node varDecl = varDecl_p (working_set);
-	if (!varDecl)
-		return nullptr;
-	AST_node scolon_node = get_token (__FUNCTION__, working_set, symbol::semicolon);
-
-	tokens = working_set;
-	return make_node (AST_type::varDeclStmt, varDecl, scolon_node);
+	return make_node (AST_type::decl, sub_decl);
 }
 
 
 
 AST_node varDecl_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	// Match `varDecl -> stringDecl`
+	AST_node type_specifier = CALL (typeSpecifier_p (working_set));
+	validate (type_specifier);
 
-	AST_node stringDecl = stringDecl_p (working_set);
-	if (stringDecl)
+	AST_node ID = get_token (working_set, token_type::identifier);
+	validate (ID);
+
+	AST_node lbracket_node = get_token (working_set, symbol::lbracket);
+	AST_node num;
+	AST_node rbracket_node;
+	if (lbracket_node)
 	{
-		tokens = working_set;
-		return make_node (AST_type::varDecl, stringDecl);
+		num = get_token (working_set, token_type::int_literal);
+		if (!num)
+			throw_error ("Expected numeric constant",
+			             begin (working_set)->pos);
+
+		rbracket_node = get_token (working_set, symbol::rbracket);
+		if (!rbracket_node)
+			throw_error ("Expected ']'",
+			             begin (working_set)->pos);
 	}
 
-	// Match `varDecl -> intTypeSpec ID = expression`
-
-	AST_node typespec = intTypeSpec_p (working_set);
-	if (!typespec)
-		return nullptr;
-	AST_node ID;
-	try
-	{
-		 ID = get_identifier (working_set);
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
-
-	{
-		token_range sub_working_set = working_set;
-
-		AST_node eq_node;
-		try
-		{
-			eq_node = get_token (__FUNCTION__, sub_working_set, symbol::equal);
-		}
-		catch (const syntax_error&) {}
-		if (eq_node)
-		{
-			AST_node initexpr = expression_p (sub_working_set);
-
-			tokens = sub_working_set;
-			return make_node (AST_type::varDecl, typespec, ID, eq_node, initexpr);
-		}
-	}
-
-	// Match `varDecl -> intTypeSpec ID`
-
-	AST_node lbracket_node;
-	try
-	{
-		lbracket_node = get_token (__FUNCTION__, working_set, symbol::lbracket);
-	}
-	catch (const syntax_error&)
-	{
-		tokens = working_set;
-		return make_node (AST_type::varDecl, typespec, ID);
-	}
-
-	// Match `varDecl -> intTypeSpec ID [ ] = initBraceList`
-
-	auto rbracket_iter = find_close (working_set, symbol::lbracket, symbol::rbracket);
-	if (rbracket_iter == end (working_set))
-		throw syntax_error ("Unmatched '['",
-		                    lbracket_node->tokenp->pos);
-
-	token_range size_expr_range (begin (working_set), rbracket_iter);
-	if (!size_expr_range)
-	{
-		token_range sub_working_set = working_set;
-
-		AST_node rbracket_node = get_token (__FUNCTION__, sub_working_set, symbol::rbracket);
-		AST_node eq_node;
-		try
-		{
-			eq_node = get_token (__FUNCTION__, sub_working_set, symbol::equal);
-		}
-		catch (const syntax_error&)
-		{
-			return nullptr;
-		}
-
-		AST_node bracelist = initBraceList_p (sub_working_set);
-		if (!bracelist)
-			throw syntax_error (string (__FUNCTION__) + " Expected brace-enclosed initializer list",
-			                    begin (sub_working_set)->pos);
-
-		tokens = sub_working_set;
-		return make_node (AST_type::varDecl, typespec, ID, lbracket_node,
-		                  rbracket_node, eq_node, bracelist);
-	}
-
-	// Match `varDecl -> intTypeSpec ID [ expression ] = initBraceList`
-
-	AST_node size_expr = expression_p (size_expr_range);
-	if (size_expr_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ']'",
-		                    end (size_expr_range)->pos);
-
-	working_set = token_range (end (size_expr_range), end (working_set));
-	AST_node rbracket_node = get_token (__FUNCTION__, working_set, symbol::rbracket);
-
-	AST_node eq_node;
-	try
-	{
-		eq_node = get_token (__FUNCTION__, working_set, symbol::equal);
-	}
-	catch (const syntax_error&) {}
-	if (eq_node)
-	{
-		AST_node bracelist = initBraceList_p (working_set);
-		if (!bracelist)
-			throw syntax_error (string (__FUNCTION__) + " Expected brace-enclosed initializer list",
-			                    begin (working_set)->pos);
-
-		tokens = working_set;
-		return make_node (AST_type::varDecl, typespec, ID, lbracket_node,
-		                  size_expr, rbracket_node, eq_node, bracelist);
-	}
-
-	// Match `varDecl -> intTypeSpec ID [ expression ]`
-	tokens = working_set;
-	return make_node (AST_type::varDecl, typespec, ID,
-	                  lbracket_node, size_expr, rbracket_node);
-}
-
-
-
-AST_node stringDecl_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	token_range working_set = tokens;
-
-	AST_node char_node;
-	try
-	{
-		char_node = get_token (__FUNCTION__, working_set, "char");
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
-	AST_node ID = get_identifier (working_set);
-	AST_node lbracket_node;
-	try
-	{
-		lbracket_node = get_token (__FUNCTION__, working_set, symbol::lbracket);
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
-
-	// Match `stringDecl -> intTypeSpec ID [ ] = STRING`
-
-	auto rbracket_iter = find_close (working_set, symbol::lbracket, symbol::rbracket);
-	if (rbracket_iter == end (working_set))
-		throw syntax_error ("Unmatched '['",
-		                    lbracket_node->tokenp->pos);
-
-	token_range size_expr_range (begin (working_set), rbracket_iter);
-	if (!size_expr_range)
-	{
-		token_range sub_working_set = working_set;
-
-		AST_node rbracket_node = get_token (__FUNCTION__, sub_working_set, symbol::rbracket);
-		AST_node eq_node = get_token (__FUNCTION__, sub_working_set, symbol::equal);
-		AST_node initstr = get_string (sub_working_set);
-		if (!initstr)
-			return nullptr;
-
-		tokens = sub_working_set;
-		return make_node (AST_type::stringDecl, char_node, ID, lbracket_node,
-		                  rbracket_node, eq_node, initstr);
-	}
-
-	// Match `stringDecl -> intTypeSpec ID [ expression ] = STRING`
-
-	AST_node size_expr = expression_p (size_expr_range);
-	if (size_expr_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ']'",
-		                    end (size_expr_range)->pos);
-
-	working_set = token_range (end (size_expr_range), end (working_set));
-	AST_node rbracket_node = get_token (__FUNCTION__, working_set, symbol::rbracket);
-
-	AST_node eq_node;
-	try
-	{
-		eq_node = get_token (__FUNCTION__, working_set, symbol::equal);
-	}
-	catch (const syntax_error&) {}
-	if (eq_node)
-	{
-		AST_node initstr = get_string (working_set);
-		if (!initstr)
-			return nullptr;
-
-		tokens = working_set;
-		return make_node (AST_type::stringDecl, char_node, ID, lbracket_node,
-		                  size_expr, rbracket_node, eq_node, initstr);
-	}
+	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
+	validate (semicolon_node);
 
 	tokens = working_set;
-	return make_node (AST_type::stringDecl, char_node, ID, lbracket_node,
-	                  size_expr, rbracket_node);
-}
-
-
-
-AST_node intTypeSpec_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	try
-	{
-		return make_node (AST_type::intTypeSpec, get_token (__FUNCTION__, tokens, "int"));
-	}
-	catch (const syntax_error&) {}
-
-	try
-	{
-		return make_node (AST_type::intTypeSpec, get_token (__FUNCTION__, tokens, "char"));
-	}
-	catch (const syntax_error&) {}
-
-	return nullptr;
+	if (lbracket_node)
+		return make_node (AST_type::varDecl, type_specifier, ID,
+		                  lbracket_node, num, rbracket_node, semicolon_node);
+	return make_node (AST_type::varDecl, type_specifier, ID, semicolon_node);
 }
 
 
 
 AST_node typeSpecifier_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node int_node = intTypeSpec_p (tokens);
-	if (int_node)
-		return make_node (AST_type::typeSpecifier, int_node);
+	AST_node specifier = get_token (tokens, "int");
+	if (specifier)
+		return make_node (AST_type::typeSpecifier, specifier);
 
-	try
-	{
-		return make_node (AST_type::typeSpecifier, get_token (__FUNCTION__, tokens, "void"));
-	}
-	catch (const syntax_error&) {}
+	specifier = get_token (tokens, "char");
+	if (specifier)
+		return make_node (AST_type::typeSpecifier, specifier);
+
+	specifier = get_token (tokens, "void");
+	if (specifier)
+		return make_node (AST_type::typeSpecifier, specifier);
 
 	return nullptr;
-}
-
-
-
-AST_node initBraceList_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	token_range working_set = tokens;
-
-	AST_node lbrace_node = get_token (__FUNCTION__, working_set, symbol::lbrace);
-
-	auto rbrace_iter = find_close (working_set, symbol::lbracket, symbol::rbracket);
-	if (rbrace_iter == end (working_set))
-		throw syntax_error ("Unmatched '{'",
-		                    lbrace_node->tokenp->pos);
-
-	token_range exprlist_range (begin (working_set), rbrace_iter);
-	if (!exprlist_range)
-	{
-		AST_node rbrace_node = get_token (__FUNCTION__, working_set, symbol::rbrace);
-
-		tokens = working_set;
-		return make_node (AST_type::initBraceList, lbrace_node, rbrace_node);
-	}
-
-	AST_node expr_list = exprList_p (exprlist_range);
-	if (exprlist_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected '}'",
-		                    begin (exprlist_range)->pos);
-
-	working_set = token_range (rbrace_iter, end (working_set));
-	AST_node rbrace_node = get_token (__FUNCTION__, working_set, symbol::rbrace);
-
-	tokens = working_set;
-	return make_node (AST_type::initBraceList, lbrace_node, expr_list, rbrace_node);
-}
-
-
-
-AST_node exprList_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	token_range working_set = tokens;
-
-	AST_node head = expression_p (working_set);
-	if (!head)
-		return nullptr;
-
-	AST_node comma_node;
-	try
-	{
-		 comma_node = get_token (__FUNCTION__, working_set, symbol::comma);
-	}
-	catch (const syntax_error&)
-	{
-		tokens = working_set;
-		return make_node (AST_type::exprList, head);
-	}
-
-	AST_node tail = exprList_p (working_set);
-
-	tokens = working_set;
-	return make_node (AST_type::exprList, head, comma_node, tail);
 }
 
 
 
 AST_node funDecl_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node typespec = typeSpecifier_p (working_set);
-	if (!typespec)
-		return nullptr;
+	AST_node type_specifier = CALL (typeSpecifier_p (working_set));
+	validate (type_specifier);
 
-	AST_node ID;
-	AST_node lparen_node;
-	try
-	{
-		ID = get_identifier (working_set);
-		lparen_node = get_token (__FUNCTION__, working_set, symbol::lparen);
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
+	AST_node ID = get_token (working_set, token_type::identifier);
+	validate (ID);
 
-	auto rparen_iter = find_close (working_set, symbol::lparen, symbol::rparen);
-	if (rparen_iter == end (working_set))
-		throw syntax_error ("Unmatched '('",
-		                    lparen_node->tokenp->pos);
+	AST_node lparen_node = get_token (working_set, symbol::lparen);
+	validate (lparen_node);
 
-	token_range decl_list_range (begin (working_set), rparen_iter);
-	AST_node decl_list;
-	if (decl_list_range)
-		decl_list = formalDeclList_p (decl_list_range);
-	if (decl_list_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ')'",
-		                    begin (decl_list_range)->pos);
+	AST_node decl_list = CALL (formalDeclList_p (working_set));
 
-	working_set = token_range (rparen_iter, end (working_set));
-	AST_node rparen_node = get_token (__FUNCTION__, working_set, symbol::rparen);
-	AST_node compound_stmt = compoundStmt_p (working_set);
-	if (!compound_stmt)
-		return nullptr;
+	AST_node rparen_node = get_token (working_set, symbol::rparen);
+	if (!rparen_node)
+		throw_error ("Expected ')'",
+		             begin (working_set)->pos);
+
+	AST_node function_body = CALL (funBody_p (working_set));
+	validate (function_body);
 
 	tokens = working_set;
 	if (decl_list)
-		return make_node (AST_type::funDecl, typespec, ID, lparen_node,
-		                  decl_list, rparen_node, compound_stmt);
-	else
-		return make_node (AST_type::funDecl, typespec, ID, lparen_node,
-		                  rparen_node, compound_stmt);
+		return make_node (AST_type::funDecl, type_specifier, ID,
+		                  lparen_node, decl_list, rparen_node, function_body);
+		return make_node (AST_type::funDecl, type_specifier, ID,
+		                  lparen_node, rparen_node, function_body);
 }
 
 
 
 AST_node formalDeclList_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node head = formalDecl_p (working_set);
-	if (!head)
-		return nullptr;
+	AST_node decl_list = make_node (AST_type::formalDeclList);
+
+	AST_node next_decl = CALL (formalDecl_p (working_set));
+	validate (next_decl);
+	decl_list->children.push_back (next_decl);
 
 	AST_node comma_node;
-	try
+	for (;;)
 	{
-		comma_node = get_token (__FUNCTION__, working_set, symbol::comma);
-	}
-	catch (const syntax_error&)
-	{
-		tokens = working_set;
-		return make_node (AST_type::formalDeclList, head);
-	}
+		comma_node = get_token (working_set, symbol::comma);
+		if (!comma_node)
+			break;
+		next_decl = CALL (formalDecl_p (working_set));
+		if (!next_decl)
+			break;
 
-	AST_node tail = formalDeclList_p (working_set);
-	if (!tail)
-		throw syntax_error (string (__FUNCTION__) + " Expected parameter declaration",
-		                    begin (working_set)->pos);
+		decl_list->children.push_back (comma_node);
+		decl_list->children.push_back (next_decl);
+	}
 
 	tokens = working_set;
-//	return make_node (AST_type::formalDeclList, head, comma_node, tail);
-	AST_node list = make_node (AST_type::formalDeclList, head, comma_node);
-	for (AST_node& child : tail->children)
-		list->children.emplace_back (move (child));
-	return list;
+	return decl_list;
 }
 
 
 
 AST_node formalDecl_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node vardecl = varDecl_p (working_set);
-	if (vardecl)
+	AST_node type_specifier = CALL (typeSpecifier_p (working_set));
+	validate (type_specifier);
+
+	AST_node ID = get_token (working_set, token_type::identifier);
+	validate (ID);
+
+	AST_node lbracket_node = get_token (working_set, symbol::lbracket);
+	AST_node rbracket_node;
+	if (lbracket_node)
 	{
-		tokens = working_set;
-		return make_node (AST_type::formalDecl, vardecl);
+		rbracket_node = get_token (working_set, symbol::rbracket);
+		if (!rbracket_node)
+			throw_error ("Expected ']'",
+			             begin (working_set)->pos);
 	}
 
-	AST_node typespec = typeSpecifier_p (working_set);
-	if (!typespec)
-		return nullptr;
+	tokens = working_set;
+	if (lbracket_node)
+		return make_node (AST_type::formalDecl, type_specifier, ID,
+		                  lbracket_node, rbracket_node);
+	return make_node (AST_type::formalDecl, type_specifier, ID);
+}
 
-	AST_node ID = get_identifier (working_set);
-	AST_node lbracket_node = get_token (__FUNCTION__, working_set, symbol::lbracket);
-	AST_node rbracket_node = get_token (__FUNCTION__, working_set, symbol::rbracket);
+
+
+AST_node funBody_p (token_range& tokens)
+{
+	token_range working_set = tokens;
+
+	AST_node lbrace_node = get_token (working_set, symbol::lbrace);
+	validate (lbrace_node);
+
+	AST_node decl_list = CALL (declList_p (working_set));
+
+	AST_node statement_list = CALL (statementList_p (working_set));
+	validate (statement_list);
+
+	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
+	if (!rbrace_node)
+		throw_error ("Expected '}'",
+		             begin (working_set)->pos);
 
 	tokens = working_set;
-	return make_node (AST_type::formalDecl, typespec, ID, lbracket_node, rbracket_node);
+	if (decl_list)
+		return make_node (AST_type::funBody, lbrace_node, decl_list,
+		                  statement_list, rbrace_node);
+	return make_node (AST_type::funBody, lbrace_node,
+	                  statement_list, rbrace_node);
+}
+
+
+
+AST_node localDeclList_p (token_range& tokens)
+{
+	token_range working_set = tokens;
+
+	AST_node decl_list = make_node (AST_type::statementList);
+
+	AST_node next_decl;
+	for (;;)
+	{
+		next_decl = CALL (localDeclList_p (working_set));
+		if (next_decl)
+			decl_list->children.push_back (next_decl);
+		else
+		{
+			tokens = working_set;
+			return decl_list;
+		}
+	}
 }
 
 
 
 AST_node statementList_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node statement = statement_p (working_set);
-	if (!statement)
-		return make_node ();
+	AST_node decl_list = make_node (AST_type::statementList);
 
-	AST_node statementList = statementList_p (working_set);
-	if (!statementList)
-		throw logic_error ("statementList returned a null pointer");
-
-	tokens = working_set;
-	return make_node (AST_type::statementList, statement, statementList);
+	AST_node next_decl;
+	for (;;)
+	{
+		next_decl = CALL (statement_p (working_set));
+		if (next_decl)
+			decl_list->children.push_back (next_decl);
+		else
+		{
+			tokens = working_set;
+			return decl_list;
+		}
+	}
 }
 
 
 
 AST_node statement_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node sub_statement;
-	sub_statement = varDeclStmt_p (tokens);
-	if (sub_statement)
-		return make_node (AST_type::statement, sub_statement);
+	AST_node sub_decl = CALL (compoundStmt_p (tokens));
+	if (sub_decl)
+		return make_node (AST_type::statement, sub_decl);
 
-	sub_statement = compoundStmt_p (tokens);
-	if (sub_statement)
-		return make_node (AST_type::statement, sub_statement);
+	sub_decl = CALL (assignStmt_p (tokens));
+	if (sub_decl)
+		return make_node (AST_type::statement, sub_decl);
 
-	sub_statement = condStmt_p (tokens);
-	if (sub_statement)
-		return make_node (AST_type::statement, sub_statement);
+	sub_decl = CALL (condStmt_p (tokens));
+	if (sub_decl)
+		return make_node (AST_type::statement, sub_decl);
 
-	sub_statement = loopStmt_p (tokens);
-	if (sub_statement)
-		return make_node (AST_type::statement, sub_statement);
+	sub_decl = CALL (loopStmt_p (tokens));
+	if (sub_decl)
+		return make_node (AST_type::statement, sub_decl);
 
-	sub_statement = returnStmt_p (tokens);
-	if (sub_statement)
-		return make_node (AST_type::statement, sub_statement);
+	sub_decl = CALL (returnStmt_p (tokens));
+	if (sub_decl)
+		return make_node (AST_type::statement, sub_decl);
 
-	try
-	{
-		sub_statement = get_token (__FUNCTION__, tokens, symbol::semicolon);
-		return make_node (AST_type::statement, sub_statement);
-	}
-	catch (const syntax_error&) {}
-
-	token_range working_set = tokens;
-
-	AST_node expression = expression_p (working_set);
-	if (!expression)
-		return nullptr;
-	AST_node scolon_node = get_token (__FUNCTION__, working_set, symbol::semicolon);
-
-	tokens = working_set;
-	return make_node (AST_type::statement, expression, scolon_node);
+	return nullptr;
 }
 
 
 
 AST_node compoundStmt_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node lbrace_node;
-	try
-	{
-		lbrace_node = get_token (__FUNCTION__, working_set, symbol::lbrace);
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
+	AST_node lbrace_node = get_token (working_set, symbol::lbrace);
+	validate (lbrace_node);
 
-	auto rbrace_iter = find_close (working_set, symbol::lbrace, symbol::rbrace);
-	if (rbrace_iter == end (working_set))
-		throw syntax_error ("Unmatched '{'",
-		                    lbrace_node->tokenp->pos);
+	AST_node statement_list = CALL (statementList_p (working_set));
+	validate (statement_list);
 
-	token_range stmt_list_range (begin (working_set), rbrace_iter);
-	if (!stmt_list_range)
-	{
-		AST_node rbrace_node = get_token (__FUNCTION__, working_set, symbol::rbrace);
-
-		tokens = working_set;
-		return make_node (AST_type::compoundStmt, lbrace_node, rbrace_node);
-	}
-
-	AST_node stmt_list = statementList_p (stmt_list_range);
-	if (stmt_list_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected '}'",
-		                    begin (stmt_list_range)->pos);
-
-	working_set = token_range (rbrace_iter, end (working_set));
-	AST_node rbrace_node = get_token (__FUNCTION__, working_set, symbol::rbrace);
+	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
+	if (!rbrace_node)
+		throw_error ("Expected '}'",
+		             begin (working_set)->pos);
 
 	tokens = working_set;
-	return make_node (AST_type::compoundStmt, lbrace_node, stmt_list, rbrace_node);
+	return make_node (AST_type::compoundStmt, lbrace_node,
+	                  statement_list, rbrace_node);
+}
+
+
+
+AST_node assignStmt_p (token_range& tokens)
+{
+	token_range working_set = tokens;
+
+	AST_node var = CALL (var_p (working_set));
+	AST_node eq_node;
+	if (var)
+	{
+		eq_node = get_token (working_set, symbol::equal);
+		if (!eq_node)
+		{
+			var = nullptr;
+			working_set = tokens;
+		}
+	}
+
+	AST_node expression = CALL (expression_p (working_set));
+	validate (expression);
+
+	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
+	if (!semicolon_node)
+		throw_error ("Expected ';'",
+		             begin (working_set)->pos);
+
+	tokens = working_set;
+	if (var)
+		return make_node (AST_type::assignStmt, var, eq_node,
+		                  expression, semicolon_node);
+	return make_node (AST_type::assignStmt, expression, semicolon_node);
 }
 
 
 
 AST_node condStmt_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node if_node;
-	try
+	AST_node if_node = get_token (working_set, "if");
+	validate (if_node);
+
+	AST_node lparen_node = get_token (working_set, symbol::lparen);
+	validate (lparen_node);
+
+	AST_node expression = CALL (expression_p (working_set));
+	if (!expression)
+		throw_error ("Expected expression",
+		             begin (working_set)->pos);
+
+	AST_node rparen_node = get_token (working_set, symbol::rparen);
+	if (!rparen_node)
+		throw_error ("Expected ')'",
+		             begin (working_set)->pos);
+
+	AST_node if_statement = CALL (statement_p (working_set));
+	if (!if_statement)
+		throw_error ("Expected statement",
+		             begin (working_set)->pos);
+
+	AST_node else_node = get_token (working_set, "else");
+	AST_node else_statement;
+	if (else_node)
 	{
-		if_node = get_token (__FUNCTION__, working_set, "if");
+		else_statement = CALL (statement_p (working_set));
+		if (!else_statement)
+			throw_error ("Expected statement",
+			             begin (working_set)->pos);
 	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
-
-	AST_node lparen_node = get_token (__FUNCTION__, working_set, symbol::lparen);
-
-
-
-	auto rparen_iter = find_close (working_set, symbol::lparen, symbol::rparen);
-	if (rparen_iter == end (working_set))
-		throw syntax_error ("Unmatched '('",
-		                    lparen_node->tokenp->pos);
-
-	token_range expression_range (begin (working_set), rparen_iter);
-	AST_node expression;
-	if (expression_range)
-		expression = expression_p (expression_range);
-	if (expression_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ')'",
-		                    begin (expression_range)->pos);
-
-	working_set = token_range (rparen_iter, end (working_set));
-	AST_node rparen_node = get_token (__FUNCTION__, working_set, symbol::rparen);
-	AST_node statement = statement_p (working_set);
-
-	AST_node else_node;
-	try
-	{
-		else_node = get_token (__FUNCTION__, working_set, "else");
-	}
-	catch (const syntax_error&)
-	{
-		tokens = working_set;
-		return make_node (AST_type::condStmt, if_node, lparen_node,
-		                  expression, rparen_node, statement);
-	}
-	AST_node else_statement = statement_p (working_set);
 
 	tokens = working_set;
-	return make_node (AST_type::condStmt, if_node, lparen_node, expression,
-	                  rparen_node, statement, else_node, else_statement);
+	if (else_node)
+		return make_node (AST_type::condStmt, if_node, lparen_node, expression,
+		                  rparen_node, if_statement, else_node, else_statement);
+		return make_node (AST_type::condStmt, if_node, lparen_node,
+		                  expression, rparen_node, if_statement);
 }
 
 
 
 AST_node loopStmt_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node while_node;
-	try
-	{
-		while_node = get_token (__FUNCTION__, working_set, "while");
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
+	AST_node while_node = get_token (working_set, "while");
+	validate (while_node);
 
-	AST_node lparen_node = get_token (__FUNCTION__, working_set, symbol::lparen);
+	AST_node lparen_node = get_token (working_set, symbol::lparen);
+	validate (lparen_node);
 
-	auto rparen_iter = find_close (working_set, symbol::lparen, symbol::rparen);
-	if (rparen_iter == end (working_set))
-		throw syntax_error ("Unmatched '('",
-		                    lparen_node->tokenp->pos);
+	AST_node expression = CALL (expression_p (working_set));
+	if (!expression)
+		throw_error ("Expected expression",
+		             begin (working_set)->pos);
 
-	token_range expression_range (begin (working_set), rparen_iter);
-	AST_node expression;
-	if (expression_range)
-		expression = expression_p (expression_range);
-	if (expression_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ')'",
-		                    begin (expression_range)->pos);
+	AST_node rparen_node = get_token (working_set, symbol::rparen);
+	if (!rparen_node)
+		throw_error ("Expected ')'",
+		             begin (working_set)->pos);
 
-	working_set = token_range (rparen_iter, end (working_set));
-	AST_node rparen_node = get_token (__FUNCTION__, working_set, symbol::rparen);
-	AST_node statement = statement_p (working_set);
+	AST_node while_statement = CALL (statement_p (working_set));
+	if (!while_statement)
+		throw_error ("Expected statement",
+		             begin (working_set)->pos);
 
 	tokens = working_set;
 	return make_node (AST_type::loopStmt, while_node, lparen_node,
-	                  expression, rparen_node, statement);
+	                  expression, rparen_node, while_statement);
 }
 
 
 
 AST_node returnStmt_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node return_node;
-	try
-	{
-		return_node = get_token (__FUNCTION__, working_set, "return");
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
+	AST_node return_node = get_token (working_set, "return");
+	validate (return_node);
 
-	AST_node scolon_node;
-	try
-	{
-		scolon_node = get_token (__FUNCTION__, working_set, symbol::semicolon);
+	AST_node expression = CALL (expression_p (working_set));
 
-		tokens = working_set;
-		return make_node (AST_type::returnStmt, return_node, scolon_node);
-	}
-	catch (const syntax_error&) {}
-
-	AST_node expression = expression_p (working_set);
-	if (!expression)
-		throw syntax_error ("Invalid expression in return statement",
-		                    begin (working_set)->pos);
-	scolon_node = scolon_node = get_token (__FUNCTION__, working_set, symbol::semicolon);
+	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
+	if (!semicolon_node)
+		throw_error ("Expected ';'",
+		             begin (working_set)->pos);
 
 	tokens = working_set;
-	return make_node (AST_type::returnStmt, return_node, expression, scolon_node);
+	if (expression)
+		return make_node (AST_type::returnStmt, return_node,
+		                  expression, semicolon_node);
+	return make_node (AST_type::returnStmt, return_node, semicolon_node);
 }
 
 
 
-AST_node lvalue_p (token_range& tokens)
+AST_node var_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node ID;
-	try
-	{
-		ID = get_identifier (working_set);
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
+	AST_node ID = get_token (working_set, token_type::identifier);
+	validate (ID);
 
-	AST_node lbracket_node;
-	try
+	AST_node lbracket_node = get_token (working_set, symbol::lbracket);
+	AST_node add_expr;
+	AST_node rbracket_node;
+	if (lbracket_node)
 	{
-		lbracket_node = get_token (__FUNCTION__, working_set, symbol::lbracket);
+		add_expr = get_token (working_set, token_type::int_literal);
+		if (!add_expr)
+			throw_error ("Expected expression",
+			             begin (working_set)->pos);
+
+		rbracket_node = get_token (working_set, symbol::rbracket);
+		if (!rbracket_node)
+			throw_error ("Expected ']'",
+			             begin (working_set)->pos);
 	}
-	catch (const syntax_error&)
-	{
-		tokens = working_set;
-		return make_node (AST_type::lvalue, ID);
-	}
-
-	auto rbracket_iter = find_close (working_set, symbol::lbracket, symbol::rbracket);
-	if (rbracket_iter == end (working_set))
-		throw syntax_error ("Unmatched '['",
-		                    lbracket_node->tokenp->pos);
-
-	token_range expression_range (begin (working_set), rbracket_iter);
-	AST_node expression;
-	if (expression_range)
-		expression = expression_p (expression_range);
-	if (expression_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ']'",
-		                    begin (expression_range)->pos);
-
-	working_set = token_range (rbracket_iter, end (working_set));
-	AST_node rbracket_node = get_token (__FUNCTION__, working_set, symbol::rbracket);
 
 	tokens = working_set;
-	return make_node (AST_type::lvalue, ID, lbracket_node, expression, rbracket_node);
-}
-
-
-
-AST_node rvalue_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	token_range working_set = tokens;
-
-	AST_node lparen_node;
-	try
-	{
-		lparen_node = get_token (__FUNCTION__, working_set, symbol::lparen);
-	}
-	catch (const syntax_error&) {}
-	if (lparen_node)
-	{
-		auto rparen_iter = find_close (working_set, symbol::lparen, symbol::rparen);
-		if (rparen_iter == end (working_set))
-			throw syntax_error ("Unmatched '('",
-			                    lparen_node->tokenp->pos);
-
-		token_range expression_range (begin (working_set), rparen_iter);
-		AST_node expression;
-		if (expression_range)
-			expression = expression_p (expression_range);
-		if (expression_range)
-			throw syntax_error (string (__FUNCTION__) + " Expected ')'",
-			                    begin (expression_range)->pos);
-
-		working_set = token_range (rparen_iter, end (working_set));
-		AST_node rparen_node = get_token (__FUNCTION__, working_set, symbol::rparen);
-
-		tokens = working_set;
-		return make_node (AST_type::rvalue, lparen_node, expression, rparen_node);
-	}
-
-	AST_node subvalue;
-	subvalue = funcCallExpr_p (tokens);
-	if (subvalue)
-		return make_node (AST_type::rvalue, subvalue);
-
-	subvalue = lvalue_p (tokens);
-	if (subvalue)
-		return make_node (AST_type::rvalue, subvalue);
-
-	try
-	{
-		subvalue = get_int_l (tokens);
-		return make_node (AST_type::rvalue, subvalue);
-	}
-	catch (const syntax_error&) {}
-
-	try
-	{
-		subvalue = get_char_l (tokens);
-		return make_node (AST_type::rvalue, subvalue);
-	}
-	catch (const syntax_error&) {}
-
-	try
-	{
-		subvalue = get_string (tokens);
-		return make_node (AST_type::rvalue, subvalue);
-	}
-	catch (const syntax_error&) {}
-
-	return nullptr;
+	if (lbracket_node)
+		return make_node (AST_type::var, ID, lbracket_node,
+		                  add_expr, rbracket_node);
+	return make_node (AST_type::var, ID);
 }
 
 
 
 AST_node expression_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node lvalue_node = lvalue_p (working_set);
-	if (!lvalue_node)
-	{
-		AST_node equiv_node = equivExpr_p (tokens);
-		if (equiv_node)
-			return make_node (AST_type::expression, equiv_node);
-		return nullptr;
-	}
+	AST_node handle = CALL (addExpr_p (working_set));
+	validate (handle);
 
-	AST_node eq_node;
-	try
-	{
-		eq_node = get_token (__FUNCTION__, working_set, symbol::equal);
-	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
-
-	AST_node expression = expression_p (working_set);
-	if (!expression)
-		return nullptr;
-
-	tokens = working_set;
-	return make_node (AST_type::expression, lvalue_node,
-	                  eq_node, expression);
-}
-
-
-
-AST_node equivExpr_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node handle = relExpr_p (tokens);
-	if (!handle)
-		return nullptr;
-
-	AST_node equivop_node;
-	AST_node rel_expr;
-	for (;;)
-	{
-		token_range working_set = tokens;
-
-		equivop_node = equivop_p (working_set);
-		if (!equivop_node)
-			break;
-
-		rel_expr = relExpr_p (working_set);
-		if (!rel_expr)
-			break;
-
-		tokens = working_set;
-		handle = make_node (AST_type::equivExpr, handle,
-		                    equivop_node, rel_expr);
-	}
-
-	return make_node (AST_type::equivExpr, handle);
-}
-
-
-
-AST_node equivop_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	try
-	{
-		return make_node (AST_type::equivop, get_token (__FUNCTION__, tokens, symbol::equivalent));
-	}
-	catch (const syntax_error&) {}
-
-	try
-	{
-		return make_node (AST_type::equivop, get_token (__FUNCTION__, tokens, symbol::not_equiv));
-	}
-	catch (const syntax_error&) {}
-
-	return nullptr;
-}
-
-
-
-AST_node relExpr_p (token_range& tokens)
-{
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node handle = addExpr_p (tokens);
-	if (!handle)
-		return nullptr;
-
-	AST_node relop_node;
+	AST_node relop;
 	AST_node add_expr;
 	for (;;)
 	{
-		token_range working_set = tokens;
+		token_range sub_working_set = working_set;
 
-		relop_node = relop_p (working_set);
-		if (!relop_node)
+		relop = CALL (relop_p (sub_working_set));
+		if (!relop)
 			break;
 
-		add_expr = addExpr_p (working_set);
+		add_expr = CALL (addExpr_p (sub_working_set));
 		if (!add_expr)
 			break;
 
-		tokens = working_set;
-		handle = make_node (AST_type::relExpr, handle,
-		                    relop_node, add_expr);
+		working_set = sub_working_set;
+		handle = make_node (AST_type::expression, handle,
+		                    relop, add_expr);
 	}
 
-	return make_node (AST_type::relExpr, handle);
+	tokens = working_set;
+	return handle;
 }
 
 
 
 AST_node relop_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	try
-	{
-		return make_node (AST_type::equivop, get_token (__FUNCTION__, tokens, symbol::gt_equiv));
-	}
-	catch (const syntax_error&) {}
+	AST_node relop = get_token (tokens, symbol::lt_equiv);
+	if (relop)
+		return make_node (AST_type::relop, relop);
 
-	try
-	{
-		return make_node (AST_type::equivop, get_token (__FUNCTION__, tokens, symbol::greater_than));
-	}
-	catch (const syntax_error&) {}
+	relop = get_token (tokens, symbol::less_than);
+	if (relop)
+		return make_node (AST_type::relop, relop);
 
-	try
-	{
-		return make_node (AST_type::equivop, get_token (__FUNCTION__, tokens, symbol::lt_equiv));
-	}
-	catch (const syntax_error&) {}
+	relop = get_token (tokens, symbol::greater_than);
+	if (relop)
+		return make_node (AST_type::relop, relop);
 
-	try
-	{
-		return make_node (AST_type::equivop, get_token (__FUNCTION__, tokens, symbol::less_than));
-	}
-	catch (const syntax_error&) {}
+	relop = get_token (tokens, symbol::gt_equiv);
+	if (relop)
+		return make_node (AST_type::relop, relop);
+
+	relop = get_token (tokens, symbol::equivalent);
+	if (relop)
+		return make_node (AST_type::relop, relop);
+
+	relop = get_token (tokens, symbol::not_equiv);
+	if (relop)
+		return make_node (AST_type::relop, relop);
 
 	return nullptr;
 }
@@ -1137,48 +761,45 @@ AST_node relop_p (token_range& tokens)
 
 AST_node addExpr_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node handle = term_p (tokens);
-	if (!handle)
-		return nullptr;
+	token_range working_set = tokens;
 
-	AST_node addop_node;
+	AST_node handle = CALL (term_p (working_set));
+	validate (handle);
+
+	AST_node addop;
 	AST_node term;
 	for (;;)
 	{
-		token_range working_set = tokens;
+		token_range sub_working_set = working_set;
 
-		addop_node = addop_p (working_set);
-		if (!addop_node)
+		addop = CALL (addop_p (sub_working_set));
+		if (!addop)
 			break;
 
-		term = term_p (working_set);
+		term = CALL (term_p (sub_working_set));
 		if (!term)
 			break;
 
-		tokens = working_set;
-		handle = make_node (AST_type::addExpr, handle, addop_node, term);
+		working_set = sub_working_set;
+		handle = make_node (AST_type::addExpr, handle,
+		                    addop, term);
 	}
 
-	return make_node (AST_type::addExpr, handle);
+	tokens = working_set;
+	return handle;
 }
 
 
 
 AST_node addop_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	try
-	{
-		return make_node (AST_type::addop, get_token (__FUNCTION__, tokens, symbol::plus));
-	}
-	catch (const syntax_error&) {}
+	AST_node addop = get_token (tokens, symbol::plus);
+	if (addop)
+		return make_node (AST_type::addop, addop);
 
-	try
-	{
-		return make_node (AST_type::addop, get_token (__FUNCTION__, tokens, symbol::minus));
-	}
-	catch (const syntax_error&) {}
+	addop = get_token (tokens, symbol::minus);
+	if (addop)
+		return make_node (AST_type::addop, addop);
 
 	return nullptr;
 }
@@ -1187,48 +808,92 @@ AST_node addop_p (token_range& tokens)
 
 AST_node term_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	AST_node handle = rvalue_p (tokens);
-	if (!handle)
-		return nullptr;
+	token_range working_set = tokens;
 
-	AST_node mulop_node;
-	AST_node rvalue;
+	AST_node handle = CALL (factor_p (working_set));
+	validate (handle);
+
+	AST_node mulop;
+	AST_node factor;
 	for (;;)
 	{
-		token_range working_set = tokens;
+		token_range sub_working_set = working_set;
 
-		mulop_node = mulop_p (working_set);
-		if (!mulop_node)
+		mulop = CALL (mulop_p (sub_working_set));
+		if (!mulop)
 			break;
 
-		rvalue = rvalue_p (working_set);
-		if (!rvalue)
+		factor = CALL (factor_p (sub_working_set));
+		if (!factor)
 			break;
 
-		tokens = working_set;
-		handle = make_node (AST_type::term, handle, mulop_node, rvalue);
+		working_set = sub_working_set;
+		handle = make_node (AST_type::term, handle,
+		                    mulop, factor);
 	}
 
-	return make_node (AST_type::term, handle);
+	tokens = working_set;
+	return handle;
 }
 
 
 
 AST_node mulop_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
-	try
-	{
-		return make_node (AST_type::mulop, get_token (__FUNCTION__, tokens, symbol::asterisk));
-	}
-	catch (const syntax_error&) {}
+	AST_node addop = get_token (tokens, symbol::asterisk);
+	if (addop)
+		return make_node (AST_type::mulop, addop);
 
-	try
+	addop = get_token (tokens, symbol::solidus);
+	if (addop)
+		return make_node (AST_type::mulop, addop);
+
+	return nullptr;
+}
+
+
+
+AST_node factor_p (token_range& tokens)
+{
+	token_range working_set = tokens;
+
+	AST_node lparen_node = get_token (working_set, symbol::lparen);
+	if (lparen_node)
 	{
-		return make_node (AST_type::mulop, get_token (__FUNCTION__, tokens, symbol::solidus));
+		AST_node expression = CALL (expression_p (working_set));
+		if (!expression)
+			throw_error ("Expected expression",
+			             begin (working_set)->pos);
+
+		AST_node rparen_node = get_token (working_set, symbol::rparen);
+		if (!rparen_node)
+			throw_error ("Expected ')'",
+			             begin (working_set)->pos);
+
+		tokens = working_set;
+		return make_node (AST_type::factor, lparen_node,
+		                  expression, rparen_node);
 	}
-	catch (const syntax_error&) {}
+
+	AST_node rvalue = CALL (funcCallExpr_p (tokens));
+	if (rvalue)
+		return make_node (AST_type::factor, rvalue);
+
+	rvalue = CALL (var_p (tokens));
+	if (rvalue)
+		return make_node (AST_type::factor, rvalue);
+
+	rvalue = get_token (tokens, token_type::int_literal);
+	if (rvalue)
+		return make_node (AST_type::factor, rvalue);
+
+	rvalue = get_token (tokens, token_type::char_literal);
+	if (rvalue)
+		return make_node (AST_type::factor, rvalue);
+
+	rvalue = get_token (tokens, token_type::string_literal);
+	if (rvalue)
+		return make_node (AST_type::factor, rvalue);
 
 	return nullptr;
 }
@@ -1237,61 +902,54 @@ AST_node mulop_p (token_range& tokens)
 
 AST_node funcCallExpr_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	try
-	{
-		AST_node ID = get_identifier (working_set);
-		AST_node arg_list = argList_p (working_set);
-		if (!arg_list)
-			return nullptr;
+	AST_node ID = get_token (working_set, token_type::identifier);
+	validate (ID);
 
-		tokens = working_set;
-		return make_node (AST_type::funcCallExpr, ID, arg_list);
-	}
-	catch (const syntax_error&) {}
+	AST_node lparen_node = get_token (working_set, symbol::lparen);
+	validate (lparen_node);
 
-	return nullptr;
+	AST_node arg_list = CALL (argList_p (working_set));
+	AST_node rparen_node = get_token (working_set, symbol::rparen);
+	if (!rparen_node)
+		throw_error ("Expected ')'",
+		             begin (working_set)->pos);
+
+	tokens = working_set;
+	if (arg_list)
+		return make_node (AST_type::funcCallExpr, ID, lparen_node,
+		                  arg_list, rparen_node);
+		return make_node (AST_type::funcCallExpr, ID,
+		                  lparen_node, rparen_node);
 }
 
 
 
 AST_node argList_p (token_range& tokens)
 {
-	logfile << "Entering " + string (__FUNCTION__) << endl;
 	token_range working_set = tokens;
 
-	AST_node lparen_node;
-	try
+	AST_node expression_list = make_node (AST_type::argList);
+
+	AST_node next_expression = CALL (expression_p (working_set));
+	validate (next_expression);
+	expression_list->children.push_back (next_expression);
+
+	AST_node comma_node;
+	for (;;)
 	{
-		lparen_node = get_token (__FUNCTION__, working_set, symbol::lparen);
+		comma_node = get_token (working_set, symbol::comma);
+		if (!comma_node)
+			break;
+		next_expression = CALL (expression_p (working_set));
+		if (!next_expression)
+			break;
+
+		expression_list->children.push_back (comma_node);
+		expression_list->children.push_back (next_expression);
 	}
-	catch (const syntax_error&)
-	{
-		return nullptr;
-	}
-
-	auto rparen_iter = find_close (working_set, symbol::lparen, symbol::rparen);
-	if (rparen_iter == end (working_set))
-		throw syntax_error ("Unmatched '('",
-		                    lparen_node->tokenp->pos);
-
-	token_range expr_list_range (begin (working_set), rparen_iter);
-	AST_node expr_list;
-	if (expr_list_range)
-		expr_list = exprList_p (expr_list_range);
-	if (expr_list_range)
-		throw syntax_error (string (__FUNCTION__) + " Expected ')'",
-		                    begin (expr_list_range)->pos);
-
-	working_set = token_range (rparen_iter, end (working_set));
-	AST_node rparen_node = get_token (__FUNCTION__, working_set, symbol::rparen);
 
 	tokens = working_set;
-	if (expr_list)
-		return make_node (AST_type::argList, lparen_node,
-		                  expr_list, rparen_node);
-	else
-		return make_node (AST_type::argList, lparen_node, rparen_node);
+	return expression_list;
 }

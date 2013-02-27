@@ -24,9 +24,6 @@ clean:
 
 testall: test-scanner
 
-debug: _CXXFLAGS := $(_CXXFLAGS) -DDEBUG
-debug: mcc
-
 
 
 # Build the text processing library
@@ -135,8 +132,6 @@ $(LIB)/libast.a: $(INCLUDE)/ast.hh \
 
 # Build the main executable
 
-mcc:
-	rm $(BIN)/mcc
 mcc: $(BIN)/mcc
 
 $(BUILD)/mcc.o: $(SRC)/mcc.cc \

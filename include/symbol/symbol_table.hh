@@ -1,19 +1,29 @@
 #ifndef SYMBOL_TABLE_HH
 #define SYMBOL_TABLE_HH
 
-#include <tokenizer.hh>
+#include <ast.hh>
 
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 
-/*
+
+enum class mc_type
+{
+	mc_void,
+	integer,
+	character,
+	int_array,
+	char_array
+};
+
+
+
 struct symbol_entry
 {
 	std::string name;
-	// TBD type;
-	// TBD scope;
+	mc_type type;
+	const token* deftoken;
 };
 
 
@@ -21,9 +31,9 @@ struct symbol_entry
 struct symbol_table
 	: std::unordered_map <std::string, symbol_entry>
 {
-	symbol_table (const std:: vector <token>& tokens);
+	symbol_table (const AST& tree);
 };
-*/
+
 
 
 #endif

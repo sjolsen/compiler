@@ -6,36 +6,34 @@
 
 
 
-typedef std::shared_ptr <AST> AST_node;
+program program_p (const std::vector <token>& tokens);
 
-AST program_p (const std::vector <token>& tokens);
-
-AST_node declList_p       (token_range& tokens);
-AST_node decl_p           (token_range& tokens);
-AST_node varDecl_p        (token_range& tokens);
-AST_node typeSpecifier_p  (token_range& tokens);
-AST_node funDecl_p        (token_range& tokens);
-AST_node formalDeclList_p (token_range& tokens);
-AST_node formalDecl_p     (token_range& tokens);
-AST_node funBody_p        (token_range& tokens);
-AST_node localDeclList_p  (token_range& tokens);
-AST_node statementList_p  (token_range& tokens);
-AST_node statement_p      (token_range& tokens);
-AST_node compoundStmt_p   (token_range& tokens);
-AST_node assignStmt_p     (token_range& tokens);
-AST_node condStmt_p       (token_range& tokens);
-AST_node loopStmt_p       (token_range& tokens);
-AST_node returnStmt_p     (token_range& tokens);
-AST_node var_p            (token_range& tokens);
-AST_node expression_p     (token_range& tokens);
-AST_node relop_p          (token_range& tokens);
-AST_node addExpr_p        (token_range& tokens);
-AST_node addop_p          (token_range& tokens);
-AST_node term_p           (token_range& tokens);
-AST_node mulop_p          (token_range& tokens);
-AST_node factor_p         (token_range& tokens);
-AST_node funcCallExpr_p   (token_range& tokens);
-AST_node argList_p        (token_range& tokens);
+std::shared_ptr <declList>       declList_p       (token_range& tokens);
+std::shared_ptr <decl>           decl_p           (token_range& tokens);
+std::shared_ptr <varDecl>        varDecl_p        (token_range& tokens);
+std::shared_ptr <typeSpecifier>  typeSpecifier_p  (token_range& tokens);
+std::shared_ptr <funDecl>        funDecl_p        (token_range& tokens);
+std::shared_ptr <formalDeclList> formalDeclList_p (token_range& tokens);
+std::shared_ptr <formalDecl>     formalDecl_p     (token_range& tokens);
+std::shared_ptr <funBody>        funBody_p        (token_range& tokens);
+std::shared_ptr <localDeclList>  localDeclList_p  (token_range& tokens);
+std::shared_ptr <statementList>  statementList_p  (token_range& tokens);
+std::shared_ptr <statement>      statement_p      (token_range& tokens);
+std::shared_ptr <compoundStmt>   compoundStmt_p   (token_range& tokens);
+std::shared_ptr <assignStmt>     assignStmt_p     (token_range& tokens);
+std::shared_ptr <condStmt>       condStmt_p       (token_range& tokens);
+std::shared_ptr <loopStmt>       loopStmt_p       (token_range& tokens);
+std::shared_ptr <returnStmt>     returnStmt_p     (token_range& tokens);
+std::shared_ptr <var>            var_p            (token_range& tokens);
+std::shared_ptr <expression>     expression_p     (token_range& tokens);
+std::shared_ptr <relop>          relop_p          (token_range& tokens);
+std::shared_ptr <addExpr>        addExpr_p        (token_range& tokens);
+std::shared_ptr <addop>          addop_p          (token_range& tokens);
+std::shared_ptr <term>           term_p           (token_range& tokens);
+std::shared_ptr <mulop>          mulop_p          (token_range& tokens);
+std::shared_ptr <factor>         factor_p         (token_range& tokens);
+std::shared_ptr <funcCallExpr>   funcCallExpr_p   (token_range& tokens);
+std::shared_ptr <argList>        argList_p        (token_range& tokens);
 
 
 

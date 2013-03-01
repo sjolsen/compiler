@@ -67,27 +67,21 @@ namespace
 
 namespace
 {
-	template <typename... Args>
-	AST_node make_node (AST_type type,
-	                    Args&&... args)
+	template <typename Node, typename... Args>
+	AST_node make_node (Args&&... args)
 	{
 		logfile << string (ident_level, '\t')
 		        << "Making node (" << to_string (type) << "):\n";
 		++ident_level;
 		printargs (forward <Args> (args)...);
 
-		auto node = make_shared <AST> (type, forward <Args> (args)...);
+		auto node = make_shared <Node> (forward <Args> (args)...);
 
 		--ident_level;
 		logfile << string (ident_level, '\t')
 		        << "Done\n";
 
 		return node;
-	}
-
-	AST_node make_node (const token& t)
-	{
-		return make_shared <AST> (t);
 	}
 
 	AST_node pop_front (token_range& working_set)
@@ -209,7 +203,7 @@ namespace
 
 
 
-AST program_p (const vector <token>& tokens)
+program program_p (const vector <token>& tokens)
 {
 	token_range working_set = tokens;
 
@@ -220,16 +214,16 @@ AST program_p (const vector <token>& tokens)
 		throw_error ("Expected a declaration",
 		             begin (working_set)->pos);
 
-	return AST (move (*declList));
+	return program (declList);
 }
 
 
 
-AST_node declList_p (token_range& tokens)
+shared_ptr <declList> declList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node decl_list = make_node (AST_type::declList);
+	AST_node decl_list = make_node <declList> ();
 
 	AST_node next_decl = CALL (decl_p (working_set));
 	validate (next_decl);
@@ -250,19 +244,19 @@ AST_node declList_p (token_range& tokens)
 
 
 
-AST_node decl_p (token_range& tokens)
+shared_ptr <decl> decl_p (token_range& tokens)
 {
 	AST_node sub_decl = CALL (varDecl_p (tokens));
 	if (!sub_decl)
 		sub_decl = CALL (funDecl_p (tokens));
 	validate (sub_decl);
 
-	return make_node (AST_type::decl, sub_decl);
+	return make_node <decl> (sub_decl);
 }
 
 
 
-AST_node varDecl_p (token_range& tokens)
+shared_ptr <varDecl> varDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -293,33 +287,33 @@ AST_node varDecl_p (token_range& tokens)
 
 	tokens = working_set;
 	if (lbracket_node)
-		return make_node (AST_type::varDecl, type_specifier, ID,
-		                  lbracket_node, num, rbracket_node, semicolon_node);
-	return make_node (AST_type::varDecl, type_specifier, ID, semicolon_node);
+		return make_node <varDecl> (type_specifier, ID,
+		                            lbracket_node, num, rbracket_node, semicolon_node);
+	return make_node <varDecl> (type_specifier, ID, semicolon_node);
 }
 
 
 
-AST_node typeSpecifier_p (token_range& tokens)
+shared_ptr <typeSpecifier> typeSpecifier_p (token_range& tokens)
 {
 	AST_node specifier = get_token (tokens, "int");
 	if (specifier)
-		return make_node (AST_type::typeSpecifier, specifier);
+		return make_node <typeSpecifier> (specifier);
 
 	specifier = get_token (tokens, "char");
 	if (specifier)
-		return make_node (AST_type::typeSpecifier, specifier);
+		return make_node <typeSpecifier> (specifier);
 
 	specifier = get_token (tokens, "void");
 	if (specifier)
-		return make_node (AST_type::typeSpecifier, specifier);
+		return make_node <typeSpecifier> (specifier);
 
 	return nullptr;
 }
 
 
 
-AST_node funDecl_p (token_range& tokens)
+shared_ptr <funDecl> funDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -344,19 +338,19 @@ AST_node funDecl_p (token_range& tokens)
 
 	tokens = working_set;
 	if (decl_list)
-		return make_node (AST_type::funDecl, type_specifier, ID,
-		                  lparen_node, decl_list, rparen_node, function_body);
-		return make_node (AST_type::funDecl, type_specifier, ID,
-		                  lparen_node, rparen_node, function_body);
+		return make_node <funDecl> (type_specifier, ID,
+		                            lparen_node, decl_list, rparen_node, function_body);
+	return make_node <funDecl> (type_specifier, ID,
+	                            lparen_node, rparen_node, function_body);
 }
 
 
 
-AST_node formalDeclList_p (token_range& tokens)
+shared_ptr <formalDeclList> formalDeclList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node decl_list = make_node (AST_type::formalDeclList);
+	AST_node decl_list = make_node <formalDeclList> ();
 
 	AST_node next_decl = CALL (formalDecl_p (working_set));
 	validate (next_decl);
@@ -382,7 +376,7 @@ AST_node formalDeclList_p (token_range& tokens)
 
 
 
-AST_node formalDecl_p (token_range& tokens)
+shared_ptr <formalDecl> formalDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -404,14 +398,14 @@ AST_node formalDecl_p (token_range& tokens)
 
 	tokens = working_set;
 	if (lbracket_node)
-		return make_node (AST_type::formalDecl, type_specifier, ID,
-		                  lbracket_node, rbracket_node);
-	return make_node (AST_type::formalDecl, type_specifier, ID);
+		return make_node <formalDecl> (type_specifier, ID,
+		                               lbracket_node, rbracket_node);
+	return make_node <formalDecl> (type_specifier, ID);
 }
 
 
 
-AST_node funBody_p (token_range& tokens)
+shared_ptr <funBody> funBody_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -430,19 +424,19 @@ AST_node funBody_p (token_range& tokens)
 
 	tokens = working_set;
 	if (decl_list)
-		return make_node (AST_type::funBody, lbrace_node, decl_list,
-		                  statement_list, rbrace_node);
-	return make_node (AST_type::funBody, lbrace_node,
-	                  statement_list, rbrace_node);
+		return make_node <funBody> (lbrace_node, decl_list,
+		                            statement_list, rbrace_node);
+	return make_node <funBody> (lbrace_node,
+	                            statement_list, rbrace_node);
 }
 
 
 
-AST_node localDeclList_p (token_range& tokens)
+shared_ptr <localDeclList> localDeclList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node decl_list = make_node (AST_type::statementList);
+	AST_node decl_list = make_node <statementList> ();
 
 	AST_node next_decl;
 	for (;;)
@@ -460,11 +454,11 @@ AST_node localDeclList_p (token_range& tokens)
 
 
 
-AST_node statementList_p (token_range& tokens)
+shared_ptr <statementList> statementList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node decl_list = make_node (AST_type::statementList);
+	AST_node decl_list = make_node <statementList> ();
 
 	AST_node next_decl;
 	for (;;)
@@ -482,34 +476,34 @@ AST_node statementList_p (token_range& tokens)
 
 
 
-AST_node statement_p (token_range& tokens)
+shared_ptr <statement> statement_p (token_range& tokens)
 {
 	AST_node sub_decl = CALL (compoundStmt_p (tokens));
 	if (sub_decl)
-		return make_node (AST_type::statement, sub_decl);
+		return make_node <statement> (sub_decl);
 
 	sub_decl = CALL (assignStmt_p (tokens));
 	if (sub_decl)
-		return make_node (AST_type::statement, sub_decl);
+		return make_node <statement> (sub_decl);
 
 	sub_decl = CALL (condStmt_p (tokens));
 	if (sub_decl)
-		return make_node (AST_type::statement, sub_decl);
+		return make_node <statement> (sub_decl);
 
 	sub_decl = CALL (loopStmt_p (tokens));
 	if (sub_decl)
-		return make_node (AST_type::statement, sub_decl);
+		return make_node <statement> (sub_decl);
 
 	sub_decl = CALL (returnStmt_p (tokens));
 	if (sub_decl)
-		return make_node (AST_type::statement, sub_decl);
+		return make_node <statement> (sub_decl);
 
 	return nullptr;
 }
 
 
 
-AST_node compoundStmt_p (token_range& tokens)
+shared_ptr <compoundStmt> compoundStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -525,13 +519,13 @@ AST_node compoundStmt_p (token_range& tokens)
 		             begin (working_set)->pos);
 
 	tokens = working_set;
-	return make_node (AST_type::compoundStmt, lbrace_node,
-	                  statement_list, rbrace_node);
+	return make_node <compoundStmt> (lbrace_node,
+	                                 statement_list, rbrace_node);
 }
 
 
 
-AST_node assignStmt_p (token_range& tokens)
+shared_ptr <assignStmt> assignStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -557,14 +551,14 @@ AST_node assignStmt_p (token_range& tokens)
 
 	tokens = working_set;
 	if (var)
-		return make_node (AST_type::assignStmt, var, eq_node,
-		                  expression, semicolon_node);
-	return make_node (AST_type::assignStmt, expression, semicolon_node);
+		return make_node <assignStmt> (var, eq_node,
+		                               expression, semicolon_node);
+	return make_node <assignStmt> (expression, semicolon_node);
 }
 
 
 
-AST_node condStmt_p (token_range& tokens)
+shared_ptr <condStmt> condStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -601,15 +595,15 @@ AST_node condStmt_p (token_range& tokens)
 
 	tokens = working_set;
 	if (else_node)
-		return make_node (AST_type::condStmt, if_node, lparen_node, expression,
-		                  rparen_node, if_statement, else_node, else_statement);
-		return make_node (AST_type::condStmt, if_node, lparen_node,
-		                  expression, rparen_node, if_statement);
+		return make_node <condStmt> (if_node, lparen_node, expression,
+		                             rparen_node, if_statement, else_node, else_statement);
+	return make_node <condStmt> (if_node, lparen_node,
+	                             expression, rparen_node, if_statement);
 }
 
 
 
-AST_node loopStmt_p (token_range& tokens)
+shared_ptr <loopStmt> loopStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -635,13 +629,13 @@ AST_node loopStmt_p (token_range& tokens)
 		             begin (working_set)->pos);
 
 	tokens = working_set;
-	return make_node (AST_type::loopStmt, while_node, lparen_node,
-	                  expression, rparen_node, while_statement);
+	return make_node <loopStmt> (while_node, lparen_node,
+	                             expression, rparen_node, while_statement);
 }
 
 
 
-AST_node returnStmt_p (token_range& tokens)
+shared_ptr <returnStmt> returnStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -657,14 +651,14 @@ AST_node returnStmt_p (token_range& tokens)
 
 	tokens = working_set;
 	if (expression)
-		return make_node (AST_type::returnStmt, return_node,
-		                  expression, semicolon_node);
-	return make_node (AST_type::returnStmt, return_node, semicolon_node);
+		return make_node <returnStmt> (return_node,
+		                               expression, semicolon_node);
+	return make_node <returnStmt> (return_node, semicolon_node);
 }
 
 
 
-AST_node var_p (token_range& tokens)
+shared_ptr <var> var_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -689,14 +683,14 @@ AST_node var_p (token_range& tokens)
 
 	tokens = working_set;
 	if (lbracket_node)
-		return make_node (AST_type::var, ID, lbracket_node,
-		                  add_expr, rbracket_node);
-	return make_node (AST_type::var, ID);
+		return make_node <var> (ID, lbracket_node,
+		                        add_expr, rbracket_node);
+	return make_node <var> (ID);
 }
 
 
 
-AST_node expression_p (token_range& tokens)
+shared_ptr <expression> expression_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -718,8 +712,8 @@ AST_node expression_p (token_range& tokens)
 			break;
 
 		working_set = sub_working_set;
-		handle = make_node (AST_type::expression, handle,
-		                    relop, add_expr);
+		handle = make_node <expression> (handle,
+		                                 relop, add_expr);
 	}
 
 	tokens = working_set;
@@ -728,38 +722,38 @@ AST_node expression_p (token_range& tokens)
 
 
 
-AST_node relop_p (token_range& tokens)
+shared_ptr <relop> relop_p (token_range& tokens)
 {
 	AST_node relop = get_token (tokens, symbol::lt_equiv);
 	if (relop)
-		return make_node (AST_type::relop, relop);
+		return make_node <relop> (relop);
 
 	relop = get_token (tokens, symbol::less_than);
 	if (relop)
-		return make_node (AST_type::relop, relop);
+		return make_node <relop> (relop);
 
 	relop = get_token (tokens, symbol::greater_than);
 	if (relop)
-		return make_node (AST_type::relop, relop);
+		return make_node <relop> (relop);
 
 	relop = get_token (tokens, symbol::gt_equiv);
 	if (relop)
-		return make_node (AST_type::relop, relop);
+		return make_node <relop> (relop);
 
 	relop = get_token (tokens, symbol::equivalent);
 	if (relop)
-		return make_node (AST_type::relop, relop);
+		return make_node <relop> (relop);
 
 	relop = get_token (tokens, symbol::not_equiv);
 	if (relop)
-		return make_node (AST_type::relop, relop);
+		return make_node <relop> (relop);
 
 	return nullptr;
 }
 
 
 
-AST_node addExpr_p (token_range& tokens)
+shared_ptr <addExpr> addExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -781,8 +775,8 @@ AST_node addExpr_p (token_range& tokens)
 			break;
 
 		working_set = sub_working_set;
-		handle = make_node (AST_type::addExpr, handle,
-		                    addop, term);
+		handle = make_node <addExpr> (handle,
+		                              addop, term);
 	}
 
 	tokens = working_set;
@@ -791,22 +785,22 @@ AST_node addExpr_p (token_range& tokens)
 
 
 
-AST_node addop_p (token_range& tokens)
+shared_ptr <addop> addop_p (token_range& tokens)
 {
 	AST_node addop = get_token (tokens, symbol::plus);
 	if (addop)
-		return make_node (AST_type::addop, addop);
+		return make_node <addop> (addop);
 
 	addop = get_token (tokens, symbol::minus);
 	if (addop)
-		return make_node (AST_type::addop, addop);
+		return make_node <addop> (addop);
 
 	return nullptr;
 }
 
 
 
-AST_node term_p (token_range& tokens)
+shared_ptr <term> term_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -828,8 +822,8 @@ AST_node term_p (token_range& tokens)
 			break;
 
 		working_set = sub_working_set;
-		handle = make_node (AST_type::term, handle,
-		                    mulop, factor);
+		handle = make_node <term> (handle,
+		                           mulop, factor);
 	}
 
 	tokens = working_set;
@@ -838,22 +832,22 @@ AST_node term_p (token_range& tokens)
 
 
 
-AST_node mulop_p (token_range& tokens)
+shared_ptr <mulop> mulop_p (token_range& tokens)
 {
 	AST_node addop = get_token (tokens, symbol::asterisk);
 	if (addop)
-		return make_node (AST_type::mulop, addop);
+		return make_node <mulop> (addop);
 
 	addop = get_token (tokens, symbol::solidus);
 	if (addop)
-		return make_node (AST_type::mulop, addop);
+		return make_node <mulop> (addop);
 
 	return nullptr;
 }
 
 
 
-AST_node factor_p (token_range& tokens)
+shared_ptr <factor> factor_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -871,36 +865,36 @@ AST_node factor_p (token_range& tokens)
 			             begin (working_set)->pos);
 
 		tokens = working_set;
-		return make_node (AST_type::factor, lparen_node,
-		                  expression, rparen_node);
+		return make_node <factor> (lparen_node,
+		                           expression, rparen_node);
 	}
 
 	AST_node rvalue = CALL (funcCallExpr_p (tokens));
 	if (rvalue)
-		return make_node (AST_type::factor, rvalue);
+		return make_node <factor> (rvalue);
 
 	rvalue = CALL (var_p (tokens));
 	if (rvalue)
-		return make_node (AST_type::factor, rvalue);
+		return make_node <factor> (rvalue);
 
 	rvalue = get_token (tokens, token_type::int_literal);
 	if (rvalue)
-		return make_node (AST_type::factor, rvalue);
+		return make_node <factor> (rvalue);
 
 	rvalue = get_token (tokens, token_type::char_literal);
 	if (rvalue)
-		return make_node (AST_type::factor, rvalue);
+		return make_node <factor> (rvalue);
 
 	rvalue = get_token (tokens, token_type::string_literal);
 	if (rvalue)
-		return make_node (AST_type::factor, rvalue);
+		return make_node <factor> (rvalue);
 
 	return nullptr;
 }
 
 
 
-AST_node funcCallExpr_p (token_range& tokens)
+shared_ptr <funcCallExpr> funcCallExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -918,19 +912,19 @@ AST_node funcCallExpr_p (token_range& tokens)
 
 	tokens = working_set;
 	if (arg_list)
-		return make_node (AST_type::funcCallExpr, ID, lparen_node,
-		                  arg_list, rparen_node);
-		return make_node (AST_type::funcCallExpr, ID,
-		                  lparen_node, rparen_node);
+		return make_node <funcCallExpr> (ID, lparen_node,
+		                                 arg_list, rparen_node);
+	return make_node <funcCallExpr> (ID,
+	                                 lparen_node, rparen_node);
 }
 
 
 
-AST_node argList_p (token_range& tokens)
+shared_ptr <argList> argList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node expression_list = make_node (AST_type::argList);
+	AST_node expression_list = make_node <argList> ();
 
 	AST_node next_expression = CALL (expression_p (working_set));
 	validate (next_expression);

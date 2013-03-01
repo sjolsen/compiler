@@ -6,57 +6,82 @@ using namespace std;
 
 
 
-AST::AST ()
-	: parent (nullptr),
-	  tokenp (nullptr)
-{
-}
-
-
-
-AST::AST (const token& t)
-	: type (AST_type::terminal),
-	  parent (nullptr),
-	  tokenp (&t)
-{
-}
-
-
-
 namespace
 {
-	vector <string> AST_to_string_impl (const AST& tree)
+	vector <string> collect (vector&& <string> v)
+	{ return v; }
+
+	template <typename... Rest>
+	vector <string> collect (vector&& <string> first,
+	                         Rest&&... rest)
 	{
-		if (tree.type == AST_type::terminal)
-			return {to_string (*tree.tokenp)};
-
-		// if (tree.children.size () == 1)
-		// 	return AST_to_string_impl (*tree.children.front ());
-
-		vector <string> lines = {'(' + to_string (tree.type)};
-		for (auto child : tree.children)
-			for (string& line : AST_to_string_impl (*child))
-				lines.emplace_back ("  " + move (line));
-
-		lines.back () += ')';
-		return lines;
+		auto&& rest_lines = collect (forward <Rest> (rest)...);
+		first.reserve (first.size () + rest_lines.size ());
+		for (string& line : rest_lines)
+			first.emplace_back (move (line));
+		return first;
 	}
+
+	vector <string> lines (const vector <AST_node>& nodes)
+	{
+		vector <string> output;
+		for (const AST_node& node : nodes)
+			output = collect (move (output), node.to_string ());
+		return output;
+	}
+
+	bool operator bool (const vector <AST_node>& nodes)
+	{ return !nodes.empty (); }
 }
 
 
+
+AST::AST ()
+	: parent (nullptr),
+{
+}
+
+virtual vector <string> AST::contents ()
+{
+	return {};
+}
+
+
+
+#include "auto.astdefs.cc"
+
+
+
+terminal::terminal (const token& t)
+	: token_ref (t)
+{
+}
+
+virtual vector <string> terminal::contents ()
+{
+	return {to_string (token_ref)};
+}
+
+
+
+vector <string> lines (const AST_node& node)
+{
+	vector <string> lines = {'(' + to_string (tree.type)};
+	for (string& line : node->contents ())
+		lines.emplace_back ("  " + move (line));
+	lines.back () += ')';
+
+	return lines;
+}
 
 string to_string (const AST& tree,
                   string line_prefix)
 {
-	auto lines = AST_to_string_impl (tree);
-	string output;
-	for (const string& line : lines)
-		output += line_prefix + line + '\n';
+	auto lines = tree.to_string ();
 
-	return output;
+	return accumulate (begin (lines), end (lines), "",
+	                   [&] (const string& output, const string& line) { return output + line_prefix + line + '\n'; });
 }
-
-
 
 std::string to_string (AST_type type)
 {

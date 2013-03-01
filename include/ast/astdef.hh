@@ -45,32 +45,35 @@ enum class AST_type
 
 struct AST
 {
-	AST_type type;
-	const token* tokenp;
-
 	AST* parent;
-	std::vector <std::shared_ptr <AST>> children;
+	AST_type type;
 
 	AST ();
-	AST (const token& t);
 
-	AST (AST&&) = default;
-	AST& operator = (AST&&) = default;
-
-	template <typename... Args>
-	AST (AST_type node_type,
-	     Args&&... args)
-		: type (node_type),
-		  tokenp (nullptr),
-		  children {std::forward <Args> (args)...}
-	{
-		for (auto& child : children)
-			child->parent = this;
-	}
+	virtual std::vector <std::string> contents ();
 };
 
 
 
+typedef std::shared_ptr <AST> AST_node;
+
+
+
+#include "auto.astdecls.hh"
+
+
+
+struct terminal
+	: AST
+{
+	const token& token_ref;
+
+	terminal (const token& t);
+	virtual std::vector <std::string> contents () override;
+};
+
+
+std::vector <std::string> lines (const AST_node& node);
 std::string to_string (const AST& tree,
                        std::string line_prefix = "");
 std::string to_string (AST_type type);

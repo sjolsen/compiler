@@ -38,7 +38,6 @@ enum class AST_type
 	factor,
 	funcCallExpr,
 	argList,
-	terminal,
 };
 
 
@@ -56,6 +55,8 @@ struct AST
 
 
 typedef std::shared_ptr <AST> AST_node;
+template <typename NodeType>
+using Node = std::shared_ptr <NodeType>;
 
 
 
@@ -74,8 +75,8 @@ struct terminal
 
 
 std::vector <std::string> lines (const AST_node& node);
-std::string to_string (const AST& tree,
-                       std::string line_prefix = "");
+std::string to_string (const AST_node& tree,
+                       std::string line_prefix);
 std::string to_string (AST_type type);
 
 

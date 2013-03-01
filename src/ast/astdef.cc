@@ -8,11 +8,11 @@ using namespace std;
 
 namespace
 {
-	vector <string> collect (vector&& <string> v)
+	vector <string> collect (vector <string>&& v)
 	{ return v; }
 
 	template <typename... Rest>
-	vector <string> collect (vector&& <string> first,
+	vector <string> collect (vector <string>&& first,
 	                         Rest&&... rest)
 	{
 		auto&& rest_lines = collect (forward <Rest> (rest)...);
@@ -26,22 +26,31 @@ namespace
 	{
 		vector <string> output;
 		for (const AST_node& node : nodes)
-			output = collect (move (output), node.to_string ());
+			output = collect (move (output), lines (node));
 		return output;
 	}
 
-	bool operator bool (const vector <AST_node>& nodes)
+	vector <string> lines (bool b)
+	{ return b ? vector <string> {"[]"} : vector <string> {}; }
+
+	bool valid (const vector <AST_node>& nodes)
 	{ return !nodes.empty (); }
+
+	bool valid (const AST_node& node)
+	{ return node != nullptr; }
+
+	bool valid (bool b)
+	{ return b; }
 }
 
 
 
 AST::AST ()
-	: parent (nullptr),
+	: parent (nullptr)
 {
 }
 
-virtual vector <string> AST::contents ()
+vector <string> AST::contents ()
 {
 	return {};
 }
@@ -57,7 +66,7 @@ terminal::terminal (const token& t)
 {
 }
 
-virtual vector <string> terminal::contents ()
+vector <string> terminal::contents ()
 {
 	return {to_string (token_ref)};
 }
@@ -66,7 +75,7 @@ virtual vector <string> terminal::contents ()
 
 vector <string> lines (const AST_node& node)
 {
-	vector <string> lines = {'(' + to_string (tree.type)};
+	vector <string> lines = {'(' + to_string (node->type)};
 	for (string& line : node->contents ())
 		lines.emplace_back ("  " + move (line));
 	lines.back () += ')';
@@ -74,12 +83,12 @@ vector <string> lines (const AST_node& node)
 	return lines;
 }
 
-string to_string (const AST& tree,
+string to_string (const AST_node& tree,
                   string line_prefix)
 {
-	auto lines = tree.to_string ();
+	auto tree_lines = lines (tree);
 
-	return accumulate (begin (lines), end (lines), "",
+	return accumulate (begin (tree_lines), end (tree_lines), string (),
 	                   [&] (const string& output, const string& line) { return output + line_prefix + line + '\n'; });
 }
 

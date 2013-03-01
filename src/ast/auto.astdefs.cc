@@ -1,337 +1,54 @@
-program::program (AST_node _decl_list)
-	: type (AST_type::program),
-	  decl_list (_decl_list)
-{
-}
-
-virtual vector <string> program::contents ()
-{
-	return collect (decl_list ? lines (decl_list) : {});
-}
-
-declList::declList (std::vector <AST_node> _decls)
-	: type (AST_type::declList),
-	  decls (_decls)
-{
-}
-
-virtual vector <string> declList::contents ()
-{
-	return collect (decls ? lines (decls) : {});
-}
-
-decl::decl (AST_node _sub_decl)
-	: type (AST_type::decl),
-	  sub_decl (_sub_decl)
-{
-}
-
-virtual vector <string> decl::contents ()
-{
-	return collect (sub_decl ? lines (sub_decl) : {});
-}
-
-varDecl::varDecl (AST_node _type_spec,
-                  AST_node _name,
-                  AST_node _size)
-	: type (AST_type::varDecl),
-	  type_spec (_type_spec)
-{
-}
-
-virtual vector <string> varDecl::contents ()
-{
-	return collect (type_spec ? lines (type_spec) : {},
-	                name ? lines (name) : {},
-	                size ? lines (size) : {});
-}
-
-typeSpecifier::typeSpecifier (AST_node _kwd_node)
-	: type (AST_type::typeSpecifier),
-	  kwd_node (_kwd_node)
-{
-}
-
-virtual vector <string> typeSpecifier::contents ()
-{
-	return collect (kwd_node ? lines (kwd_node) : {});
-}
-
-funDecl::funDecl (AST_node _type_spec,
-                  AST_node _name,
-                  AST_node _decl_list,
-                  AST_node _body)
-	: type (AST_type::funDecl),
-	  type_spec (_type_spec)
-{
-}
-
-virtual vector <string> funDecl::contents ()
-{
-	return collect (type_spec ? lines (type_spec) : {},
-	                name ? lines (name) : {},
-	                decl_list ? lines (decl_list) : {},
-	                body ? lines (body) : {});
-}
-
-formalDeclList::formalDeclList (std::vector <AST_node> _decls)
-	: type (AST_type::formalDeclList),
-	  decls (_decls)
-{
-}
-
-virtual vector <string> formalDeclList::contents ()
-{
-	return collect (decls ? lines (decls) : {});
-}
-
-formalDecl::formalDecl (AST_node _type_spec,
-                        AST_node _name,
-                        bool _is_array)
-	: type (AST_type::formalDecl),
-	  type_spec (_type_spec)
-{
-}
-
-virtual vector <string> formalDecl::contents ()
-{
-	return collect (type_spec ? lines (type_spec) : {},
-	                name ? lines (name) : {},
-	                is_array ? lines (is_array) : {});
-}
-
-funBody::funBody (AST_node _decl_list,
-                  AST_node _stmt_list)
-	: type (AST_type::funBody),
-	  decl_list (_decl_list)
-{
-}
-
-virtual vector <string> funBody::contents ()
-{
-	return collect (decl_list ? lines (decl_list) : {},
-	                stmt_list ? lines (stmt_list) : {});
-}
-
-localDeclList::localDeclList (std::vector <AST_node> _decls)
-	: type (AST_type::localDeclList),
-	  decls (_decls)
-{
-}
-
-virtual vector <string> localDeclList::contents ()
-{
-	return collect (decls ? lines (decls) : {});
-}
-
-statementList::statementList (std::vector <AST_node> _stmts)
-	: type (AST_type::statementList),
-	  stmts (_stmts)
-{
-}
-
-virtual vector <string> statementList::contents ()
-{
-	return collect (stmts ? lines (stmts) : {});
-}
-
-statement::statement (AST_node _sub_stmt)
-	: type (AST_type::statement),
-	  sub_stmt (_sub_stmt)
-{
-}
-
-virtual vector <string> statement::contents ()
-{
-	return collect (sub_stmt ? lines (sub_stmt) : {});
-}
-
-compoundStmt::compoundStmt (AST_node _stmt_list)
-	: type (AST_type::compoundStmt),
-	  stmt_list (_stmt_list)
-{
-}
-
-virtual vector <string> compoundStmt::contents ()
-{
-	return collect (stmt_list ? lines (stmt_list) : {});
-}
-
-assignStmt::assignStmt (AST_node _lvalue,
-                        AST_node _rvalue)
-	: type (AST_type::assignStmt),
-	  lvalue (_lvalue)
-{
-}
-
-virtual vector <string> assignStmt::contents ()
-{
-	return collect (lvalue ? lines (lvalue) : {},
-	                rvalue ? lines (rvalue) : {});
-}
-
-condStmt::condStmt (AST_node _cond_expr,
-                    AST_node _then_stmt,
-                    AST_node _else_stmt)
-	: type (AST_type::condStmt),
-	  cond_expr (_cond_expr)
-{
-}
-
-virtual vector <string> condStmt::contents ()
-{
-	return collect (cond_expr ? lines (cond_expr) : {},
-	                then_stmt ? lines (then_stmt) : {},
-	                else_stmt ? lines (else_stmt) : {});
-}
-
-loopStmt::loopStmt (AST_node _cond_expr,
-                    AST_node _then_stmt)
-	: type (AST_type::loopStmt),
-	  cond_expr (_cond_expr)
-{
-}
-
-virtual vector <string> loopStmt::contents ()
-{
-	return collect (cond_expr ? lines (cond_expr) : {},
-	                then_stmt ? lines (then_stmt) : {});
-}
-
-returnStmt::returnStmt (AST_node _rtrn_expr)
-	: type (AST_type::returnStmt),
-	  rtrn_expr (_rtrn_expr)
-{
-}
-
-virtual vector <string> returnStmt::contents ()
-{
-	return collect (rtrn_expr ? lines (rtrn_expr) : {});
-}
-
-var::var (AST_node _name,
-          AST_node _size)
-	: type (AST_type::var),
-	  name (_name)
-{
-}
-
-virtual vector <string> var::contents ()
-{
-	return collect (name ? lines (name) : {},
-	                size ? lines (size) : {});
-}
-
-expression::expression (AST_node _lhs,
-                        AST_node _op,
-                        AST_node _rhs)
-	: type (AST_type::expression),
-	  lhs (_lhs)
-{
-}
-
-virtual vector <string> expression::contents ()
-{
-	return collect (lhs ? lines (lhs) : {},
-	                op ? lines (op) : {},
-	                rhs ? lines (rhs) : {});
-}
-
-relop::relop (AST_node _sym)
-	: type (AST_type::relop),
-	  sym (_sym)
-{
-}
-
-virtual vector <string> relop::contents ()
-{
-	return collect (sym ? lines (sym) : {});
-}
-
-addExpr::addExpr (AST_node _lhs,
-                  AST_node _op,
-                  AST_node _rhs)
-	: type (AST_type::addExpr),
-	  lhs (_lhs)
-{
-}
-
-virtual vector <string> addExpr::contents ()
-{
-	return collect (lhs ? lines (lhs) : {},
-	                op ? lines (op) : {},
-	                rhs ? lines (rhs) : {});
-}
-
-addop::addop (AST_node _sym)
-	: type (AST_type::addop),
-	  sym (_sym)
-{
-}
-
-virtual vector <string> addop::contents ()
-{
-	return collect (sym ? lines (sym) : {});
-}
-
-term::term (AST_node _lhs,
-            AST_node _op,
-            AST_node _rhs)
-	: type (AST_type::term),
-	  lhs (_lhs)
-{
-}
-
-virtual vector <string> term::contents ()
-{
-	return collect (lhs ? lines (lhs) : {},
-	                op ? lines (op) : {},
-	                rhs ? lines (rhs) : {});
-}
-
-mulop::mulop (AST_node _sym)
-	: type (AST_type::mulop),
-	  sym (_sym)
-{
-}
-
-virtual vector <string> mulop::contents ()
-{
-	return collect (sym ? lines (sym) : {});
-}
-
-factor::factor (AST_node _rvalue)
-	: type (AST_type::factor),
-	  rvalue (_rvalue)
-{
-}
-
-virtual vector <string> factor::contents ()
-{
-	return collect (rvalue ? lines (rvalue) : {});
-}
-
-funcCallExpr::funcCallExpr (AST_node _name,
-                            AST_node _arg_list)
-	: type (AST_type::funcCallExpr),
-	  name (_name)
-{
-}
-
-virtual vector <string> funcCallExpr::contents ()
-{
-	return collect (name ? lines (name) : {},
-	                arg_list ? lines (arg_list) : {});
-}
-
-argList::argList (std::vector <AST_node> _args)
-	: type (AST_type::argList),
-	  args (_args)
-{
-}
-
-virtual vector <string> argList::contents ()
-{
-	return collect (args ? lines (args) : {});
-}
-
+program::program (AST_node _decl_list): decl_list(_decl_list) {type = AST_type::program;}
+vector <string> program::contents () {return collect (valid (decl_list) ? lines (decl_list) : vector <string> {} ); }
+declList::declList (std::vector <AST_node> _decls): decls(_decls) {type = AST_type::declList;}
+vector <string> declList::contents () {return collect (valid (decls) ? lines (decls) : vector <string> {} ); }
+decl::decl (AST_node _sub_decl): sub_decl(_sub_decl) {type = AST_type::decl;}
+vector <string> decl::contents () {return collect (valid (sub_decl) ? lines (sub_decl) : vector <string> {} ); }
+varDecl::varDecl (AST_node _type_spec, AST_node _name, AST_node _size): type_spec(_type_spec) , name(_name) , size(_size) {type = AST_type::varDecl;}
+vector <string> varDecl::contents () {return collect (valid (type_spec) ? lines (type_spec) : vector <string> {} , valid (name) ? lines (name) : vector <string> {} , valid (size) ? lines (size) : vector <string> {} ); }
+typeSpecifier::typeSpecifier (AST_node _kwd_node): kwd_node(_kwd_node) {type = AST_type::typeSpecifier;}
+vector <string> typeSpecifier::contents () {return collect (valid (kwd_node) ? lines (kwd_node) : vector <string> {} ); }
+funDecl::funDecl (AST_node _type_spec, AST_node _name, AST_node _decl_list, AST_node _body): type_spec(_type_spec) , name(_name) , decl_list(_decl_list) , body(_body) {type = AST_type::funDecl;}
+vector <string> funDecl::contents () {return collect (valid (type_spec) ? lines (type_spec) : vector <string> {} , valid (name) ? lines (name) : vector <string> {} , valid (decl_list) ? lines (decl_list) : vector <string> {} , valid (body) ? lines (body) : vector <string> {} ); }
+formalDeclList::formalDeclList (std::vector <AST_node> _decls): decls(_decls) {type = AST_type::formalDeclList;}
+vector <string> formalDeclList::contents () {return collect (valid (decls) ? lines (decls) : vector <string> {} ); }
+formalDecl::formalDecl (AST_node _type_spec, AST_node _name, bool _is_array): type_spec(_type_spec) , name(_name) , is_array(_is_array) {type = AST_type::formalDecl;}
+vector <string> formalDecl::contents () {return collect (valid (type_spec) ? lines (type_spec) : vector <string> {} , valid (name) ? lines (name) : vector <string> {} , valid (is_array) ? lines (is_array) : vector <string> {} ); }
+funBody::funBody (AST_node _decl_list, AST_node _stmt_list): decl_list(_decl_list) , stmt_list(_stmt_list) {type = AST_type::funBody;}
+vector <string> funBody::contents () {return collect (valid (decl_list) ? lines (decl_list) : vector <string> {} , valid (stmt_list) ? lines (stmt_list) : vector <string> {} ); }
+localDeclList::localDeclList (std::vector <AST_node> _decls): decls(_decls) {type = AST_type::localDeclList;}
+vector <string> localDeclList::contents () {return collect (valid (decls) ? lines (decls) : vector <string> {} ); }
+statementList::statementList (std::vector <AST_node> _stmts): stmts(_stmts) {type = AST_type::statementList;}
+vector <string> statementList::contents () {return collect (valid (stmts) ? lines (stmts) : vector <string> {} ); }
+statement::statement (AST_node _sub_stmt): sub_stmt(_sub_stmt) {type = AST_type::statement;}
+vector <string> statement::contents () {return collect (valid (sub_stmt) ? lines (sub_stmt) : vector <string> {} ); }
+compoundStmt::compoundStmt (AST_node _stmt_list): stmt_list(_stmt_list) {type = AST_type::compoundStmt;}
+vector <string> compoundStmt::contents () {return collect (valid (stmt_list) ? lines (stmt_list) : vector <string> {} ); }
+assignStmt::assignStmt (AST_node _lvalue, AST_node _rvalue): lvalue(_lvalue) , rvalue(_rvalue) {type = AST_type::assignStmt;}
+vector <string> assignStmt::contents () {return collect (valid (lvalue) ? lines (lvalue) : vector <string> {} , valid (rvalue) ? lines (rvalue) : vector <string> {} ); }
+condStmt::condStmt (AST_node _cond_expr, AST_node _then_stmt, AST_node _else_stmt): cond_expr(_cond_expr) , then_stmt(_then_stmt) , else_stmt(_else_stmt) {type = AST_type::condStmt;}
+vector <string> condStmt::contents () {return collect (valid (cond_expr) ? lines (cond_expr) : vector <string> {} , valid (then_stmt) ? lines (then_stmt) : vector <string> {} , valid (else_stmt) ? lines (else_stmt) : vector <string> {} ); }
+loopStmt::loopStmt (AST_node _cond_expr, AST_node _then_stmt): cond_expr(_cond_expr) , then_stmt(_then_stmt) {type = AST_type::loopStmt;}
+vector <string> loopStmt::contents () {return collect (valid (cond_expr) ? lines (cond_expr) : vector <string> {} , valid (then_stmt) ? lines (then_stmt) : vector <string> {} ); }
+returnStmt::returnStmt (AST_node _rtrn_expr): rtrn_expr(_rtrn_expr) {type = AST_type::returnStmt;}
+vector <string> returnStmt::contents () {return collect (valid (rtrn_expr) ? lines (rtrn_expr) : vector <string> {} ); }
+var::var (AST_node _name, AST_node _size): name(_name) , size(_size) {type = AST_type::var;}
+vector <string> var::contents () {return collect (valid (name) ? lines (name) : vector <string> {} , valid (size) ? lines (size) : vector <string> {} ); }
+expression::expression (AST_node _lhs, AST_node _op, AST_node _rhs): lhs(_lhs) , op(_op) , rhs(_rhs) {type = AST_type::expression;}
+vector <string> expression::contents () {return collect (valid (lhs) ? lines (lhs) : vector <string> {} , valid (op) ? lines (op) : vector <string> {} , valid (rhs) ? lines (rhs) : vector <string> {} ); }
+relop::relop (AST_node _sym): sym(_sym) {type = AST_type::relop;}
+vector <string> relop::contents () {return collect (valid (sym) ? lines (sym) : vector <string> {} ); }
+addExpr::addExpr (AST_node _lhs, AST_node _op, AST_node _rhs): lhs(_lhs) , op(_op) , rhs(_rhs) {type = AST_type::addExpr;}
+vector <string> addExpr::contents () {return collect (valid (lhs) ? lines (lhs) : vector <string> {} , valid (op) ? lines (op) : vector <string> {} , valid (rhs) ? lines (rhs) : vector <string> {} ); }
+addop::addop (AST_node _sym): sym(_sym) {type = AST_type::addop;}
+vector <string> addop::contents () {return collect (valid (sym) ? lines (sym) : vector <string> {} ); }
+term::term (AST_node _lhs, AST_node _op, AST_node _rhs): lhs(_lhs) , op(_op) , rhs(_rhs) {type = AST_type::term;}
+vector <string> term::contents () {return collect (valid (lhs) ? lines (lhs) : vector <string> {} , valid (op) ? lines (op) : vector <string> {} , valid (rhs) ? lines (rhs) : vector <string> {} ); }
+mulop::mulop (AST_node _sym): sym(_sym) {type = AST_type::mulop;}
+vector <string> mulop::contents () {return collect (valid (sym) ? lines (sym) : vector <string> {} ); }
+factor::factor (AST_node _rvalue): rvalue(_rvalue) {type = AST_type::factor;}
+vector <string> factor::contents () {return collect (valid (rvalue) ? lines (rvalue) : vector <string> {} ); }
+funcCallExpr::funcCallExpr (AST_node _name, AST_node _arg_list): name(_name) , arg_list(_arg_list) {type = AST_type::funcCallExpr;}
+vector <string> funcCallExpr::contents () {return collect (valid (name) ? lines (name) : vector <string> {} , valid (arg_list) ? lines (arg_list) : vector <string> {} ); }
+argList::argList (std::vector <AST_node> _args): args(_args) {type = AST_type::argList;}
+vector <string> argList::contents () {return collect (valid (args) ? lines (args) : vector <string> {} ); }

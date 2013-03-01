@@ -47,7 +47,7 @@ namespace
 	{
 		if (!node)
 			throw logic_error ("Tried to dereference a null AST_node");
-		return to_string (*node, string (ident_level, '\t'));
+		return to_string (node, string (ident_level, '\t'));
 	}
 
 	void printargs ()
@@ -67,15 +67,15 @@ namespace
 
 namespace
 {
-	template <typename Node, typename... Args>
-	AST_node make_node (Args&&... args)
+	template <typename NodeType, typename... Args>
+	Node <NodeType> make_node (Args&&... args)
 	{
 		logfile << string (ident_level, '\t')
-		        << "Making node (" << to_string (type) << "):\n";
+		        << "Making node:\n";
 		++ident_level;
 		printargs (forward <Args> (args)...);
 
-		auto node = make_shared <Node> (forward <Args> (args)...);
+		auto node = make_shared <NodeType> (forward <Args> (args)...);
 
 		--ident_level;
 		logfile << string (ident_level, '\t')
@@ -86,7 +86,7 @@ namespace
 
 	AST_node pop_front (token_range& working_set)
 	{
-		AST_node front = make_node (working_set [0]);
+		AST_node front = make_node <terminal> (working_set [0]);
 		working_set.drop_front (1);
 		return front;
 	}
@@ -209,31 +209,31 @@ program program_p (const vector <token>& tokens)
 
 	validate_pairs (working_set);
 	logfile << "Finished validating\n";
-	AST_node declList = CALL (declList_p (working_set));
-	if (!declList)
+	Node <declList> decl_list = CALL (declList_p (working_set));
+	if (!decl_list)
 		throw_error ("Expected a declaration",
 		             begin (working_set)->pos);
 
-	return program (declList);
+	return program (decl_list);
 }
 
 
 
-shared_ptr <declList> declList_p (token_range& tokens)
+Node <declList> declList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node decl_list = make_node <declList> ();
+	Node <declList> decl_list;
 
-	AST_node next_decl = CALL (decl_p (working_set));
+	Node <decl> next_decl = CALL (decl_p (working_set));
 	validate (next_decl);
-	decl_list->children.push_back (next_decl);
+	decl_list->decls.push_back (next_decl);
 
 	for (;;)
 	{
 		next_decl = CALL (decl_p (working_set));
 		if (next_decl)
-			decl_list->children.push_back (next_decl);
+			decl_list->decls.push_back (next_decl);
 		else
 		{
 			tokens = working_set;
@@ -244,7 +244,7 @@ shared_ptr <declList> declList_p (token_range& tokens)
 
 
 
-shared_ptr <decl> decl_p (token_range& tokens)
+Node <decl> decl_p (token_range& tokens)
 {
 	AST_node sub_decl = CALL (varDecl_p (tokens));
 	if (!sub_decl)
@@ -256,7 +256,7 @@ shared_ptr <decl> decl_p (token_range& tokens)
 
 
 
-shared_ptr <varDecl> varDecl_p (token_range& tokens)
+Node <varDecl> varDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -294,7 +294,7 @@ shared_ptr <varDecl> varDecl_p (token_range& tokens)
 
 
 
-shared_ptr <typeSpecifier> typeSpecifier_p (token_range& tokens)
+Node <typeSpecifier> typeSpecifier_p (token_range& tokens)
 {
 	AST_node specifier = get_token (tokens, "int");
 	if (specifier)
@@ -313,7 +313,7 @@ shared_ptr <typeSpecifier> typeSpecifier_p (token_range& tokens)
 
 
 
-shared_ptr <funDecl> funDecl_p (token_range& tokens)
+Node <funDecl> funDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -346,7 +346,7 @@ shared_ptr <funDecl> funDecl_p (token_range& tokens)
 
 
 
-shared_ptr <formalDeclList> formalDeclList_p (token_range& tokens)
+Node <formalDeclList> formalDeclList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -376,7 +376,7 @@ shared_ptr <formalDeclList> formalDeclList_p (token_range& tokens)
 
 
 
-shared_ptr <formalDecl> formalDecl_p (token_range& tokens)
+Node <formalDecl> formalDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -405,7 +405,7 @@ shared_ptr <formalDecl> formalDecl_p (token_range& tokens)
 
 
 
-shared_ptr <funBody> funBody_p (token_range& tokens)
+Node <funBody> funBody_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -432,7 +432,7 @@ shared_ptr <funBody> funBody_p (token_range& tokens)
 
 
 
-shared_ptr <localDeclList> localDeclList_p (token_range& tokens)
+Node <localDeclList> localDeclList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -454,7 +454,7 @@ shared_ptr <localDeclList> localDeclList_p (token_range& tokens)
 
 
 
-shared_ptr <statementList> statementList_p (token_range& tokens)
+Node <statementList> statementList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -476,7 +476,7 @@ shared_ptr <statementList> statementList_p (token_range& tokens)
 
 
 
-shared_ptr <statement> statement_p (token_range& tokens)
+Node <statement> statement_p (token_range& tokens)
 {
 	AST_node sub_decl = CALL (compoundStmt_p (tokens));
 	if (sub_decl)
@@ -503,7 +503,7 @@ shared_ptr <statement> statement_p (token_range& tokens)
 
 
 
-shared_ptr <compoundStmt> compoundStmt_p (token_range& tokens)
+Node <compoundStmt> compoundStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -525,7 +525,7 @@ shared_ptr <compoundStmt> compoundStmt_p (token_range& tokens)
 
 
 
-shared_ptr <assignStmt> assignStmt_p (token_range& tokens)
+Node <assignStmt> assignStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -558,7 +558,7 @@ shared_ptr <assignStmt> assignStmt_p (token_range& tokens)
 
 
 
-shared_ptr <condStmt> condStmt_p (token_range& tokens)
+Node <condStmt> condStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -603,7 +603,7 @@ shared_ptr <condStmt> condStmt_p (token_range& tokens)
 
 
 
-shared_ptr <loopStmt> loopStmt_p (token_range& tokens)
+Node <loopStmt> loopStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -635,7 +635,7 @@ shared_ptr <loopStmt> loopStmt_p (token_range& tokens)
 
 
 
-shared_ptr <returnStmt> returnStmt_p (token_range& tokens)
+Node <returnStmt> returnStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -658,7 +658,7 @@ shared_ptr <returnStmt> returnStmt_p (token_range& tokens)
 
 
 
-shared_ptr <var> var_p (token_range& tokens)
+Node <var> var_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -690,7 +690,7 @@ shared_ptr <var> var_p (token_range& tokens)
 
 
 
-shared_ptr <expression> expression_p (token_range& tokens)
+Node <expression> expression_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -722,7 +722,7 @@ shared_ptr <expression> expression_p (token_range& tokens)
 
 
 
-shared_ptr <relop> relop_p (token_range& tokens)
+Node <relop> relop_p (token_range& tokens)
 {
 	AST_node relop = get_token (tokens, symbol::lt_equiv);
 	if (relop)
@@ -753,7 +753,7 @@ shared_ptr <relop> relop_p (token_range& tokens)
 
 
 
-shared_ptr <addExpr> addExpr_p (token_range& tokens)
+Node <addExpr> addExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -785,7 +785,7 @@ shared_ptr <addExpr> addExpr_p (token_range& tokens)
 
 
 
-shared_ptr <addop> addop_p (token_range& tokens)
+Node <addop> addop_p (token_range& tokens)
 {
 	AST_node addop = get_token (tokens, symbol::plus);
 	if (addop)
@@ -800,7 +800,7 @@ shared_ptr <addop> addop_p (token_range& tokens)
 
 
 
-shared_ptr <term> term_p (token_range& tokens)
+Node <term> term_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -832,7 +832,7 @@ shared_ptr <term> term_p (token_range& tokens)
 
 
 
-shared_ptr <mulop> mulop_p (token_range& tokens)
+Node <mulop> mulop_p (token_range& tokens)
 {
 	AST_node addop = get_token (tokens, symbol::asterisk);
 	if (addop)
@@ -847,7 +847,7 @@ shared_ptr <mulop> mulop_p (token_range& tokens)
 
 
 
-shared_ptr <factor> factor_p (token_range& tokens)
+Node <factor> factor_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -894,7 +894,7 @@ shared_ptr <factor> factor_p (token_range& tokens)
 
 
 
-shared_ptr <funcCallExpr> funcCallExpr_p (token_range& tokens)
+Node <funcCallExpr> funcCallExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
@@ -920,7 +920,7 @@ shared_ptr <funcCallExpr> funcCallExpr_p (token_range& tokens)
 
 
 
-shared_ptr <argList> argList_p (token_range& tokens)
+Node <argList> argList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 

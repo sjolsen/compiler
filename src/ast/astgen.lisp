@@ -19,21 +19,25 @@
 
 (defun make-init-list (members)
   (if members
-      (concatenate 'string ", " (caar members) "(_" (caar members) ") ")))
+      (let ((head-def
+	     (concatenate 'string (caar members) "(_" (caar members) ") ")))
+	(if (cdr members)
+	    (concatenate 'string head-def ", " (make-init-list (cdr members)))
+	    head-def))))
 
 (defun make-classdef (name members)
   (concatenate 'string name "::" name " (" (make-param-list members) ")"
-	       ": type (AST_type::" name ")" (make-init-list members) "{}"))
+	       ": " (make-init-list members) "{type = AST_type::" name ";}"))
 
 (defun make-linegets (members)
   (let ((head-decl
-	 (concatenate 'string (caar members) "? lines (" (caar members) ") : {} ")))
+	 (concatenate 'string "valid (" (caar members) ") ? lines (" (caar members) ") : vector <string> {} ")))
     (if (cdr members)
 	(concatenate 'string head-decl ", " (make-linegets (cdr members)))
 	head-decl)))
 
 (defun make-contents (name members)
-  (concatenate 'string "virtual vector <string> " name "::contents () {"
+  (concatenate 'string "vector <string> " name "::contents () {"
 	       "return collect (" (make-linegets members) "); }"))
 
 (defparameter node "AST_node")
@@ -123,14 +127,14 @@
 ;; 				  #(#\Newline))
 ;; 		     declfile)))
 
-;; (with-open-file (deffile "auto.astdefs.hh"
-;; 			  :if-exists :supersede
-;; 			  :if-does-not-exist :create
-;; 			  :direction :output)
-;;   (loop for typespec in ast-types do
-;;        (write-string (concatenate 'string
-;; 				  (make-classdef (car typespec) (cadr typespec))
-;; 				  #(#\Newline)
-;; 				  (make-contents (car typespec) (cadr typespec))
-;; 				  #(#\Newline))
-;; 		     deffile)))
+(with-open-file (deffile "auto.astdefs.cc"
+			  :if-exists :supersede
+			  :if-does-not-exist :create
+			  :direction :output)
+  (loop for typespec in ast-types do
+       (write-string (concatenate 'string
+				  (make-classdef (car typespec) (cadr typespec))
+				  #(#\Newline)
+				  (make-contents (car typespec) (cadr typespec))
+				  #(#\Newline))
+		     deffile)))

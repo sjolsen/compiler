@@ -95,10 +95,10 @@ int main (int argc,
 		return EXIT_SUCCESS;
 	}
 
-	AST program;
+	program syntax_tree;
 	try
 	{
-		program = program_p (tokens);
+		syntax_tree = program_p (tokens);
 	}
 	catch (const syntax_error& e)
 	{
@@ -106,7 +106,7 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	cout << to_string (program) << endl;
+	cout << to_string (syntax_tree) << endl;
 
 	// Build symbol table
 }

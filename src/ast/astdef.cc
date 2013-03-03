@@ -22,6 +22,21 @@ namespace
 		return first;
 	}
 
+	vector <string> lines (const AST& tree)
+	{
+		vector <string> lines = {'(' + to_string (tree.type)};
+		for (string& line : tree.contents ())
+			lines.emplace_back ("  " + move (line));
+		lines.back () += ')';
+
+		return lines;
+	}
+
+	vector <string> lines (const AST_node& node)
+	{
+		return lines (*node);
+	}
+
 	vector <string> lines (const vector <AST_node>& nodes)
 	{
 		vector <string> output;
@@ -50,7 +65,7 @@ AST::AST ()
 {
 }
 
-vector <string> AST::contents ()
+vector <string> AST::contents () const
 {
 	return {};
 }
@@ -66,24 +81,14 @@ terminal::terminal (const token& t)
 {
 }
 
-vector <string> terminal::contents ()
+vector <string> terminal::contents () const
 {
 	return {to_string (token_ref)};
 }
 
 
 
-vector <string> lines (const AST_node& node)
-{
-	vector <string> lines = {'(' + to_string (node->type)};
-	for (string& line : node->contents ())
-		lines.emplace_back ("  " + move (line));
-	lines.back () += ')';
-
-	return lines;
-}
-
-string to_string (const AST_node& tree,
+string to_string (const AST& tree,
                   string line_prefix)
 {
 	auto tree_lines = lines (tree);

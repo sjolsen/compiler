@@ -49,7 +49,7 @@ struct AST
 
 	AST ();
 
-	virtual std::vector <std::string> contents ();
+	virtual std::vector <std::string> contents () const;
 };
 
 
@@ -70,13 +70,12 @@ struct terminal
 	const token& token_ref;
 
 	terminal (const token& t);
-	virtual std::vector <std::string> contents () override;
+	virtual std::vector <std::string> contents () const override;
 };
 
 
-std::vector <std::string> lines (const AST_node& node);
-std::string to_string (const AST_node& tree,
-                       std::string line_prefix);
+std::string to_string (const AST& tree,
+                       std::string line_prefix = "");
 std::string to_string (AST_type type);
 
 

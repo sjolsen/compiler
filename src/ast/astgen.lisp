@@ -14,8 +14,9 @@
 (defun make-classdecl (name members)
   (concatenate 'string "struct " name " : AST {"
 	       (make-decls members)
+	       name "() = default;"
 	       name "(" (make-param-list members) ");"
-	       "virtual std::vector <std::string> contents () override; };"))
+	       "virtual std::vector <std::string> contents () const override; };"))
 
 (defun make-init-list (members)
   (if members
@@ -37,7 +38,7 @@
 	head-decl)))
 
 (defun make-contents (name members)
-  (concatenate 'string "vector <string> " name "::contents () {"
+  (concatenate 'string "vector <string> " name "::contents () const {"
 	       "return collect (" (make-linegets members) "); }"))
 
 (defparameter node "AST_node")
@@ -117,15 +118,15 @@
 
 			  ("argList"        (("args"      ,nlist)))))
 
-;; (with-open-file (declfile "auto.astdecls.hh"
-;; 			  :if-exists :supersede
-;; 			  :if-does-not-exist :create
-;; 			  :direction :output)
-;;   (loop for typespec in ast-types do
-;;        (write-string (concatenate 'string
-;; 				  (make-classdecl (car typespec) (cadr typespec))
-;; 				  #(#\Newline))
-;; 		     declfile)))
+(with-open-file (declfile "auto.astdecls.hh"
+			  :if-exists :supersede
+			  :if-does-not-exist :create
+			  :direction :output)
+  (loop for typespec in ast-types do
+       (write-string (concatenate 'string
+				  (make-classdecl (car typespec) (cadr typespec))
+				  #(#\Newline))
+		     declfile)))
 
 (with-open-file (deffile "auto.astdefs.cc"
 			  :if-exists :supersede

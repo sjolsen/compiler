@@ -17,7 +17,7 @@ formalDeclList : formalDecl ("," formalDecl)*
 
 formalDecl     : typeSpecifier ID ("[" "]")?
 
-funBody        : "{" localDeclList? statementList "}"
+funBody        : "{" localDeclList statementList "}"
 
 localDeclList  : varDecl*
 

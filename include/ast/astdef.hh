@@ -38,6 +38,7 @@ enum class AST_type
 	factor,
 	funcCallExpr,
 	argList,
+	terminal
 };
 
 

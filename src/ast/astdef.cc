@@ -79,6 +79,7 @@ vector <string> AST::contents () const
 terminal::terminal (const token& t)
 	: token_ref (t)
 {
+	type = AST_type::terminal;
 }
 
 vector <string> terminal::contents () const
@@ -155,5 +156,7 @@ std::string to_string (AST_type type)
 		return "funcCallExpr";
 	case AST_type::argList:
 		return "argList";
+	case AST_type::terminal:
+		return "terminal";
 	};
 }

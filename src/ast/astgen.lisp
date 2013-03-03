@@ -14,7 +14,7 @@
 (defun make-classdecl (name members)
   (concatenate 'string "struct " name " : AST {"
 	       (make-decls members)
-	       name "() = default;"
+	       name "();"
 	       name "(" (make-param-list members) ");"
 	       "virtual std::vector <std::string> contents () const override; };"))
 
@@ -28,7 +28,9 @@
 
 (defun make-classdef (name members)
   (concatenate 'string name "::" name " (" (make-param-list members) ")"
-	       ": " (make-init-list members) "{type = AST_type::" name ";}"))
+	       ": " (make-init-list members) "{type = AST_type::" name ";}"
+	       #(#\Newline) name "::" name " () {type = AST_type::"
+	       name ";}"))
 
 (defun make-linegets (members)
   (let ((head-decl

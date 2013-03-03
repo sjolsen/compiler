@@ -409,7 +409,8 @@ Node <funBody> funBody_p (token_range& tokens)
 	AST_node lbrace_node = get_token (working_set, symbol::lbrace);
 	validate (lbrace_node);
 
-	AST_node decl_list = CALL (declList_p (working_set));
+	AST_node decl_list = CALL (localDeclList_p (working_set));
+	validate (decl_list);
 
 	AST_node statement_list = CALL (statementList_p (working_set));
 	validate (statement_list);
@@ -672,12 +673,12 @@ Node <expression> expression_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto handle = make_node <expression> (nullptr, nullptr,
-	                                      CALL (addExpr_p (working_set)));
-	validate (handle);
+	AST_node add_expr = CALL (addExpr_p (working_set));
+	validate (add_expr);
+
+	auto handle = make_node <expression> (nullptr, nullptr, add_expr);
 
 	AST_node relop;
-	AST_node add_expr;
 	for (;;)
 	{
 		token_range sub_working_set = working_set;
@@ -735,12 +736,13 @@ Node <addExpr> addExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
+	AST_node term = CALL (term_p (working_set));
+	validate (term);
+
 	auto handle = make_node <addExpr> (nullptr, nullptr,
-	                                   CALL (term_p (working_set)));
-	validate (handle);
+	                                   term);
 
 	AST_node addop;
-	AST_node term;
 	for (;;)
 	{
 		token_range sub_working_set = working_set;
@@ -782,12 +784,12 @@ Node <term> term_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto handle = make_node <term> (nullptr, nullptr,
-	                                CALL (factor_p (working_set)));
-	validate (handle);
+	AST_node factor = CALL (factor_p (working_set));
+	validate (factor);
+
+	auto handle = make_node <term> (nullptr, nullptr, factor);
 
 	AST_node mulop;
-	AST_node factor;
 	for (;;)
 	{
 		token_range sub_working_set = working_set;

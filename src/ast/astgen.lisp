@@ -47,24 +47,24 @@
 
 			  ("declList"       (("decls"     "std::vector <Node <decl>>")))
 
-			  ("decl"           (("sub_decl"  "AST_node")))
+			  ("decl"           (("sub_decl"  "Node <basic_decl>")))
 
-			  ("varDecl"        (("type_spec" "Node <typeSpecifier>")
-			  		     ("name"      "Node <terminal>")
-			  		     ("size"      "Node <terminal>")))
+			  ;; ("varDecl"        (("type_spec" "Node <typeSpecifier>")
+			  ;; 		     ("name"      "Node <terminal>")
+			  ;; 		     ("size"      "Node <terminal>")))
 
 			  ("typeSpecifier"  (("kwd_node"  "Node <terminal>")))
 
-			  ("funDecl"        (("type_spec" "Node <typeSpecifier>")
-			  		     ("name"      "Node <terminal>")
-			  		     ("decl_list" "Node <formalDeclList>")
-			  		     ("body"      "Node <funBody>")))
+			  ;; ("funDecl"        (("type_spec" "Node <typeSpecifier>")
+			  ;; 		     ("name"      "Node <terminal>")
+			  ;; 		     ("decl_list" "Node <formalDeclList>")
+			  ;; 		     ("body"      "Node <funBody>")
 
 			  ("formalDeclList" (("decls"     "std::vector <Node <formalDecl>>")))
 
-			  ("formalDecl"     (("type_spec" "Node <typeSpecifier>")
-					     ("name"      "Node <terminal>")
-					     ("is_array"  "bool")))
+			  ;; ("formalDecl"     (("type_spec" "Node <typeSpecifier>")
+			  ;; 		     ("name"      "Node <terminal>")
+			  ;; 		     ("is_array"  "bool")))
 
 			  ("funBody"        (("decl_list" "Node <localDeclList>")
 					     ("stmt_list" "Node <statementList>")))

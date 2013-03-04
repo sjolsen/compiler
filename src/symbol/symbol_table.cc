@@ -23,9 +23,20 @@ using namespace std;
 // 	}
 // }
 
-
-
-symbol_table::symbol_table (const declList& decl_list)
+void populate_table (symbol_table& table,
+                     const program& tree)
 {
+	for (const Node <decl>& decl_node : tree.decl_list->decls)
+	{
+		if (table.count (decl_node->sub_decl->get_name ()) > 0)
+			throw syntax_error ("Redefined identifier (first definition here)",
+			                    table [decl_node->sub_decl->get_name ()].decl_node->pos ());
 
+		table [decl_node->sub_decl->get_name ()] = symbol_entry {decl_node->sub_decl->get_name (),
+		                                                         decl_node->sub_decl->get_type (),
+		                                                         decl_node->sub_decl};
+	}
 }
+
+void populate_table (symbol_table& table,
+                     const funDecl& tree);

@@ -1,6 +1,7 @@
 #include <ast/astdef.hh>
 
 #include <algorithm>
+#include <unordered_map>
 
 using namespace std;
 
@@ -77,6 +78,151 @@ vector <string> AST::contents () const
 #include "auto.astdefs.cc"
 
 
+
+// --- varDecl ---
+
+varDecl::varDecl (Node <typeSpecifier> _type_spec,
+                  Node <terminal> _name,
+                  Node <terminal> _size)
+	: type_spec (_type_spec),
+	  name (_name),
+	  size (_size)
+{
+	type = AST_type::varDecl;
+}
+
+vector <string> varDecl::contents () const
+{
+	return collect (valid (type_spec) ? lines (type_spec) : vector <string> {},
+	                valid (name) ? lines (name) : vector <string> {},
+	                valid (size) ? lines (size) : vector <string> {});
+}
+
+string varDecl::get_name () const
+{
+	return name->token_ref.str;
+}
+
+mc_type varDecl::get_type () const
+{
+	static unordered_map <string, mc_type> var_map = {{"void", mc_type::mc_void},
+	                                                  {"int", mc_type::integer},
+	                                                  {"char", mc_type::character}};
+	static unordered_map <string, mc_type> array_map = {{"int", mc_type::int_array},
+	                                                    {"char", mc_type::char_array}};
+
+	try
+	{
+		if (size)
+			return array_map.at (type_spec->kwd_node->token_ref.str);
+		return var_map.at (type_spec->kwd_node->token_ref.str);
+	}
+	catch (const exception&)
+	{
+		throw syntax_error ("Encountered an illegal variable declaration",
+		                    type_spec->kwd_node->token_ref.pos);
+	}
+}
+
+file_position varDecl::pos () const
+{
+	return type_spec->kwd_node->token_ref.pos;
+}
+
+
+
+// --- funDecl ---
+
+funDecl::funDecl (Node <typeSpecifier> _type_spec,
+                  Node <terminal> _name,
+                  Node <formalDeclList> _decl_list,
+                  Node <funBody> _body)
+	: type_spec (_type_spec),
+	  name (_name),
+	  decl_list (_decl_list),
+	  body (_body)
+{
+	type = AST_type::funDecl;
+}
+
+std::vector <std::string> funDecl::contents () const
+{
+	return collect (valid (type_spec) ? lines (type_spec) : vector <string> {},
+	                valid (name) ? lines (name) : vector <string> {},
+	                valid (decl_list) ? lines (decl_list) : vector <string> {},
+	                valid (body) ? lines (body) : vector <string> {});
+}
+
+std::string funDecl::get_name () const
+{
+	return name->token_ref.str;
+}
+
+mc_type funDecl::get_type () const
+{
+	return mc_type::function;
+}
+
+file_position funDecl::pos () const
+{
+	return type_spec->kwd_node->token_ref.pos;
+}
+
+
+
+// --- formalDecl ---
+
+formalDecl::formalDecl (Node <typeSpecifier> _type_spec,
+                        Node <terminal> _name,
+                        bool _is_array)
+	: type_spec (_type_spec),
+	  name (_name),
+	  is_array (_is_array)
+{
+	type = AST_type::formalDecl;
+}
+
+vector <string> formalDecl::contents () const
+{
+	return collect (valid (type_spec) ? lines (type_spec) : vector <string> {},
+	                valid (name) ? lines (name) : vector <string> {},
+	                valid (is_array) ? lines (is_array) : vector <string> {});
+}
+
+string formalDecl::get_name () const
+{
+	return name->token_ref.str;
+}
+
+mc_type formalDecl::get_type () const
+{
+	static unordered_map <string, mc_type> var_map = {{"void", mc_type::mc_void},
+	                                                  {"int", mc_type::integer},
+	                                                  {"char", mc_type::character}};
+	static unordered_map <string, mc_type> array_map = {{"int", mc_type::int_array},
+	                                                    {"char", mc_type::char_array}};
+
+	try
+	{
+		if (is_array)
+			return array_map.at (type_spec->kwd_node->token_ref.str);
+		return var_map.at (type_spec->kwd_node->token_ref.str);
+	}
+	catch (const exception&)
+	{
+		throw syntax_error ("Encountered an illegal variable declaration",
+		                    type_spec->kwd_node->token_ref.pos);
+	}
+}
+
+file_position formalDecl::pos () const
+{
+	return type_spec->kwd_node->token_ref.pos;
+}
+
+
+
+// --- terminal ---
 
 terminal::terminal (const token& t)
 	: token_ref (t)

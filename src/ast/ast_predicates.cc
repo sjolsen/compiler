@@ -253,7 +253,7 @@ Node <declList> declList_p (token_range& tokens)
 
 Node <decl> decl_p (token_range& tokens)
 {
-	AST_node sub_decl = CALL (varDecl_p (tokens));
+	Node <basic_decl> sub_decl = CALL (varDecl_p (tokens));
 	if (!sub_decl)
 		sub_decl = CALL (funDecl_p (tokens));
 	validate (sub_decl);

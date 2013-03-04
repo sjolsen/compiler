@@ -4,24 +4,15 @@ vector <string> program::contents () const {return collect (valid (decl_list) ? 
 declList::declList (std::vector <Node <decl>> _decls): decls(_decls) {type = AST_type::declList;}
 declList::declList () {type = AST_type::declList;}
 vector <string> declList::contents () const {return collect (valid (decls) ? lines (decls) : vector <string> {} ); }
-decl::decl (AST_node _sub_decl): sub_decl(_sub_decl) {type = AST_type::decl;}
+decl::decl (Node <basic_decl> _sub_decl): sub_decl(_sub_decl) {type = AST_type::decl;}
 decl::decl () {type = AST_type::decl;}
 vector <string> decl::contents () const {return collect (valid (sub_decl) ? lines (sub_decl) : vector <string> {} ); }
-varDecl::varDecl (Node <typeSpecifier> _type_spec, Node <terminal> _name, Node <terminal> _size): type_spec(_type_spec) , name(_name) , size(_size) {type = AST_type::varDecl;}
-varDecl::varDecl () {type = AST_type::varDecl;}
-vector <string> varDecl::contents () const {return collect (valid (type_spec) ? lines (type_spec) : vector <string> {} , valid (name) ? lines (name) : vector <string> {} , valid (size) ? lines (size) : vector <string> {} ); }
 typeSpecifier::typeSpecifier (Node <terminal> _kwd_node): kwd_node(_kwd_node) {type = AST_type::typeSpecifier;}
 typeSpecifier::typeSpecifier () {type = AST_type::typeSpecifier;}
 vector <string> typeSpecifier::contents () const {return collect (valid (kwd_node) ? lines (kwd_node) : vector <string> {} ); }
-funDecl::funDecl (Node <typeSpecifier> _type_spec, Node <terminal> _name, Node <formalDeclList> _decl_list, Node <funBody> _body): type_spec(_type_spec) , name(_name) , decl_list(_decl_list) , body(_body) {type = AST_type::funDecl;}
-funDecl::funDecl () {type = AST_type::funDecl;}
-vector <string> funDecl::contents () const {return collect (valid (type_spec) ? lines (type_spec) : vector <string> {} , valid (name) ? lines (name) : vector <string> {} , valid (decl_list) ? lines (decl_list) : vector <string> {} , valid (body) ? lines (body) : vector <string> {} ); }
 formalDeclList::formalDeclList (std::vector <Node <formalDecl>> _decls): decls(_decls) {type = AST_type::formalDeclList;}
 formalDeclList::formalDeclList () {type = AST_type::formalDeclList;}
 vector <string> formalDeclList::contents () const {return collect (valid (decls) ? lines (decls) : vector <string> {} ); }
-formalDecl::formalDecl (Node <typeSpecifier> _type_spec, Node <terminal> _name, bool _is_array): type_spec(_type_spec) , name(_name) , is_array(_is_array) {type = AST_type::formalDecl;}
-formalDecl::formalDecl () {type = AST_type::formalDecl;}
-vector <string> formalDecl::contents () const {return collect (valid (type_spec) ? lines (type_spec) : vector <string> {} , valid (name) ? lines (name) : vector <string> {} , valid (is_array) ? lines (is_array) : vector <string> {} ); }
 funBody::funBody (Node <localDeclList> _decl_list, Node <statementList> _stmt_list): decl_list(_decl_list) , stmt_list(_stmt_list) {type = AST_type::funBody;}
 funBody::funBody () {type = AST_type::funBody;}
 vector <string> funBody::contents () const {return collect (valid (decl_list) ? lines (decl_list) : vector <string> {} , valid (stmt_list) ? lines (stmt_list) : vector <string> {} ); }

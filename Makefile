@@ -100,11 +100,13 @@ $(LIB)/libtokenizer.a: $(INCLUDE)/tokenizer.hh \
 symbol: $(LIB)/libsymbol.a
 
 $(BUILD)/symbol_table.o: $(INCLUDE)/symbol/symbol_table.hh \
+                         $(INCLUDE)/text_processing.hh \
+                         $(LIB)/libast.a \
                          $(SRC)/symbol/symbol_table.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/symbol/symbol_table.cc -c -o $(BUILD)/symbol_table.o
 
 $(LIB)/libsymbol.a: $(INCLUDE)/symbol.hh \
-                 $(BUILD)/symbol_table.o
+                    $(BUILD)/symbol_table.o
 	$(AR) $(ARFLAGS) $(LIB)/libsymbol.a \
                          $(BUILD)/symbol_table.o
 

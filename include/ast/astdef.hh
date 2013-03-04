@@ -43,6 +43,18 @@ enum class AST_type
 
 
 
+enum class mc_type
+{
+	mc_void,
+	integer,
+	character,
+	int_array,
+	char_array,
+	function
+};
+
+
+
 struct AST
 {
 	AST* parent;
@@ -65,6 +77,16 @@ struct Node
 		: std::shared_ptr <NodeType> (std::forward <Args> (args)...)
 	{
 	}
+};
+
+
+
+struct basic_decl
+	: AST
+{
+	virtual std::string get_name () const = 0;
+	virtual mc_type get_type () const = 0;
+	virtual file_position pos () const = 0;
 };
 
 
@@ -104,13 +126,72 @@ struct terminal;
 
 
 
+struct varDecl
+	: basic_decl
+{
+	Node <typeSpecifier> type_spec;
+	Node <terminal> name;
+	Node <terminal> size;
+
+	varDecl (Node <typeSpecifier> _type_spec,
+	         Node <terminal> _name,
+	         Node <terminal> _size);
+
+	virtual std::vector <std::string> contents () const;
+	virtual std::string get_name () const;
+	virtual mc_type get_type () const;
+	virtual file_position pos () const;
+};
+
+
+
+struct funDecl
+	: basic_decl
+{
+	Node <typeSpecifier> type_spec;
+	Node <terminal> name;
+	Node <formalDeclList> decl_list;
+	Node <funBody> body;
+
+	funDecl (Node <typeSpecifier> _type_spec,
+	         Node <terminal> _name,
+	         Node <formalDeclList> _decl_list,
+	         Node <funBody> _body);
+
+	virtual std::vector <std::string> contents () const;
+	virtual std::string get_name () const;
+	virtual mc_type get_type () const;
+	virtual file_position pos () const;
+};
+
+
+
+struct formalDecl
+	: basic_decl
+{
+	Node <typeSpecifier> type_spec;
+	Node <terminal> name;
+	bool is_array;
+
+	formalDecl (Node <typeSpecifier> _type_spec,
+	            Node <terminal> _name,
+	            bool _is_array);
+
+	virtual std::vector <std::string> contents () const;
+	virtual std::string get_name () const;
+	virtual mc_type get_type () const;
+	virtual file_position pos () const;
+};
+
+
+
 struct terminal
 	: AST
 {
 	const token& token_ref;
 
 	terminal (const token& t);
-	virtual std::vector <std::string> contents () const ;
+	virtual std::vector <std::string> contents () const;
 };
 
 

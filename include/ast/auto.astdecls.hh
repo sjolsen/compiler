@@ -1,11 +1,8 @@
 struct program : AST {Node <declList> decl_list;program();program(Node <declList> _decl_list);virtual std::vector <std::string> contents () const ; };
 struct declList : AST {std::vector <Node <decl>> decls;declList();declList(std::vector <Node <decl>> _decls);virtual std::vector <std::string> contents () const ; };
-struct decl : AST {AST_node sub_decl;decl();decl(AST_node _sub_decl);virtual std::vector <std::string> contents () const ; };
-struct varDecl : AST {Node <typeSpecifier> type_spec;Node <terminal> name;Node <terminal> size;varDecl();varDecl(Node <typeSpecifier> _type_spec, Node <terminal> _name, Node <terminal> _size);virtual std::vector <std::string> contents () const ; };
+struct decl : AST {Node <basic_decl> sub_decl;decl();decl(Node <basic_decl> _sub_decl);virtual std::vector <std::string> contents () const ; };
 struct typeSpecifier : AST {Node <terminal> kwd_node;typeSpecifier();typeSpecifier(Node <terminal> _kwd_node);virtual std::vector <std::string> contents () const ; };
-struct funDecl : AST {Node <typeSpecifier> type_spec;Node <terminal> name;Node <formalDeclList> decl_list;Node <funBody> body;funDecl();funDecl(Node <typeSpecifier> _type_spec, Node <terminal> _name, Node <formalDeclList> _decl_list, Node <funBody> _body);virtual std::vector <std::string> contents () const ; };
 struct formalDeclList : AST {std::vector <Node <formalDecl>> decls;formalDeclList();formalDeclList(std::vector <Node <formalDecl>> _decls);virtual std::vector <std::string> contents () const ; };
-struct formalDecl : AST {Node <typeSpecifier> type_spec;Node <terminal> name;bool is_array;formalDecl();formalDecl(Node <typeSpecifier> _type_spec, Node <terminal> _name, bool _is_array);virtual std::vector <std::string> contents () const ; };
 struct funBody : AST {Node <localDeclList> decl_list;Node <statementList> stmt_list;funBody();funBody(Node <localDeclList> _decl_list, Node <statementList> _stmt_list);virtual std::vector <std::string> contents () const ; };
 struct localDeclList : AST {std::vector <Node <varDecl>> decls;localDeclList();localDeclList(std::vector <Node <varDecl>> _decls);virtual std::vector <std::string> contents () const ; };
 struct statementList : AST {std::vector <Node <statement>> stmts;statementList();statementList(std::vector <Node <statement>> _stmts);virtual std::vector <std::string> contents () const ; };

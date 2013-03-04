@@ -90,15 +90,15 @@ namespace
 		return node;
 	}
 
-	AST_node pop_front (token_range& working_set)
+	Node <terminal> pop_front (token_range& working_set)
 	{
-		AST_node front = make_node <terminal> (working_set [0]);
+		Node <terminal> front = make_node <terminal> (working_set [0]);
 		working_set.drop_front (1);
 		return front;
 	}
 
-	AST_node get_token (token_range& working_set,
-	                    token_type type)
+	Node <terminal> get_token (token_range& working_set,
+	                           token_type type)
 	{
 		if (working_set.empty ())
 			return nullptr;
@@ -108,8 +108,8 @@ namespace
 		return pop_front (working_set);
 	}
 
-	AST_node get_token (token_range& working_set,
-	                    symbol sym)
+	Node <terminal> get_token (token_range& working_set,
+	                           symbol sym)
 	{
 		if (working_set.empty ())
 			return nullptr;
@@ -121,8 +121,8 @@ namespace
 		return pop_front (working_set);
 	}
 
-	AST_node get_token (token_range& working_set,
-	                    string keyword)
+	Node <terminal> get_token (token_range& working_set,
+	                           string keyword)
 	{
 		if (working_set.empty ())
 			return nullptr;
@@ -216,7 +216,7 @@ program program_p (const vector <token>& tokens)
 	validate_pairs (working_set);
 	logfile << "Finished validating\n";
 
-	AST_node decl_list = CALL (declList_p (working_set));
+	Node <declList> decl_list = CALL (declList_p (working_set));
 	if (!decl_list)
 		throw_error ("Expected a declaration",
 		             begin (working_set)->pos);
@@ -232,7 +232,7 @@ Node <declList> declList_p (token_range& tokens)
 
 	auto decl_list = make_node <declList> ();
 
-	AST_node next_decl = CALL (decl_p (working_set));
+	Node <decl> next_decl = CALL (decl_p (working_set));
 	validate (next_decl);
 	decl_list->decls.push_back (next_decl);
 
@@ -267,14 +267,14 @@ Node <varDecl> varDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node type_specifier = CALL (typeSpecifier_p (working_set));
+	Node <typeSpecifier> type_specifier = CALL (typeSpecifier_p (working_set));
 	validate (type_specifier);
 
-	AST_node ID = get_token (working_set, token_type::identifier);
+	Node <terminal> ID = get_token (working_set, token_type::identifier);
 	validate (ID);
 
 	AST_node lbracket_node = get_token (working_set, symbol::lbracket);
-	AST_node num;
+	Node <terminal> num;
 	AST_node rbracket_node;
 	if (lbracket_node)
 	{
@@ -300,7 +300,7 @@ Node <varDecl> varDecl_p (token_range& tokens)
 
 Node <typeSpecifier> typeSpecifier_p (token_range& tokens)
 {
-	AST_node specifier = get_token (tokens, "int");
+	Node <terminal> specifier = get_token (tokens, "int");
 	if (specifier)
 		return make_node <typeSpecifier> (specifier);
 
@@ -321,23 +321,23 @@ Node <funDecl> funDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node type_specifier = CALL (typeSpecifier_p (working_set));
+	Node <typeSpecifier> type_specifier = CALL (typeSpecifier_p (working_set));
 	validate (type_specifier);
 
-	AST_node ID = get_token (working_set, token_type::identifier);
+	Node <terminal> ID = get_token (working_set, token_type::identifier);
 	validate (ID);
 
 	AST_node lparen_node = get_token (working_set, symbol::lparen);
 	validate (lparen_node);
 
-	AST_node decl_list = CALL (formalDeclList_p (working_set));
+	Node <formalDeclList> decl_list = CALL (formalDeclList_p (working_set));
 
 	AST_node rparen_node = get_token (working_set, symbol::rparen);
 	if (!rparen_node)
 		throw_error ("Expected ')'",
 		             begin (working_set)->pos);
 
-	AST_node function_body = CALL (funBody_p (working_set));
+	Node <funBody> function_body = CALL (funBody_p (working_set));
 	validate (function_body);
 
 	tokens = working_set;
@@ -352,7 +352,7 @@ Node <formalDeclList> formalDeclList_p (token_range& tokens)
 
 	auto decl_list = make_node <formalDeclList> ();
 
-	AST_node next_decl = CALL (formalDecl_p (working_set));
+	Node <formalDecl> next_decl = CALL (formalDecl_p (working_set));
 	validate (next_decl);
 	decl_list->decls.push_back (next_decl);
 
@@ -366,7 +366,6 @@ Node <formalDeclList> formalDeclList_p (token_range& tokens)
 		if (!next_decl)
 			break;
 
-		decl_list->decls.push_back (comma_node);
 		decl_list->decls.push_back (next_decl);
 	}
 
@@ -380,10 +379,10 @@ Node <formalDecl> formalDecl_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node type_specifier = CALL (typeSpecifier_p (working_set));
+	Node <typeSpecifier> type_specifier = CALL (typeSpecifier_p (working_set));
 	validate (type_specifier);
 
-	AST_node ID = get_token (working_set, token_type::identifier);
+	Node <terminal> ID = get_token (working_set, token_type::identifier);
 	validate (ID);
 
 	AST_node lbracket_node = get_token (working_set, symbol::lbracket);
@@ -409,15 +408,15 @@ Node <funBody> funBody_p (token_range& tokens)
 	AST_node lbrace_node = get_token (working_set, symbol::lbrace);
 	validate (lbrace_node);
 
-	AST_node decl_list = CALL (localDeclList_p (working_set));
+	Node <localDeclList> decl_list = CALL (localDeclList_p (working_set));
 	validate (decl_list);
 
-	AST_node statement_list = CALL (statementList_p (working_set));
+	Node <statementList> statement_list = CALL (statementList_p (working_set));
 	validate (statement_list);
 
 	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
 	if (!rbrace_node)
-		throw_error ("Expected '}'",
+		throw_error ("Expected '}', declaration, or statement",
 		             begin (working_set)->pos);
 
 	tokens = working_set;
@@ -433,7 +432,7 @@ Node <localDeclList> localDeclList_p (token_range& tokens)
 
 	auto decl_list = make_node <localDeclList> ();
 
-	AST_node next_decl;
+	Node <varDecl> next_decl;
 	for (;;)
 	{
 		next_decl = CALL (varDecl_p (working_set));
@@ -455,7 +454,7 @@ Node <statementList> statementList_p (token_range& tokens)
 
 	auto decl_list = make_node <statementList> ();
 
-	AST_node next_decl;
+	Node <statement> next_decl;
 	for (;;)
 	{
 		next_decl = CALL (statement_p (working_set));
@@ -505,12 +504,12 @@ Node <compoundStmt> compoundStmt_p (token_range& tokens)
 	AST_node lbrace_node = get_token (working_set, symbol::lbrace);
 	validate (lbrace_node);
 
-	AST_node statement_list = CALL (statementList_p (working_set));
+	Node <statementList> statement_list = CALL (statementList_p (working_set));
 	validate (statement_list);
 
 	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
 	if (!rbrace_node)
-		throw_error ("Expected '}'",
+		throw_error ("Expected '}' or statement",
 		             begin (working_set)->pos);
 
 	tokens = working_set;
@@ -523,27 +522,27 @@ Node <assignStmt> assignStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node var = CALL (var_p (working_set));
+	Node <var> lvalue = CALL (var_p (working_set));
 	AST_node eq_node;
-	if (var)
+	if (lvalue)
 	{
 		eq_node = get_token (working_set, symbol::equal);
 		if (!eq_node)
 		{
-			var = nullptr;
+			lvalue = nullptr;
 			working_set = tokens;
 		}
 	}
 
-	AST_node expression = CALL (expression_p (working_set));
-	validate (expression);
+	Node <expression> rvalue = CALL (expression_p (working_set));
+	validate (rvalue);
 
 	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
 	if (!semicolon_node)
 		return nullptr;
 
 	tokens = working_set;
-	return make_node <assignStmt> (var, expression);
+	return make_node <assignStmt> (lvalue, rvalue);
 }
 
 
@@ -558,7 +557,7 @@ Node <condStmt> condStmt_p (token_range& tokens)
 	AST_node lparen_node = get_token (working_set, symbol::lparen);
 	validate (lparen_node);
 
-	AST_node expression = CALL (expression_p (working_set));
+	Node <expression> expression = CALL (expression_p (working_set));
 	if (!expression)
 		throw_error ("Expected expression",
 		             begin (working_set)->pos);
@@ -568,13 +567,13 @@ Node <condStmt> condStmt_p (token_range& tokens)
 		throw_error ("Expected ')'",
 		             begin (working_set)->pos);
 
-	AST_node if_statement = CALL (statement_p (working_set));
+	Node <statement> if_statement = CALL (statement_p (working_set));
 	if (!if_statement)
 		throw_error ("Expected statement",
 		             begin (working_set)->pos);
 
 	AST_node else_node = get_token (working_set, "else");
-	AST_node else_statement;
+	Node <statement> else_statement;
 	if (else_node)
 	{
 		else_statement = CALL (statement_p (working_set));
@@ -599,7 +598,7 @@ Node <loopStmt> loopStmt_p (token_range& tokens)
 	AST_node lparen_node = get_token (working_set, symbol::lparen);
 	validate (lparen_node);
 
-	AST_node expression = CALL (expression_p (working_set));
+	Node <expression> expression = CALL (expression_p (working_set));
 	if (!expression)
 		throw_error ("Expected expression",
 		             begin (working_set)->pos);
@@ -609,7 +608,7 @@ Node <loopStmt> loopStmt_p (token_range& tokens)
 		throw_error ("Expected ')'",
 		             begin (working_set)->pos);
 
-	AST_node while_statement = CALL (statement_p (working_set));
+	Node <statement> while_statement = CALL (statement_p (working_set));
 	if (!while_statement)
 		throw_error ("Expected statement",
 		             begin (working_set)->pos);
@@ -627,7 +626,7 @@ Node <returnStmt> returnStmt_p (token_range& tokens)
 	AST_node return_node = get_token (working_set, "return");
 	validate (return_node);
 
-	AST_node expression = CALL (expression_p (working_set));
+	Node <expression> expression = CALL (expression_p (working_set));
 
 	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
 	if (!semicolon_node)
@@ -644,15 +643,15 @@ Node <var> var_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node ID = get_token (working_set, token_type::identifier);
+	Node <terminal> ID = get_token (working_set, token_type::identifier);
 	validate (ID);
 
 	AST_node lbracket_node = get_token (working_set, symbol::lbracket);
-	AST_node add_expr;
+	Node <addExpr> add_expr;
 	AST_node rbracket_node;
 	if (lbracket_node)
 	{
-		add_expr = get_token (working_set, token_type::int_literal);
+		add_expr = CALL (addExpr_p (working_set));
 		if (!add_expr)
 			throw_error ("Expected expression",
 			             begin (working_set)->pos);
@@ -673,12 +672,12 @@ Node <expression> expression_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node add_expr = CALL (addExpr_p (working_set));
+	Node <addExpr> add_expr = CALL (addExpr_p (working_set));
 	validate (add_expr);
 
 	auto handle = make_node <expression> (nullptr, nullptr, add_expr);
 
-	AST_node relop;
+	Node <relop> relop;
 	for (;;)
 	{
 		token_range sub_working_set = working_set;
@@ -703,7 +702,7 @@ Node <expression> expression_p (token_range& tokens)
 
 Node <relop> relop_p (token_range& tokens)
 {
-	AST_node op_node = get_token (tokens, symbol::lt_equiv);
+	Node <terminal> op_node = get_token (tokens, symbol::lt_equiv);
 	if (op_node)
 		return make_node <relop> (op_node);
 
@@ -736,13 +735,13 @@ Node <addExpr> addExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node term = CALL (term_p (working_set));
+	Node <term> term = CALL (term_p (working_set));
 	validate (term);
 
 	auto handle = make_node <addExpr> (nullptr, nullptr,
 	                                   term);
 
-	AST_node addop;
+	Node <addop> addop;
 	for (;;)
 	{
 		token_range sub_working_set = working_set;
@@ -767,7 +766,7 @@ Node <addExpr> addExpr_p (token_range& tokens)
 
 Node <addop> addop_p (token_range& tokens)
 {
-	AST_node op_node = get_token (tokens, symbol::plus);
+	Node <terminal> op_node = get_token (tokens, symbol::plus);
 	if (op_node)
 		return make_node <addop> (op_node);
 
@@ -784,12 +783,12 @@ Node <term> term_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node factor = CALL (factor_p (working_set));
+	Node <factor> factor = CALL (factor_p (working_set));
 	validate (factor);
 
 	auto handle = make_node <term> (nullptr, nullptr, factor);
 
-	AST_node mulop;
+	Node <mulop> mulop;
 	for (;;)
 	{
 		token_range sub_working_set = working_set;
@@ -814,7 +813,7 @@ Node <term> term_p (token_range& tokens)
 
 Node <mulop> mulop_p (token_range& tokens)
 {
-	AST_node op_node = get_token (tokens, symbol::asterisk);
+	Node <terminal> op_node = get_token (tokens, symbol::asterisk);
 	if (op_node)
 		return make_node <mulop> (op_node);
 
@@ -877,13 +876,13 @@ Node <funcCallExpr> funcCallExpr_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node ID = get_token (working_set, token_type::identifier);
+	Node <terminal> ID = get_token (working_set, token_type::identifier);
 	validate (ID);
 
 	AST_node lparen_node = get_token (working_set, symbol::lparen);
 	validate (lparen_node);
 
-	AST_node arg_list = CALL (argList_p (working_set));
+	Node <argList> arg_list = CALL (argList_p (working_set));
 	AST_node rparen_node = get_token (working_set, symbol::rparen);
 	if (!rparen_node)
 		throw_error ("Expected ')'",
@@ -901,7 +900,7 @@ Node <argList> argList_p (token_range& tokens)
 
 	auto expression_list = make_node <argList> ();
 
-	AST_node next_expression = CALL (expression_p (working_set));
+	Node <expression> next_expression = CALL (expression_p (working_set));
 	validate (next_expression);
 	expression_list->args.push_back (next_expression);
 
@@ -915,7 +914,6 @@ Node <argList> argList_p (token_range& tokens)
 		if (!next_expression)
 			break;
 
-		expression_list->args.push_back (comma_node);
 		expression_list->args.push_back (next_expression);
 	}
 

@@ -43,101 +43,100 @@
   (concatenate 'string "vector <string> " name "::contents () const {"
 	       "return collect (" (make-linegets members) "); }"))
 
-(defparameter node "AST_node")
-(defparameter nlist "std::vector <AST_node>")
+(defparameter ast-types `(("program"        (("decl_list" "Node <declList>")))
 
-(defparameter ast-types `(("program"        (("decl_list" ,node)))
+			  ("declList"       (("decls"     "std::vector <Node <decl>>")))
 
-			  ("declList"       (("decls"     ,nlist)))
+			  ("decl"           (("sub_decl"  "AST_node")))
 
-			  ("decl"           (("sub_decl"  ,node)))
+			  ("varDecl"        (("type_spec" "Node <typeSpecifier>")
+			  		     ("name"      "Node <terminal>")
+			  		     ("size"      "Node <terminal>")))
 
-			  ("varDecl"        (("type_spec" ,node)
-					     ("name"      ,node)
-					     ("size"      ,node)))
+			  ("typeSpecifier"  (("kwd_node"  "Node <terminal>")))
 
-			  ("typeSpecifier"  (("kwd_node"  ,node)))
+			  ("funDecl"        (("type_spec" "Node <typeSpecifier>")
+			  		     ("name"      "Node <terminal>")
+			  		     ("decl_list" "Node <formalDeclList>")
+			  		     ("body"      "Node <funBody>")))
 
-			  ("funDecl"        (("type_spec" ,node)
-					     ("name"      ,node)
-					     ("decl_list" ,node)
-					     ("body"      ,node)))
+			  ("formalDeclList" (("decls"     "std::vector <Node <formalDecl>>")))
 
-			  ("formalDeclList" (("decls"     ,nlist)))
-
-			  ("formalDecl"     (("type_spec" ,node)
-					     ("name"      ,node)
+			  ("formalDecl"     (("type_spec" "Node <typeSpecifier>")
+					     ("name"      "Node <terminal>")
 					     ("is_array"  "bool")))
 
-			  ("funBody"        (("decl_list" ,node)
-					     ("stmt_list" ,node)))
+			  ("funBody"        (("decl_list" "Node <localDeclList>")
+					     ("stmt_list" "Node <statementList>")))
 
-			  ("localDeclList"  (("decls"     ,nlist)))
+			  ("localDeclList"  (("decls"     "std::vector <Node <varDecl>>")))
 
-			  ("statementList"  (("stmts"     ,nlist)))
+			  ("statementList"  (("stmts"     "std::vector <Node <statement>>")))
 
-			  ("statement"      (("sub_stmt"  ,node)))
+			  ("statement"      (("sub_stmt"  "AST_node")))
 
-			  ("compoundStmt"   (("stmt_list" ,node)))
+			  ("compoundStmt"   (("stmt_list" "Node <statementList>")))
 
-			  ("assignStmt"     (("lvalue"    ,node)
-					     ("rvalue"    ,node)))
+			  ("assignStmt"     (("lvalue"    "Node <var>")
+					     ("rvalue"    "Node <expression>")))
 
-			  ("condStmt"       (("cond_expr" ,node)
-					     ("then_stmt" ,node)
-					     ("else_stmt" ,node)))
+			  ("condStmt"       (("cond_expr" "Node <expression>")
+					     ("then_stmt" "Node <statement>")
+					     ("else_stmt" "Node <statement>")))
 
-			  ("loopStmt"       (("cond_expr" ,node)
-					     ("then_stmt" ,node)))
+			  ("loopStmt"       (("cond_expr" "Node <expression>")
+					     ("then_stmt" "Node <statement>")))
 
-			  ("returnStmt"     (("rtrn_expr" ,node)))
+			  ("returnStmt"     (("rtrn_expr" "Node <expression>")))
 
-			  ("var"            (("name"      ,node)
-					     ("size"      ,node)))
+			  ("var"            (("name"      "Node <terminal>")
+					     ("size"      "Node <addExpr>")))
 
-			  ("expression"     (("lhs"       ,node)
-					     ("op"        ,node)
-					     ("rhs"       ,node)))
+			  ("expression"     (("lhs"       "Node <expression>")
+					     ("op"        "Node <relop>")
+					     ("rhs"       "Node <addExpr>")))
 
-			  ("relop"          (("sym"       ,node)))
+			  ("relop"          (("sym"       "Node <terminal>")))
 
-			  ("addExpr"        (("lhs"       ,node)
-					     ("op"        ,node)
-					     ("rhs"       ,node)))
+			  ("addExpr"        (("lhs"       "Node <addExpr>")
+					     ("op"        "Node <addop>")
+					     ("rhs"       "Node <term>")))
 
-			  ("addop"          (("sym"       ,node)))
+			  ("addop"          (("sym"       "Node <terminal>")))
 
-			  ("term"           (("lhs"       ,node)
-					     ("op"        ,node)
-					     ("rhs"       ,node)))
+			  ("term"           (("lhs"       "Node <term>")
+					     ("op"        "Node <mulop>")
+					     ("rhs"       "Node <factor>")))
 
-			  ("mulop"          (("sym"       ,node)))
+			  ("mulop"          (("sym"       "Node <terminal>")))
 
-			  ("factor"         (("rvalue"    ,node)))
+			  ("factor"         (("rvalue"    "AST_node")))
 
-			  ("funcCallExpr"   (("name"      ,node)
-					     ("arg_list"  ,node)))
+			  ("funcCallExpr"   (("name"      "Node <terminal>")
+					     ("arg_list"  "Node <argList>")))
 
-			  ("argList"        (("args"      ,nlist)))))
+			  ("argList"        (("args"      "std::vector <Node <expression>>")))))
 
-(with-open-file (declfile "auto.astdecls.hh"
-			  :if-exists :supersede
-			  :if-does-not-exist :create
-			  :direction :output)
-  (loop for typespec in ast-types do
-       (write-string (concatenate 'string
-				  (make-classdecl (car typespec) (cadr typespec))
-				  #(#\Newline))
-		     declfile)))
+(defun make-declfile (pathname)
+  (with-open-file (declfile pathname
+			    :if-exists :supersede
+			    :if-does-not-exist :create
+			    :direction :output)
+    (loop for typespec in ast-types do
+	 (write-string (concatenate 'string
+				    (make-classdecl (car typespec) (cadr typespec))
+				    #(#\Newline))
+		       declfile))))
 
-(with-open-file (deffile "auto.astdefs.cc"
-			  :if-exists :supersede
-			  :if-does-not-exist :create
-			  :direction :output)
-  (loop for typespec in ast-types do
-       (write-string (concatenate 'string
-				  (make-classdef (car typespec) (cadr typespec))
-				  #(#\Newline)
-				  (make-contents (car typespec) (cadr typespec))
-				  #(#\Newline))
-		     deffile)))
+(defun make-deffile (pathname)
+  (with-open-file (deffile pathname
+		      :if-exists :supersede
+		      :if-does-not-exist :create
+		      :direction :output)
+    (loop for typespec in ast-types do
+	 (write-string (concatenate 'string
+				    (make-classdef (car typespec) (cadr typespec))
+				    #(#\Newline)
+				    (make-contents (car typespec) (cadr typespec))
+				    #(#\Newline))
+		       deffile))))

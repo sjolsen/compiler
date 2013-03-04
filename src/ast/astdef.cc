@@ -37,7 +37,8 @@ namespace
 		return lines (*node);
 	}
 
-	vector <string> lines (const vector <AST_node>& nodes)
+	template <typename NodeType>
+	vector <string> lines (const vector <NodeType>& nodes)
 	{
 		vector <string> output;
 		for (const AST_node& node : nodes)
@@ -48,7 +49,8 @@ namespace
 	vector <string> lines (bool b)
 	{ return b ? vector <string> {"[]"} : vector <string> {}; }
 
-	bool valid (const vector <AST_node>& nodes)
+	template <typename NodeType>
+	bool valid (const vector <NodeType>& nodes)
 	{ return !nodes.empty (); }
 
 	bool valid (const AST_node& node)

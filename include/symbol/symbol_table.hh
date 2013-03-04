@@ -31,7 +31,7 @@ struct symbol_entry
 struct symbol_table
 	: std::unordered_map <std::string, symbol_entry>
 {
-	symbol_table (const AST& tree);
+	symbol_table (const declList& decl_list);
 };
 
 

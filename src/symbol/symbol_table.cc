@@ -25,7 +25,7 @@ using namespace std;
 
 
 
-symbol_table::symbol_table (const AST& tree)
+symbol_table::symbol_table (const declList& decl_list)
 {
-	// s_table_ctor (this, &tree);
+
 }

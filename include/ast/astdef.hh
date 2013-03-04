@@ -61,6 +61,37 @@ using Node = std::shared_ptr <NodeType>;
 
 
 
+struct program;
+struct declList;
+struct decl;
+struct varDecl;
+struct typeSpecifier;
+struct funDecl;
+struct formalDeclList;
+struct formalDecl;
+struct funBody;
+struct localDeclList;
+struct statementList;
+struct statement;
+struct compoundStmt;
+struct assignStmt;
+struct condStmt;
+struct loopStmt;
+struct returnStmt;
+struct var;
+struct expression;
+struct relop;
+struct addExpr;
+struct addop;
+struct term;
+struct mulop;
+struct factor;
+struct funcCallExpr;
+struct argList;
+struct terminal;
+
+
+
 #include "auto.astdecls.hh"
 
 

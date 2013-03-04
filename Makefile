@@ -113,7 +113,9 @@ $(LIB)/libsymbol.a: $(INCLUDE)/symbol.hh \
 ast: $(LIB)/libast.a
 
 $(BUILD)/astdef.o: $(INCLUDE)/ast/astdef.hh \
-                   $(SRC)/ast/astdef.cc
+                   $(INCLUDE)/ast/auto.astdecls.hh \
+                   $(SRC)/ast/astdef.cc \
+                   $(SRC)/ast/auto.astdefs.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/ast/astdef.cc -c -o $(BUILD)/astdef.o
 
 $(BUILD)/ast_predicates.o: $(INCLUDE)/ast/astdef.hh \

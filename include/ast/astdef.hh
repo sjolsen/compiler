@@ -57,7 +57,15 @@ struct AST
 
 typedef std::shared_ptr <AST> AST_node;
 template <typename NodeType>
-using Node = std::shared_ptr <NodeType>;
+struct Node
+	: std::shared_ptr <NodeType>
+{
+	template <typename... Args>
+	Node (Args&&... args)
+		: std::shared_ptr <NodeType> (std::forward <Args> (args)...)
+	{
+	}
+};
 
 
 
@@ -102,7 +110,7 @@ struct terminal
 	const token& token_ref;
 
 	terminal (const token& t);
-	virtual std::vector <std::string> contents () const override;
+	virtual std::vector <std::string> contents () const ;
 };
 
 

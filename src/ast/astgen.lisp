@@ -16,7 +16,7 @@
 	       (make-decls members)
 	       name "();"
 	       name "(" (make-param-list members) ");"
-	       "virtual std::vector <std::string> contents () const override; };"))
+	       "virtual std::vector <std::string> contents () const ; };"))
 
 (defun make-init-list (members)
   (if members

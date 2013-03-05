@@ -73,6 +73,23 @@ namespace
 
 namespace
 {
+	void link_node (const AST_node&)
+	{
+	}
+
+	template <typename First, typename... Args>
+	void link_node (AST_node node, First&& first, Args&&... rest)
+	{
+		link_node (node, rest...);
+	}
+
+	template <typename... Args>
+	void link_node (AST_node node, AST_node first, Args&&... rest)
+	{
+		first->parent = node.get ();
+		link_node (node, rest...);
+	}
+
 	template <typename NodeType, typename... Args>
 	Node <NodeType> make_node (Args&&... args)
 	{
@@ -82,6 +99,7 @@ namespace
 		printargs (forward <Args> (args)...);
 
 		auto node = make_shared <NodeType> (forward <Args> (args)...);
+		link_node (node, args...);
 
 		--ident_level;
 		logfile << string (ident_level, '\t')
@@ -221,7 +239,9 @@ program program_p (const vector <token>& tokens)
 		throw_error ("Expected a declaration",
 		             begin (working_set)->pos);
 
-	return program (decl_list);
+	auto prog = program (decl_list);
+	prog.parent = nullptr;
+	return prog;
 }
 
 

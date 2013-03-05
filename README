@@ -14,25 +14,34 @@ The available make targets are:
 	all               Builds all library and driver binaries
 	clean             Removes binary and object files
 
+	mcc               Builds the main executable
+
 	text_processing   Builds the text processing library
 	tokenizer         Builds the tokenization library (depends
 	                  on the text processing library)
-
-	scanner           Builds the scanner-driver
+	symbol            Builds the symbol table facilities
+	ast               Builds the abstract syntax tree library
 
 	testall           Runs all available top-level tests
-	test-scanner      Runs the test script for the scanner-driver
+	test-scanner      Runs the test script for the scanner
+	test-parser       Runs the test script for the parser
 
 Additional arguments may be passed to the compiler by setting the
 CXXFLAGS environment variable.
 
-The scanner-driver takes as its argument the name of the file to be
-tokenized, but may be run by piping a program to its standard input,
-omitting the filename argument. Output is a stream of tokens in the
-form "<type, value>", or a syntax error message accompanied by the
-offending location in the text in the form "(line, col)" and the
-contents of the file from that point until the next newline or until
-the end of file, whichever comes first.
+The main executable takes as its first argument the name of the file
+to be compiled; '-' may be given as the first argument to indicate
+that input should be read from STDIN. Additionally, '-Tscanner' may
+be passed as the second argument to print output from the scanner
+stage, terminating before the parsing stage. If the '-Tscanner'
+argument is not specified, the output of the parser will be printed
+instead as of nested s-expressions of them form:
+
+	(production-rule &rest components)
+
+The grammar matched by this program is slightly modified, allowing
+lists to be represented as true lists, rather than recursively along
+the tree. This grammar is specified in the file 'GRAMMAR'.
 
 Testing may be performed through make, or
 'test/[component]/run_tests.bash' may be invoked directly The test
@@ -42,8 +51,6 @@ component's output as normal.
 Building this project requires a mostly C++11-compliant compiler and
 standard library. At this point, no third-party libraries are in use.
 The project compiles successfully under GCC/libstdc++ 4.6.3,
-accessible at athena.cs.txstate.edu, and under Clang/LLVM 3.1 and
-libc++1.0.
+accessible at athena.cs.txstate.edu.
 
-Information about the internal workings of the scanner may be found
-in the ABOUT file.
+The source tree is described in 'ABOUT'.

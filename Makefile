@@ -22,7 +22,8 @@ all: text_processing \
 clean:
 	rm -f $(BUILD)/* $(BIN)/* $(LIB)/*
 
-testall: test-scanner
+testall: test-scanner \
+         test-parser
 
 
 
@@ -161,3 +162,6 @@ $(BIN)/mcc: $(BUILD)/mcc.o \
 
 test-scanner: $(BIN)/mcc
 	$(TEST)/scanner/run_tests.bash
+
+test-parser: $(BIN)/mcc
+	$(TEST)/parser/run_tests.bash

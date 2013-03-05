@@ -26,9 +26,11 @@ struct symbol_table
 
 
 void populate_table (symbol_table& table,
-                     const program& tree);
+                     const declList& decl_list);
 void populate_table (symbol_table& table,
-                     const funDecl& tree);
+                     const formalDeclList& decl_list);
+void populate_table (symbol_table& table,
+                     const localDeclList& decl_list);
 
 
 

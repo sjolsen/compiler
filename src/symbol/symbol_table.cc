@@ -24,9 +24,9 @@ using namespace std;
 // }
 
 void populate_table (symbol_table& table,
-                     const program& tree)
+                     const declList& decl_list)
 {
-	for (const Node <decl>& decl_node : tree.decl_list->decls)
+	for (const Node <decl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->sub_decl->get_name ()) > 0)
 			throw syntax_error ("Redefined identifier (first definition here)",
@@ -39,4 +39,31 @@ void populate_table (symbol_table& table,
 }
 
 void populate_table (symbol_table& table,
-                     const funDecl& tree);
+                     const formalDeclList& decl_list)
+{
+	for (const Node <formalDecl>& decl_node : decl_list.decls)
+	{
+		if (table.count (decl_node->get_name ()) > 0)
+			throw syntax_error ("Redefined identifier (first definition here)",
+			                    table [decl_node->get_name ()].decl_node->pos ());
+
+		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
+		                                               decl_node->get_type (),
+		                                               decl_node};
+	}
+}
+
+void populate_table (symbol_table& table,
+                     const localDeclList& decl_list)
+{
+	for (const Node <varDecl>& decl_node : decl_list.decls)
+	{
+		if (table.count (decl_node->get_name ()) > 0)
+			throw syntax_error ("Redefined identifier (first definition here)",
+			                    table [decl_node->get_name ()].decl_node->pos ());
+
+		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
+		                                               decl_node->get_type (),
+		                                               decl_node};
+	}
+}

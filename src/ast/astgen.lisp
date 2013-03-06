@@ -43,7 +43,7 @@
   (concatenate 'string "vector <string> " name "::contents () const {"
 	       "return collect (" (make-linegets members) "); }"))
 
-(defparameter ast-types `(("program"        (("decl_list" "Node <declList>")))
+(defparameter ast-types `(;; ("program"        (("decl_list" "Node <declList>")))
 
 			  ("declList"       (("decls"     "std::vector <Node <decl>>")))
 

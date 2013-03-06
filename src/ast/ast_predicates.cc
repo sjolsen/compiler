@@ -1,13 +1,12 @@
 #include <ast/ast_predicates.hh>
-
-using namespace std;
-
-
+#include <symbol.hh>
 
 #include <fstream>
 #include <algorithm>
 #include <stack>
 #include <chrono>
+
+using namespace std;
 
 
 
@@ -241,6 +240,8 @@ program program_p (const vector <token>& tokens)
 
 	auto prog = program (decl_list);
 	prog.parent = nullptr;
+	populate_table (*prog.table, *prog.decl_list);
+
 	return prog;
 }
 
@@ -361,7 +362,13 @@ Node <funDecl> funDecl_p (token_range& tokens)
 	validate (function_body);
 
 	tokens = working_set;
-	return make_node <funDecl> (type_specifier, ID, decl_list, function_body);
+	auto func = make_node <funDecl> (type_specifier, ID, decl_list, function_body);
+	if (func->decl_list)
+		populate_table (*func->table, *func->decl_list);
+	if (func->body->decl_list)
+		populate_table (*func->table, *func->body->decl_list);
+
+	return func;
 }
 
 

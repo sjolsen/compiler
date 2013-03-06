@@ -125,6 +125,21 @@ struct terminal;
 #include "auto.astdecls.hh"
 
 
+struct symbol_table;
+
+struct program
+	: AST
+{
+	std::shared_ptr <symbol_table> table;
+
+	Node <declList> decl_list;
+
+	program ();
+	program (Node <declList> _decl_list);
+	virtual std::vector <std::string> contents () const;
+};
+
+
 
 struct varDecl
 	: basic_decl
@@ -148,6 +163,8 @@ struct varDecl
 struct funDecl
 	: basic_decl
 {
+	std::shared_ptr <symbol_table> table;
+
 	Node <typeSpecifier> type_spec;
 	Node <terminal> name;
 	Node <formalDeclList> decl_list;
@@ -195,6 +212,7 @@ struct terminal
 };
 
 
+std::string to_string (mc_type t);
 std::string to_string (const AST& tree,
                        std::string line_prefix = "");
 std::string to_string (AST_type type);

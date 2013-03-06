@@ -1,4 +1,5 @@
 #include <ast/astdef.hh>
+#include <symbol.hh>
 
 #include <algorithm>
 #include <unordered_map>
@@ -21,6 +22,16 @@ namespace
 		for (string& line : rest_lines)
 			first.emplace_back (move (line));
 		return first;
+	}
+
+	vector <string> lines (const symbol_table& table)
+	{
+		vector <string> lines = {"(symbol_table"};
+		for (const auto& kv_pair : table)
+			lines.emplace_back ("  (" + kv_pair.first + ' ' + to_string (kv_pair.second.type) + ')');
+		lines.back () += ')';
+
+		return lines;
 	}
 
 	vector <string> lines (const AST& tree)
@@ -77,6 +88,27 @@ vector <string> AST::contents () const
 
 #include "auto.astdefs.cc"
 
+
+
+// --- program ---
+
+program::program (Node <declList> _decl_list)
+	: decl_list (_decl_list),
+	  table (new symbol_table)
+{
+	type = AST_type::program;
+}
+program::program ()
+	: table (new symbol_table)
+{
+	type = AST_type::program;
+}
+
+vector <string> program::contents () const
+{
+	return collect (lines (*table),
+	                valid (decl_list) ? lines (decl_list) : vector <string> {});
+}
 
 
 // --- varDecl ---
@@ -140,14 +172,16 @@ funDecl::funDecl (Node <typeSpecifier> _type_spec,
 	: type_spec (_type_spec),
 	  name (_name),
 	  decl_list (_decl_list),
-	  body (_body)
+	  body (_body),
+	  table (new symbol_table)
 {
 	type = AST_type::funDecl;
 }
 
 std::vector <std::string> funDecl::contents () const
 {
-	return collect (valid (type_spec) ? lines (type_spec) : vector <string> {},
+	return collect (lines (*table),
+	                valid (type_spec) ? lines (type_spec) : vector <string> {},
 	                valid (name) ? lines (name) : vector <string> {},
 	                valid (decl_list) ? lines (decl_list) : vector <string> {},
 	                valid (body) ? lines (body) : vector <string> {});
@@ -307,4 +341,25 @@ std::string to_string (AST_type type)
 	case AST_type::terminal:
 		return "terminal";
 	};
+}
+
+
+
+string to_string (mc_type t)
+{
+	switch (t)
+	{
+	case mc_type::mc_void:
+		return "void";
+	case mc_type::integer:
+		return "int";
+	case mc_type::character:
+		return "char";
+	case mc_type::int_array:
+		return "int []";
+	case mc_type::char_array:
+		return "char []";
+	case mc_type::function:
+		return "function";
+	}
 }

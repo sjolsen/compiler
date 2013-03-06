@@ -1,4 +1,3 @@
-struct program : AST {Node <declList> decl_list;program();program(Node <declList> _decl_list);virtual std::vector <std::string> contents () const ; };
 struct declList : AST {std::vector <Node <decl>> decls;declList();declList(std::vector <Node <decl>> _decls);virtual std::vector <std::string> contents () const ; };
 struct decl : AST {Node <basic_decl> sub_decl;decl();decl(Node <basic_decl> _sub_decl);virtual std::vector <std::string> contents () const ; };
 struct typeSpecifier : AST {Node <terminal> kwd_node;typeSpecifier();typeSpecifier(Node <terminal> _kwd_node);virtual std::vector <std::string> contents () const ; };

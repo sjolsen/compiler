@@ -29,8 +29,9 @@ void populate_table (symbol_table& table,
 	for (const Node <decl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->sub_decl->get_name ()) > 0)
-			throw syntax_error ("Redefined identifier (first definition here)",
-			                    table [decl_node->sub_decl->get_name ()].decl_node->pos ());
+			throw syntax_error ("Redefined identifier (first defined at " +
+			                    to_string (table [decl_node->sub_decl->get_name ()].decl_node->pos ()) + ')',
+			                    decl_node->sub_decl->pos ());
 
 		table [decl_node->sub_decl->get_name ()] = symbol_entry {decl_node->sub_decl->get_name (),
 		                                                         decl_node->sub_decl->get_type (),
@@ -44,8 +45,9 @@ void populate_table (symbol_table& table,
 	for (const Node <formalDecl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->get_name ()) > 0)
-			throw syntax_error ("Redefined identifier (first definition here)",
-			                    table [decl_node->get_name ()].decl_node->pos ());
+			throw syntax_error ("Redefined identifier (first defined at " +
+			                    to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
+			                    decl_node->pos ());
 
 		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
 		                                               decl_node->get_type (),
@@ -59,8 +61,9 @@ void populate_table (symbol_table& table,
 	for (const Node <varDecl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->get_name ()) > 0)
-			throw syntax_error ("Redefined identifier (first definition here)",
-			                    table [decl_node->get_name ()].decl_node->pos ());
+			throw syntax_error ("Redefined identifier (first defined at " +
+			                    to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
+			                    decl_node->pos ());
 
 		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
 		                                               decl_node->get_type (),

@@ -1,6 +1,3 @@
-program::program (Node <declList> _decl_list): decl_list(_decl_list) {type = AST_type::program;}
-program::program () {type = AST_type::program;}
-vector <string> program::contents () const {return collect (valid (decl_list) ? lines (decl_list) : vector <string> {} ); }
 declList::declList (std::vector <Node <decl>> _decls): decls(_decls) {type = AST_type::declList;}
 declList::declList () {type = AST_type::declList;}
 vector <string> declList::contents () const {return collect (valid (decls) ? lines (decls) : vector <string> {} ); }

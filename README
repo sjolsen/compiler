@@ -41,7 +41,9 @@ instead as of nested s-expressions of them form:
 
 The grammar matched by this program is slightly modified, allowing
 lists to be represented as true lists, rather than recursively along
-the tree. This grammar is specified in the file 'GRAMMAR'.
+the tree. This grammar is specified in the file 'GRAMMAR'. The parser
+does do minimal semantic checking, as it constructs the symbol tables
+during parsing.
 
 Testing may be performed through make, or
 'test/[component]/run_tests.bash' may be invoked directly The test

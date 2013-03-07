@@ -2,6 +2,7 @@
 #define AST_PREDICATES_HH
 
 #include <ast/astdef.hh>
+#include <ast/ast_nodes.hh>
 #include <tokenizer.hh>
 
 

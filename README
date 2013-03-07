@@ -19,7 +19,6 @@ The available make targets are:
 	text_processing   Builds the text processing library
 	tokenizer         Builds the tokenization library (depends
 	                  on the text processing library)
-	symbol            Builds the symbol table facilities
 	ast               Builds the abstract syntax tree library
 
 	testall           Runs all available top-level tests

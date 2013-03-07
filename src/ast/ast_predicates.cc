@@ -1,5 +1,5 @@
 #include <ast/ast_predicates.hh>
-#include <symbol.hh>
+#include <ast/symbol_table.hh>
 
 #include <fstream>
 #include <algorithm>

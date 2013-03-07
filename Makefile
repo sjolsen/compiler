@@ -15,7 +15,6 @@ _ARFLAGS  := $(ARFLAGS)s
 
 all: text_processing \
      tokenizer \
-     symbol \
      ast \
      mcc
 
@@ -96,41 +95,48 @@ $(LIB)/libtokenizer.a: $(INCLUDE)/tokenizer.hh \
                           $(BUILD)/token_extraction.o \
                           $(BUILD)/token_range.o
 
-# Build the symbol table facilities
 
-symbol: $(LIB)/libsymbol.a
-
-$(BUILD)/symbol_table.o: $(INCLUDE)/symbol/symbol_table.hh \
-                         $(INCLUDE)/text_processing.hh \
-                         $(LIB)/libast.a \
-                         $(SRC)/symbol/symbol_table.cc
-	$(CXX) $(_CXXFLAGS) $(SRC)/symbol/symbol_table.cc -c -o $(BUILD)/symbol_table.o
-
-$(LIB)/libsymbol.a: $(INCLUDE)/symbol.hh \
-                    $(BUILD)/symbol_table.o
-	$(AR) $(ARFLAGS) $(LIB)/libsymbol.a \
-                         $(BUILD)/symbol_table.o
 
 # Build the AST facilities
 
 ast: $(LIB)/libast.a
 
+$(BUILD)/astprint.o: $(INCLUDE)/ast/astdef.hh \
+                     $(INCLUDE)/ast/symbol_table.hh \
+                     $(INCLUDE)/ast/astprint.hh \
+                     $(SRC)/ast/astprint.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/ast/astprint.cc -c -o $(BUILD)/astprint.o
+
 $(BUILD)/astdef.o: $(INCLUDE)/ast/astdef.hh \
-                   $(INCLUDE)/ast/auto.astdecls.hh \
-                   $(SRC)/ast/astdef.cc \
-                   $(SRC)/ast/auto.astdefs.cc
+                   $(INCLUDE)/ast/astprint.hh \
+                   $(SRC)/ast/astdef.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/ast/astdef.cc -c -o $(BUILD)/astdef.o
 
+$(BUILD)/ast_nodes.o: $(INCLUDE)/ast/astdef.hh \
+                      $(INCLUDE)/ast/symbol_table.hh \
+                      $(INCLUDE)/ast/ast_nodes.hh \
+                      $(INCLUDE)/ast/auto.astdecls.hh \
+                      $(INCLUDE)/ast/astprint.hh \
+                      $(SRC)/ast/ast_nodes.cc \
+                      $(SRC)/ast/auto.astdefs.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/ast/ast_nodes.cc -c -o $(BUILD)/ast_nodes.o
+
 $(BUILD)/ast_predicates.o: $(INCLUDE)/ast/astdef.hh \
+                           $(INCLUDE)/ast/symbol_table.hh \
+                           $(INCLUDE)/ast/ast_nodes.hh \
                            $(INCLUDE)/ast/ast_predicates.hh \
                            $(SRC)/ast/ast_predicates.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/ast/ast_predicates.cc -c -o $(BUILD)/ast_predicates.o
 
 $(LIB)/libast.a: $(INCLUDE)/ast.hh \
-              $(BUILD)/astdef.o \
-              $(BUILD)/ast_predicates.o
+                 $(BUILD)/astprint.o \
+                 $(BUILD)/astdef.o \
+                 $(BUILD)/ast_nodes.o \
+                 $(BUILD)/ast_predicates.o
 	$(AR) $(ARFLAGS) $(LIB)/libast.a \
+                         $(BUILD)/astprint.o \
                          $(BUILD)/astdef.o \
+                         $(BUILD)/ast_nodes.o \
                          $(BUILD)/ast_predicates.o
 
 
@@ -148,14 +154,12 @@ $(BUILD)/mcc.o: $(SRC)/mcc.cc \
 $(BIN)/mcc: $(BUILD)/mcc.o \
             $(LIB)/libtext_processing.a \
             $(LIB)/libtokenizer.a \
-            $(LIB)/libast.a \
-            $(LIB)/libsymbol.a
+            $(LIB)/libast.a
 	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
                             -L$(LIB) \
-                            -ltext_processing \
                             -last \
                             -ltokenizer \
-                            -lsymbol \
+                            -ltext_processing \
                             -o $(BIN)/mcc
 
 

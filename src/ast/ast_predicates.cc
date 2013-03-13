@@ -234,7 +234,7 @@ program program_p (const vector <token>& tokens)
 	logfile << "Finished validating\n";
 
 	Node <declList> decl_list = CALL (declList_p (working_set));
-	if (!decl_list)
+	if (!decl_list || !working_set.empty ())
 		throw_error ("Expected a declaration",
 		             begin (working_set)->pos);
 

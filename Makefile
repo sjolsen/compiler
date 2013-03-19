@@ -40,8 +40,8 @@ $(BUILD)/file_position.o: $(INCLUDE)/text_processing/file_position.hh \
 	$(CXX) $(_CXXFLAGS) $(SRC)/text_processing/file_position.cc -c -o $(BUILD)/file_position.o
 
 $(LIB)/libtext_processing.a: $(INCLUDE)/text_processing.hh \
-                          $(BUILD)/char_range.o \
-                          $(BUILD)/file_position.o
+                             $(BUILD)/char_range.o \
+                             $(BUILD)/file_position.o
 	$(AR) $(_ARFLAGS) $(LIB)/libtext_processing.a \
                           $(BUILD)/char_range.o \
                           $(BUILD)/file_position.o
@@ -83,11 +83,11 @@ $(BUILD)/token_range.o: $(INCLUDE)/tokenizer/tokendef.hh \
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_range.cc -c -o $(BUILD)/token_range.o
 
 $(LIB)/libtokenizer.a: $(INCLUDE)/tokenizer.hh \
-                    $(BUILD)/syntax_error.o \
-                    $(BUILD)/tokendef.o \
-                    $(BUILD)/token_predicates.o \
-                    $(BUILD)/token_extraction.o \
-                    $(BUILD)/token_range.o
+                       $(BUILD)/syntax_error.o \
+                       $(BUILD)/tokendef.o \
+                       $(BUILD)/token_predicates.o \
+                       $(BUILD)/token_extraction.o \
+                       $(BUILD)/token_range.o
 	$(AR) $(_ARFLAGS) $(LIB)/libtokenizer.a \
                           $(BUILD)/syntax_error.o \
                           $(BUILD)/tokendef.o \

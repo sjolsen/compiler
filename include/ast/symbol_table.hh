@@ -5,13 +5,14 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 
 
 struct symbol_entry
 {
 	std::string name;
-	mc_type type;
+	std::vector <mc_type> type;
 	Node <basic_decl> decl_node;
 };
 

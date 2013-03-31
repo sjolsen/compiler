@@ -50,7 +50,6 @@ enum class mc_type
 	character,
 	int_array,
 	char_array,
-	function
 };
 
 
@@ -71,7 +70,7 @@ struct basic_decl
 	: AST
 {
 	virtual std::string get_name () const = 0;
-	virtual mc_type get_type () const = 0;
+	virtual std::vector <mc_type> get_type () const = 0;
 	virtual file_position pos () const = 0;
 };
 
@@ -92,6 +91,7 @@ struct Node
 
 
 std::string to_string (mc_type t);
+std::string to_string (const std::vector <mc_type>& parameter_types);
 std::string to_string (const AST& tree,
                        std::string line_prefix = "");
 std::string to_string (AST_type type);

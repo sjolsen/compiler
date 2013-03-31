@@ -5,6 +5,17 @@ using namespace std;
 
 
 
+namespace
+{
+	static unordered_map <string, mc_type> var_map = {{"void", mc_type::mc_void},
+	                                                  {"int", mc_type::integer},
+	                                                  {"char", mc_type::character}};
+	static unordered_map <string, mc_type> array_map = {{"int", mc_type::int_array},
+	                                                    {"char", mc_type::char_array}};
+}
+
+
+
 #include "auto.astdefs.cc"
 
 
@@ -54,19 +65,13 @@ string varDecl::get_name () const
 	return name->token_ref.str;
 }
 
-mc_type varDecl::get_type () const
+vector <mc_type> varDecl::get_type () const
 {
-	static unordered_map <string, mc_type> var_map = {{"void", mc_type::mc_void},
-	                                                  {"int", mc_type::integer},
-	                                                  {"char", mc_type::character}};
-	static unordered_map <string, mc_type> array_map = {{"int", mc_type::int_array},
-	                                                    {"char", mc_type::char_array}};
-
 	try
 	{
 		if (size)
-			return array_map.at (type_spec->kwd_node->token_ref.str);
-		return var_map.at (type_spec->kwd_node->token_ref.str);
+			return vector <mc_type> {array_map.at (type_spec->kwd_node->token_ref.str)};
+		return vector <mc_type> {var_map.at (type_spec->kwd_node->token_ref.str)};
 	}
 	catch (const exception&)
 	{
@@ -97,7 +102,7 @@ funDecl::funDecl (Node <typeSpecifier> _type_spec,
 	type = AST_type::funDecl;
 }
 
-std::vector <std::string> funDecl::contents () const
+vector <string> funDecl::contents () const
 {
 	return collect (lines (*table),
 	                valid (type_spec) ? lines (type_spec) : vector <string> {},
@@ -106,14 +111,20 @@ std::vector <std::string> funDecl::contents () const
 	                valid (body) ? lines (body) : vector <string> {});
 }
 
-std::string funDecl::get_name () const
+string funDecl::get_name () const
 {
 	return name->token_ref.str;
 }
 
-mc_type funDecl::get_type () const
+vector <mc_type> funDecl::get_type () const
 {
-	return mc_type::function;
+	vector <mc_type> parameter_types {var_map.at (type_spec->kwd_node->token_ref.str)};
+
+	if (decl_list)
+		for (const Node <formalDecl>& decl_node : decl_list->decls)
+			parameter_types.emplace_back (decl_node->get_type () [0]);
+
+	return parameter_types;
 }
 
 file_position funDecl::pos () const
@@ -147,19 +158,13 @@ string formalDecl::get_name () const
 	return name->token_ref.str;
 }
 
-mc_type formalDecl::get_type () const
+vector <mc_type> formalDecl::get_type () const
 {
-	static unordered_map <string, mc_type> var_map = {{"void", mc_type::mc_void},
-	                                                  {"int", mc_type::integer},
-	                                                  {"char", mc_type::character}};
-	static unordered_map <string, mc_type> array_map = {{"int", mc_type::int_array},
-	                                                    {"char", mc_type::char_array}};
-
 	try
 	{
 		if (is_array)
-			return array_map.at (type_spec->kwd_node->token_ref.str);
-		return var_map.at (type_spec->kwd_node->token_ref.str);
+			return vector <mc_type> {array_map.at (type_spec->kwd_node->token_ref.str)};
+		return vector <mc_type> {var_map.at (type_spec->kwd_node->token_ref.str)};
 	}
 	catch (const exception&)
 	{

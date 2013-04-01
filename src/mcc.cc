@@ -1,6 +1,7 @@
 #include <text_processing.hh>
 #include <tokenizer.hh>
 #include <ast.hh>
+#include <semantic.hh>
 
 #include <fstream>
 #include <iostream>
@@ -39,7 +40,7 @@ void print_syntax_error (char_range text,
 	auto error_point = e.where ();
 	auto line = containing_line (error_point);
 
-	cerr << "Syntax error: " << e.what () << ' ' << error_point << ':' << endl
+	cerr << "Error: " << e.what () << ' ' << error_point << ':' << endl
 	     << line << endl;
 	transform (line.begin (), error_point._pos, ostream_iterator <char> (cerr),
 	           [] (char c) { return c == '\t'? '\t' : ' '; });
@@ -58,9 +59,14 @@ int main (int argc,
 		cerr << usage;
 		return EXIT_FAILURE;
 	}
+
 	bool test_scanner = false;
+	bool test_parser = false;
+
 	if (find (argv + 2, argv + argc, string ("-Tscanner")) != argv + argc)
 		test_scanner = true;
+	if (find (argv + 2, argv + argc, string ("-Tparser")) != argv + argc)
+		test_parser = true;
 
 	// Open the input file
 
@@ -88,12 +94,15 @@ int main (int argc,
 		print_syntax_error (text, e);
 		return EXIT_FAILURE;
 	}
+
 	if (test_scanner)
 	{
 		for (auto& token : tokens)
 			cout << to_string (token) << endl;
 		return EXIT_SUCCESS;
 	}
+
+	// Parse the program
 
 	program syntax_tree;
 	try
@@ -106,7 +115,25 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
+	if (test_parser)
+	{
+		cout << to_string (syntax_tree) << endl;
+		return EXIT_SUCCESS;
+	}
+
+	// Perform static analysis
+
+	try
+	{
+		semantic_check (syntax_tree);
+	}
+	catch (const syntax_error& e)
+	{
+		print_syntax_error (text, e);
+		return EXIT_FAILURE;
+	}
+
 	cout << to_string (syntax_tree) << endl;
 
-	// Build symbol table
+	return EXIT_SUCCESS;
 }

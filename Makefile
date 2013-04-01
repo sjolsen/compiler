@@ -16,6 +16,7 @@ _ARFLAGS  := $(ARFLAGS)s
 all: text_processing \
      tokenizer \
      ast \
+     semantic \
      mcc
 
 clean:
@@ -141,6 +142,21 @@ $(LIB)/libast.a: $(INCLUDE)/ast.hh \
 
 
 
+# Build the static analysis library
+
+semantic: $(LIB)/libsemantic.a
+
+$(BUILD)/semantic.o: $(INCLUDE)/ast.hh \
+                     $(INCLUDE)/semantic.hh \
+                     $(SRC)/semantic.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/semantic.cc -c -o $(BUILD)/semantic.o
+
+$(LIB)/libsemantic.a: $(BUILD)/semantic.o
+	$(AR) $(ARFLAGS) $(LIB)/libsemantic.a \
+                         $(BUILD)/semantic.o
+
+
+
 # Build the main executable
 
 mcc: $(BIN)/mcc
@@ -160,6 +176,7 @@ $(BIN)/mcc: $(BUILD)/mcc.o \
                             -last \
                             -ltokenizer \
                             -ltext_processing \
+                            -lsemantic \
                             -o $(BIN)/mcc
 
 

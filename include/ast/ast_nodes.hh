@@ -68,7 +68,7 @@ struct varDecl
 
 	virtual std::vector <std::string> contents () const;
 	virtual std::string get_name () const;
-	virtual mc_type get_type () const;
+	virtual std::vector <mc_type> get_type () const;
 	virtual file_position pos () const;
 };
 
@@ -91,7 +91,7 @@ struct funDecl
 
 	virtual std::vector <std::string> contents () const;
 	virtual std::string get_name () const;
-	virtual mc_type get_type () const;
+	virtual std::vector <mc_type> get_type () const;
 	virtual file_position pos () const;
 };
 
@@ -110,7 +110,7 @@ struct formalDecl
 
 	virtual std::vector <std::string> contents () const;
 	virtual std::string get_name () const;
-	virtual mc_type get_type () const;
+	virtual std::vector <mc_type> get_type () const;
 	virtual file_position pos () const;
 };
 

@@ -164,13 +164,15 @@ mcc: $(BIN)/mcc
 $(BUILD)/mcc.o: $(SRC)/mcc.cc \
                 $(INCLUDE)/text_processing.hh \
                 $(INCLUDE)/tokenizer.hh \
-                $(INCLUDE)/ast.hh
+                $(INCLUDE)/ast.hh \
+                $(INCLUDE)/semantic.hh
 	$(CXX) $(_CXXFLAGS) $(SRC)/mcc.cc -c -o $(BUILD)/mcc.o
 
 $(BIN)/mcc: $(BUILD)/mcc.o \
             $(LIB)/libtext_processing.a \
             $(LIB)/libtokenizer.a \
-            $(LIB)/libast.a
+            $(LIB)/libast.a \
+            $(LIB)/libsemantic.a
 	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
                             -L$(LIB) \
                             -last \

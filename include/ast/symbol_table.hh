@@ -12,7 +12,7 @@ struct symbol_entry
 {
 	std::string name;
 	mc_type type;
-	Node <basic_decl> decl_node;
+	basic_decl* decl_node;
 };
 
 

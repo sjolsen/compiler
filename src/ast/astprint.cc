@@ -27,16 +27,8 @@ vector <string> lines (const AST& tree)
 	return lines;
 }
 
-vector <string> lines (const AST_node& node)
-{
-	return lines (*node);
-}
-
 vector <string> lines (bool b)
 { return b ? vector <string> {"[]"} : vector <string> {}; }
-
-bool valid (const AST_node& node)
-{ return node != nullptr; }
 
 bool valid (bool b)
 { return b; }

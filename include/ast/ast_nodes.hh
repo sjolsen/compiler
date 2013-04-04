@@ -44,12 +44,12 @@ struct terminal;
 struct program
 	: AST
 {
-	std::shared_ptr <symbol_table> table;
+	std::unique_ptr <symbol_table> table;
 
 	Node <declList> decl_list;
 
 	program ();
-	program (Node <declList> _decl_list);
+	program (Node <declList>&& _decl_list);
 	virtual std::vector <std::string> contents () const;
 };
 
@@ -62,9 +62,9 @@ struct varDecl
 	Node <terminal> name;
 	Node <terminal> size;
 
-	varDecl (Node <typeSpecifier> _type_spec,
-	         Node <terminal> _name,
-	         Node <terminal> _size);
+	varDecl (Node <typeSpecifier>&& _type_spec,
+	         Node <terminal>&& _name,
+	         Node <terminal>&& _size);
 
 	virtual std::vector <std::string> contents () const;
 	virtual std::string get_name () const;
@@ -77,17 +77,17 @@ struct varDecl
 struct funDecl
 	: basic_decl
 {
-	std::shared_ptr <symbol_table> table;
+	std::unique_ptr <symbol_table> table;
 
 	Node <typeSpecifier> type_spec;
 	Node <terminal> name;
 	Node <formalDeclList> decl_list;
 	Node <funBody> body;
 
-	funDecl (Node <typeSpecifier> _type_spec,
-	         Node <terminal> _name,
-	         Node <formalDeclList> _decl_list,
-	         Node <funBody> _body);
+	funDecl (Node <typeSpecifier>&& _type_spec,
+	         Node <terminal>&& _name,
+	         Node <formalDeclList>&& _decl_list,
+	         Node <funBody>&& _body);
 
 	virtual std::vector <std::string> contents () const;
 	virtual std::string get_name () const;
@@ -104,8 +104,8 @@ struct formalDecl
 	Node <terminal> name;
 	bool is_array;
 
-	formalDecl (Node <typeSpecifier> _type_spec,
-	            Node <terminal> _name,
+	formalDecl (Node <typeSpecifier>&& _type_spec,
+	            Node <terminal>&& _name,
 	            bool _is_array);
 
 	virtual std::vector <std::string> contents () const;

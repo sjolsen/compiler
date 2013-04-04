@@ -77,17 +77,18 @@ struct basic_decl
 
 
 
-typedef std::shared_ptr <AST> AST_node;
 template <typename NodeType>
 struct Node
-	: std::shared_ptr <NodeType>
+	: std::unique_ptr <NodeType>
 {
 	template <typename... Args>
 	Node (Args&&... args)
-		: std::shared_ptr <NodeType> (std::forward <Args> (args)...)
+		: std::unique_ptr <NodeType> (std::forward <Args> (args)...)
 	{
 	}
 };
+typedef Node <AST> AST_node;
+
 
 
 

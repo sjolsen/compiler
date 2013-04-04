@@ -11,8 +11,8 @@ using namespace std;
 
 // --- program ---
 
-program::program (Node <declList> _decl_list)
-	: decl_list (_decl_list),
+program::program (Node <declList>&& _decl_list)
+	: decl_list (move (_decl_list)),
 	  table (new symbol_table)
 {
 	type = AST_type::program;
@@ -32,12 +32,12 @@ vector <string> program::contents () const
 
 // --- varDecl ---
 
-varDecl::varDecl (Node <typeSpecifier> _type_spec,
-                  Node <terminal> _name,
-                  Node <terminal> _size)
-	: type_spec (_type_spec),
-	  name (_name),
-	  size (_size)
+varDecl::varDecl (Node <typeSpecifier>&& _type_spec,
+                  Node <terminal>&& _name,
+                  Node <terminal>&& _size)
+	: type_spec (move (_type_spec)),
+	  name (move (_name)),
+	  size (move (_size))
 {
 	type = AST_type::varDecl;
 }
@@ -84,14 +84,14 @@ file_position varDecl::pos () const
 
 // --- funDecl ---
 
-funDecl::funDecl (Node <typeSpecifier> _type_spec,
-                  Node <terminal> _name,
-                  Node <formalDeclList> _decl_list,
-                  Node <funBody> _body)
-	: type_spec (_type_spec),
-	  name (_name),
-	  decl_list (_decl_list),
-	  body (_body),
+funDecl::funDecl (Node <typeSpecifier>&& _type_spec,
+                  Node <terminal>&& _name,
+                  Node <formalDeclList>&& _decl_list,
+                  Node <funBody>&& _body)
+	: type_spec (move (_type_spec)),
+	  name (move (_name)),
+	  decl_list (move (_decl_list)),
+	  body (move (_body)),
 	  table (new symbol_table)
 {
 	type = AST_type::funDecl;
@@ -125,11 +125,11 @@ file_position funDecl::pos () const
 
 // --- formalDecl ---
 
-formalDecl::formalDecl (Node <typeSpecifier> _type_spec,
-                        Node <terminal> _name,
+formalDecl::formalDecl (Node <typeSpecifier>&& _type_spec,
+                        Node <terminal>&& _name,
                         bool _is_array)
-	: type_spec (_type_spec),
-	  name (_name),
+	: type_spec (move (_type_spec)),
+	  name (move (_name)),
 	  is_array (_is_array)
 {
 	type = AST_type::formalDecl;
@@ -202,7 +202,7 @@ void populate_table (symbol_table& table,
 
 		table [decl_node->sub_decl->get_name ()] = symbol_entry {decl_node->sub_decl->get_name (),
 		                                                         decl_node->sub_decl->get_type (),
-		                                                         decl_node->sub_decl};
+		                                                         decl_node->sub_decl.get ()};
 	}
 }
 
@@ -218,7 +218,7 @@ void populate_table (symbol_table& table,
 
 		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
 		                                               decl_node->get_type (),
-		                                               decl_node};
+		                                               decl_node.get ()};
 	}
 }
 
@@ -234,6 +234,6 @@ void populate_table (symbol_table& table,
 
 		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
 		                                               decl_node->get_type (),
-		                                               decl_node};
+		                                               decl_node.get ()};
 	}
 }

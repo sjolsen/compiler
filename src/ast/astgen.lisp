@@ -1,7 +1,7 @@
 (defun make-param-list (params)
   (if params
       (let ((head-decl
-	     (concatenate 'string (cadar params) " _" (caar params))))
+	     (concatenate 'string (cadar params) "&& _" (caar params))))
 	(if (cdr params)
 	    (concatenate 'string head-decl ", " (make-param-list (cdr params)))
 	    head-decl))))
@@ -21,7 +21,7 @@
 (defun make-init-list (members)
   (if members
       (let ((head-def
-	     (concatenate 'string (caar members) "(_" (caar members) ") ")))
+	     (concatenate 'string (caar members) "(move (_" (caar members) ")) ")))
 	(if (cdr members)
 	    (concatenate 'string head-def ", " (make-init-list (cdr members)))
 	    head-def))))

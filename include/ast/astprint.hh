@@ -21,13 +21,18 @@ std::vector <std::string> collect (std::vector <std::string>&& first,
 
 std::vector <std::string> lines (const symbol_table& table);
 std::vector <std::string> lines (const AST& tree);
-std::vector <std::string> lines (const AST_node& node);
+
+template <typename AstType>
+std::vector <std::string> lines (const Node <AstType>& node)
+{
+	return lines (*node);
+}
 
 template <typename NodeType>
 std::vector <std::string> lines (const std::vector <NodeType>& nodes)
 {
 	std::vector <std::string> output;
-	for (const AST_node& node : nodes)
+	for (const NodeType& node : nodes)
 		output = collect (move (output), lines (node));
 	return output;
 }
@@ -38,7 +43,10 @@ template <typename NodeType>
 bool valid (const std::vector <NodeType>& nodes)
 { return !nodes.empty (); }
 
-bool valid (const AST_node& node);
+template <typename AstType>
+bool valid (const Node <AstType>& node)
+{ return static_cast <bool> (node); }
+
 bool valid (bool b);
 
 

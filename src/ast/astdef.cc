@@ -145,11 +145,12 @@ string to_string (mc_type t)
 
 
 
-string to_string (const vector <mc_type>& parameter_types)
+string to_string (const vector <mc_type>& parameter_types,
+                  bool is_function)
 {
 	string type_string = to_string (parameter_types [0]);
 
-	if (parameter_types.size () > 1)
+	if (is_function)
 		return type_string + " (" + accumulate (begin (parameter_types) + 1, end (parameter_types), string (),
 		                                        [] (const string& type_string, mc_type t) { return (type_string.empty () ? string ("") : type_string + ' ' ) + to_string (t); }) + ")";
 	return type_string;

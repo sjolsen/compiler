@@ -103,7 +103,8 @@ typedef Node <AST> AST_node;
 
 std::string to_string (basic_mc_type t);
 std::string to_string (mc_type t);
-std::string to_string (const std::vector <mc_type>& parameter_types);
+std::string to_string (const std::vector <mc_type>& parameter_types,
+                       bool is_function = false);
 std::string to_string (const AST& tree,
                        std::string line_prefix = "");
 std::string to_string (AST_type type);

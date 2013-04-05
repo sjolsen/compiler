@@ -34,8 +34,7 @@ string get_file (const string& filename)
 
 
 
-void print_syntax_error (char_range text,
-                         const syntax_error& e)
+void print_syntax_error (const syntax_error& e)
 {
 	auto error_point = e.where ();
 	auto line = containing_line (error_point);
@@ -91,7 +90,7 @@ int main (int argc,
 	}
 	catch (const syntax_error& e)
 	{
-		print_syntax_error (text, e);
+		print_syntax_error (e);
 		return EXIT_FAILURE;
 	}
 
@@ -111,7 +110,7 @@ int main (int argc,
 	}
 	catch (const syntax_error& e)
 	{
-		print_syntax_error (text, e);
+		print_syntax_error (e);
 		return EXIT_FAILURE;
 	}
 
@@ -129,7 +128,7 @@ int main (int argc,
 	}
 	catch (const syntax_error& e)
 	{
-		print_syntax_error (text, e);
+		print_syntax_error (e);
 		return EXIT_FAILURE;
 	}
 

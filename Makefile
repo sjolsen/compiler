@@ -151,7 +151,8 @@ $(BUILD)/semantic.o: $(INCLUDE)/ast.hh \
                      $(SRC)/semantic.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/semantic.cc -c -o $(BUILD)/semantic.o
 
-$(LIB)/libsemantic.a: $(BUILD)/semantic.o
+$(LIB)/libsemantic.a: $(INCLUDE)/semantic.hh \
+                      $(BUILD)/semantic.o
 	$(AR) $(ARFLAGS) $(LIB)/libsemantic.a \
                          $(BUILD)/semantic.o
 

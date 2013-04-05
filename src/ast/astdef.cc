@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <stdexcept>
 
 using namespace std;
 
@@ -91,6 +92,8 @@ std::string to_string (AST_type type)
 	case AST_type::terminal:
 		return "terminal";
 	};
+
+	throw logic_error ("Bad enumeration value (to_string (AST_type))");
 }
 
 
@@ -110,6 +113,8 @@ string to_string (mc_type t)
 	case mc_type::char_array:
 		return "char []";
 	}
+
+	throw logic_error ("Bad enumeration value (to_string (mc_type))");
 }
 
 

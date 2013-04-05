@@ -1,5 +1,7 @@
 #include <tokenizer/tokendef.hh>
 
+#include <stdexcept>
+
 using namespace std;
 
 
@@ -21,6 +23,8 @@ string to_string (token t)
 	case token_type::symbol:
 		return "<symbol, '"        + to_string (t.op)    + "', " + to_string (t.pos) + '>';
 	};
+
+	throw logic_error ("Bad enumeration value (to_string (token))");
 }
 
 
@@ -70,4 +74,6 @@ string to_string (symbol s)
 	case symbol::semicolon:
 		return ";";
 	};
+
+	throw logic_error ("Bad enumeration value (to_string (symbol))");
 }

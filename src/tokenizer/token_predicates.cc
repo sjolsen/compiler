@@ -17,7 +17,7 @@ using namespace std;
 matcher identifier_p
 {
 	[] (char_range token_range,
-	    char_range file) -> token
+	    char_range) -> token
 	{
 		token t;
 		t.type = token_type::identifier;
@@ -58,7 +58,7 @@ const array <const string, 8> keywords = {{"if",
 matcher keyword_p
 {
 	[] (char_range token_range,
-	    char_range file) -> token
+	    char_range) -> token
 	{
 		token t;
 		t.type = token_type::keyword;
@@ -334,7 +334,7 @@ unordered_map <string, symbol> symbol_map = {{"+",  symbol::plus},
 matcher symbol_p
 {
 	[] (char_range token_range,
-	    char_range file) -> token
+	    char_range) -> token
 	{
 		token t;
 		t.type = token_type::symbol;
@@ -388,7 +388,7 @@ matcher space_p
 	},
 
 	[] (char_range working_set,
-	    char_range file) -> char_range
+	    char_range) -> char_range
 	{
 		return char_range (begin (working_set),
 		                   find_if_not (begin (working_set), end (working_set),

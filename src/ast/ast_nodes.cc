@@ -23,8 +23,8 @@ namespace
 // --- program ---
 
 program::program (Node <declList>&& _decl_list)
-	: decl_list (move (_decl_list)),
-	  table (new symbol_table)
+	: table (new symbol_table),
+	  decl_list (move (_decl_list))
 {
 	type = AST_type::program;
 }
@@ -93,11 +93,11 @@ funDecl::funDecl (Node <typeSpecifier>&& _type_spec,
                   Node <terminal>&& _name,
                   Node <formalDeclList>&& _decl_list,
                   Node <funBody>&& _body)
-	: type_spec (move (_type_spec)),
+	: table (new symbol_table),
+	  type_spec (move (_type_spec)),
 	  name (move (_name)),
 	  decl_list (move (_decl_list)),
-	  body (move (_body)),
-	  table (new symbol_table)
+	  body (move (_body))
 {
 	type = AST_type::funDecl;
 }

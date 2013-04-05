@@ -145,6 +145,8 @@ namespace
 						                    open_tokens.top ()->pos);
 					open_tokens.pop ();
 					break;
+				default:
+					break;
 				}
 
 			tokens.drop_front (1);

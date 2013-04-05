@@ -147,6 +147,7 @@ $(LIB)/libast.a: $(INCLUDE)/ast.hh \
 semantic: $(LIB)/libsemantic.a
 
 $(BUILD)/semantic.o: $(INCLUDE)/ast.hh \
+                     $(INCLUDE)/tokenizer.hh \
                      $(INCLUDE)/semantic.hh \
                      $(SRC)/semantic.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/semantic.cc -c -o $(BUILD)/semantic.o

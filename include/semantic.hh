@@ -24,12 +24,30 @@ void semantic_check (const statementList& node,
                      const symbol_table& local_table,
                      const symbol_table& global_table);
 
-void semantic_check (const statement& node);
-void semantic_check (const compoundStmt& node);
-void semantic_check (const assignStmt& node);
-void semantic_check (const condStmt& node);
-void semantic_check (const loopStmt& node);
-void semantic_check (const returnStmt& node);
+void semantic_check (const statement& node,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
+
+void semantic_check (const compoundStmt& node,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
+
+void semantic_check (const assignStmt& node,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
+
+void semantic_check (const condStmt& node,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
+
+void semantic_check (const loopStmt& node,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
+
+void semantic_check (const returnStmt& node,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
+
 void semantic_check (const var& node);
 void semantic_check (const expression& node);
 void semantic_check (const relop& node);

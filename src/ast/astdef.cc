@@ -17,6 +17,16 @@ mc_type::mc_type (basic_mc_type _type,
 {
 }
 
+bool mc_type::operator == (const mc_type& other)
+{
+	return type == other.type && size == other.size;
+}
+
+bool mc_type::operator != (const mc_type& other)
+{
+	return !(*this == other);
+}
+
 
 
 AST::AST ()

@@ -169,7 +169,7 @@ void semantic_check (const returnStmt& node,
 			return;
 		else
 			throw error ("Expected expression in return statement",
-			             node->pos ());
+			             node.pos ());
 
 	mc_type rexpr_type = semantic_check (*node.rtrn_expr, local_table, global_table);
 	if (rexpr_type != return_type)
@@ -187,13 +187,13 @@ mc_type semantic_check (const var& node,
 	mc_type var_type;
 	try
 	{
-		var_type = local_table.at (node.name->token_ref.str);
+		var_type = local_table.at (node.name->token_ref.str).type [0];
 	}
 	catch (const out_of_range&)
 	{
 		try
 		{
-			var_type = local_table.at (node.name->token_ref.str);
+			var_type = local_table.at (node.name->token_ref.str).type [0];
 		}
 		catch (const out_of_range&)
 		{
@@ -222,7 +222,7 @@ mc_type semantic_check (const var& node,
 		}
 		else // Complex expression; don’t perform bounds check
 		{
-			mc_type index_type = semantic_check (node.size, local_table, global_table);
+			mc_type index_type = semantic_check (*node.size, local_table, global_table);
 
 			if (index_type.type != basic_mc_type::mc_int &&
 			    index_type.type != basic_mc_type::mc_char) // Invalid index type
@@ -235,59 +235,71 @@ mc_type semantic_check (const var& node,
 		throw error ("Array of void used in expression",
 		             node.pos ());
 
-	return var_type;
+	return mc_type (var_type.type, 0);
 }
 
 
 
-void semantic_check (const expression& node)
+mc_type semantic_check (const expression& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
+{
+	if (!node.lhs)
+		return semantic_check (*node.rhs, local_table, global_table);
+
+	mc_type lhs_type = semantic_check (*node.lhs, local_table, global_table);
+	mc_type rhs_type = semantic_check (*node.rhs, local_table, global_table);
+
+	if ((lhs_type.type != basic_mc_type::mc_int &&
+	     lhs_type.type != basic_mc_type::mc_char) ||
+	    (rhs_type.type != basic_mc_type::mc_int &&
+	     rhs_type.type != basic_mc_type::mc_char)) // One operand is non-integral
+		throw error ("Expression compares non-integral type",
+		             node.op->pos ());
+
+	if (lhs_type.type == basic_mc_type::mc_int ||
+	    rhs_type.type == basic_mc_type::mc_int)
+		return mc_type (basic_mc_type::mc_int, 0); // Widening conversion
+
+	return mc_type (basic_mc_type::mc_char, 0);
+}
+
+
+
+mc_type semantic_check (const addExpr& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
 {
 }
 
 
 
-void semantic_check (const relop& node)
+mc_type semantic_check (const term& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
 {
 }
 
 
 
-void semantic_check (const addExpr& node)
+mc_type semantic_check (const factor& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
 {
 }
 
 
 
-void semantic_check (const addop& node)
+mc_type semantic_check (const funcCallExpr& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
 {
 }
 
 
 
-void semantic_check (const term& node)
-{
-}
-
-
-
-void semantic_check (const mulop& node)
-{
-}
-
-
-
-void semantic_check (const factor& node)
-{
-}
-
-
-
-void semantic_check (const funcCallExpr& node)
-{
-}
-
-
-
-void semantic_check (const argList& node)
+mc_type semantic_check (const argList& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
 {
 }

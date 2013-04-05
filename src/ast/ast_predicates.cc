@@ -15,24 +15,6 @@ using namespace std;
 
 namespace
 {
-	template <typename Parent>
-	void link_node (const Node <Parent>&)
-	{
-	}
-
-	template <typename Parent, typename First, typename... Rest>
-	void link_node (const Node <Parent>& parent, const First& first, Rest&&... rest)
-	{
-		link_node (parent, rest...);
-	}
-
-	template <typename Parent, typename Child, typename... Rest>
-	void link_node (const Node <Parent>& parent, Node <Child> first_child, Rest&&... rest)
-	{
-		first_child->parent = parent.get ();
-		link_node (parent, rest...);
-	}
-
 	template <typename AstType, typename... Args>
 	Node <AstType> make_node (Args&&... args)
 	{
@@ -184,21 +166,21 @@ Node <declList> declList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto decl_list = make_node <declList> ();
+	vector <Node <decl>> decl_list;
 
 	Node <decl> next_decl = decl_p (working_set);
 	validate (next_decl);
-	decl_list->decls.push_back (move (next_decl));
+	decl_list.push_back (move (next_decl));
 
 	for (;;)
 	{
 		next_decl = decl_p (working_set);
 		if (next_decl)
-			decl_list->decls.push_back (move (next_decl));
+			decl_list.push_back (move (next_decl));
 		else
 		{
 			tokens = working_set;
-			return decl_list;
+			return make_node <declList> (move (decl_list));
 		}
 	}
 }
@@ -313,11 +295,11 @@ Node <formalDeclList> formalDeclList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto decl_list = make_node <formalDeclList> ();
+	vector <Node <formalDecl>> decl_list;
 
 	Node <formalDecl> next_decl = formalDecl_p (working_set);
 	validate (next_decl);
-	decl_list->decls.push_back (move (next_decl));
+	decl_list.push_back (move (next_decl));
 
 	AST_node comma_node;
 	for (;;)
@@ -329,11 +311,11 @@ Node <formalDeclList> formalDeclList_p (token_range& tokens)
 		if (!next_decl)
 			break;
 
-		decl_list->decls.push_back (move (next_decl));
+		decl_list.push_back (move (next_decl));
 	}
 
 	tokens = working_set;
-	return decl_list;
+	return make_node <formalDeclList> (move (decl_list));
 }
 
 
@@ -392,18 +374,18 @@ Node <localDeclList> localDeclList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto decl_list = make_node <localDeclList> ();
+	vector <Node <varDecl>> decl_list;
 
 	Node <varDecl> next_decl;
 	for (;;)
 	{
 		next_decl = varDecl_p (working_set);
 		if (next_decl)
-			decl_list->decls.push_back (move (next_decl));
+			decl_list.push_back (move (next_decl));
 		else
 		{
 			tokens = working_set;
-			return decl_list;
+			return make_node <localDeclList> (move (decl_list));
 		}
 	}
 }
@@ -414,18 +396,18 @@ Node <statementList> statementList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto decl_list = make_node <statementList> ();
+	vector <Node <statement>> decl_list;
 
 	Node <statement> next_decl;
 	for (;;)
 	{
 		next_decl = statement_p (working_set);
 		if (next_decl)
-			decl_list->stmts.push_back (move (next_decl));
+			decl_list.push_back (move (next_decl));
 		else
 		{
 			tokens = working_set;
-			return decl_list;
+			return make_node <statementList> (move (decl_list));
 		}
 	}
 }
@@ -859,13 +841,13 @@ Node <argList> argList_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	auto expression_list = make_node <argList> ();
+	vector <Node <expression>> expression_list;
 
 	Node <expression> next_expression = expression_p (working_set);
 	if (!next_expression)
-		return expression_list;
+		return make_node <argList> (move (expression_list));
 
-	expression_list->args.push_back (move (next_expression));
+	expression_list.push_back (move (next_expression));
 
 	AST_node comma_node;
 	for (;;)
@@ -877,9 +859,9 @@ Node <argList> argList_p (token_range& tokens)
 		if (!next_expression)
 			break;
 
-		expression_list->args.push_back (move (next_expression));
+		expression_list.push_back (move (next_expression));
 	}
 
 	tokens = working_set;
-	return expression_list;
+	return make_node <argList> (move (expression_list));
 }

@@ -138,6 +138,8 @@ string to_string (mc_type t)
 {
 	if (t.size == 0)
 		return to_string (t.type);
+	if (t.size == -1)
+		return to_string (t.type) + " []";
 	return to_string (t.type) + " [" + to_string (t.size) + "]";
 }
 

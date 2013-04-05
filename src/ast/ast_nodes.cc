@@ -10,6 +10,27 @@ namespace
 	static unordered_map <string, basic_mc_type> type_map = {{"void", basic_mc_type::mc_void},
 	                                                         {"int", basic_mc_type::mc_int},
 	                                                         {"char", basic_mc_type::mc_char}};
+
+	template <typename Parent>
+	void link (const Parent*)
+	{
+	}
+
+	template <typename Parent, typename Child, typename... Rest>
+	void link (const Parent* parent, Node <Child>& child, Rest&&... rest)
+	{
+		if (child)
+			child->parent = parent;
+		link (parent, forward <Rest> (rest)...);
+	}
+
+	template <typename Parent, typename Child, typename... Rest>
+	void link (const Parent* parent, vector <Node <Child>>& children, Rest&&... rest)
+	{
+		for (Node <Child>& child : children)
+			child->parent = parent;
+		link (parent, forward <Rest> (rest)...);
+	}
 }
 
 
@@ -25,6 +46,7 @@ program::program (Node <declList>&& _decl_list)
 	  decl_list (move (_decl_list))
 {
 	type = AST_type::program;
+	decl_list->parent = this;
 }
 program::program ()
 	: table (new symbol_table)
@@ -49,6 +71,7 @@ varDecl::varDecl (Node <typeSpecifier>&& _type_spec,
 	  size (move (_size))
 {
 	type = AST_type::varDecl;
+	link (this, type_spec, name, size);
 }
 
 vector <string> varDecl::contents () const
@@ -96,6 +119,7 @@ funDecl::funDecl (Node <typeSpecifier>&& _type_spec,
 	  body (move (_body))
 {
 	type = AST_type::funDecl;
+	link (this, type_spec, name, decl_list, body);
 }
 
 vector <string> funDecl::contents () const
@@ -140,6 +164,7 @@ formalDecl::formalDecl (Node <typeSpecifier>&& _type_spec,
 	  is_array (_is_array)
 {
 	type = AST_type::formalDecl;
+	link (this, type_spec, name);
 }
 
 vector <string> formalDecl::contents () const

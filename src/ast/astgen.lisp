@@ -26,9 +26,17 @@
 	    (concatenate 'string head-def ", " (make-init-list (cdr members)))
 	    head-def))))
 
+(defun parent-ptr-list (members)
+  (if members
+      (let ((head-def (caar members)))
+	(if (cdr members)
+	    (concatenate 'string head-def ", " (parent-ptr-list (cdr members)))
+	    head-def))))
+
 (defun make-classdef (name members)
   (concatenate 'string name "::" name " (" (make-param-list members) ")"
-	       ": " (make-init-list members) "{type = AST_type::" name ";}"
+	       ": " (make-init-list members) "{type = AST_type::" name
+	       ";link (this, " (parent-ptr-list members) ");}"
 	       #(#\Newline) name "::" name " () {type = AST_type::"
 	       name ";}"))
 

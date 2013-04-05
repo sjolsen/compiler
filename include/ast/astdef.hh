@@ -66,7 +66,7 @@ struct mc_type
 
 struct AST
 {
-	AST* parent;
+	const AST* parent;
 	AST_type type;
 
 	AST ();

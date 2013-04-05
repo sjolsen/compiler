@@ -180,8 +180,62 @@ void semantic_check (const returnStmt& node,
 
 
 
-void semantic_check (const var& node)
+mc_type semantic_check (const var& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table)
 {
+	mc_type var_type;
+	try
+	{
+		var_type = local_table.at (node.name->token_ref.str);
+	}
+	catch (const out_of_range&)
+	{
+		try
+		{
+			var_type = local_table.at (node.name->token_ref.str);
+		}
+		catch (const out_of_range&)
+		{
+			throw error ("Undefined variable",
+			             node.pos ());
+		}
+	}
+
+	if (var_type.size > 0) // Defined locally as an array
+		if (node.size->lhs == nullptr &&
+		    node.size->rhs->lhs == nullptr &&
+		    node.size->rhs->rhs->rvalue->type == AST_type::terminal) // Single-factor literal expression
+		{
+			const token& literal_token = reinterpret_cast <const terminal&> (*node.size->rhs->rhs->rvalue).token_ref;
+
+			if (literal_token.type == token_type::int_literal ||
+			    literal_token.type == token_type::char_literal)
+			{
+				if (literal_token.value >= var_type.size)
+					throw error ("Out of bounds array access",
+					             node.size->pos ());
+			}
+			else // String literal
+				throw error ("String literal used as array index",
+				             node.size->pos ());
+		}
+		else // Complex expression; don’t perform bounds check
+		{
+			mc_type index_type = semantic_check (node.size, local_table, global_table);
+
+			if (index_type.type != basic_mc_type::mc_int &&
+			    index_type.type != basic_mc_type::mc_char) // Invalid index type
+				throw error ("Invalid index type (" + to_string (index_type) + ")",
+				             node.size->pos ());
+		}
+
+	if (var_type.size != 0 &&
+	    var_type.type == basic_mc_type::mc_void) // void array
+		throw error ("Array of void used in expression",
+		             node.pos ());
+
+	return var_type;
 }
 
 

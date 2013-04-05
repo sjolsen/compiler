@@ -48,7 +48,10 @@ void semantic_check (const returnStmt& node,
                      const symbol_table& local_table,
                      const symbol_table& global_table);
 
-void semantic_check (const var& node);
+mc_type semantic_check (const var& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
+
 void semantic_check (const expression& node);
 void semantic_check (const relop& node);
 void semantic_check (const addExpr& node);

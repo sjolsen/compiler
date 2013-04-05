@@ -52,15 +52,29 @@ mc_type semantic_check (const var& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table);
 
-void semantic_check (const expression& node);
-void semantic_check (const relop& node);
-void semantic_check (const addExpr& node);
-void semantic_check (const addop& node);
-void semantic_check (const term& node);
-void semantic_check (const mulop& node);
-void semantic_check (const factor& node);
-void semantic_check (const funcCallExpr& node);
-void semantic_check (const argList& node);
+mc_type semantic_check (const expression& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
+
+mc_type semantic_check (const addExpr& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
+
+mc_type semantic_check (const term& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
+
+mc_type semantic_check (const factor& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
+
+mc_type semantic_check (const funcCallExpr& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
+
+mc_type semantic_check (const argList& node,
+                        const symbol_table& local_table,
+                        const symbol_table& global_table);
 
 
 

@@ -55,8 +55,11 @@ struct mc_type
 	basic_mc_type type;
 	int size;
 
-	mc_type (basic_mc_type _type,
+	mc_type (basic_mc_type _type = basic_mc_type::mc_void,
 	         int _size = 0);
+
+	bool operator == (const mc_type& other);
+	bool operator != (const mc_type& other);
 };
 
 
@@ -69,6 +72,8 @@ struct AST
 	AST ();
 
 	virtual std::vector <std::string> contents () const;
+	virtual std::vector <mc_type> get_type () const { return std::vector <mc_type> (); }; // FIXME
+	virtual file_position pos () const { return file_position (); }; // FIXME
 };
 
 
@@ -77,8 +82,6 @@ struct basic_decl
 	: AST
 {
 	virtual std::string get_name () const = 0;
-	virtual std::vector <mc_type> get_type () const = 0;
-	virtual file_position pos () const = 0;
 };
 
 

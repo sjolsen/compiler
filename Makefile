@@ -53,10 +53,10 @@ $(LIB)/libtext_processing.a: $(INCLUDE)/text_processing.hh \
 
 tokenizer: $(LIB)/libtokenizer.a
 
-$(BUILD)/syntax_error.o: $(LIB)/libtext_processing.a \
-                         $(INCLUDE)/tokenizer/syntax_error.hh \
-                         $(SRC)/tokenizer/syntax_error.cc
-	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/syntax_error.cc -c -o $(BUILD)/syntax_error.o
+$(BUILD)/error.o: $(LIB)/libtext_processing.a \
+                         $(INCLUDE)/tokenizer/error.hh \
+                         $(SRC)/tokenizer/error.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/error.cc -c -o $(BUILD)/error.o
 
 $(BUILD)/tokendef.o: $(LIB)/libtext_processing.a \
                      $(INCLUDE)/tokenizer/tokendef.hh \
@@ -66,7 +66,7 @@ $(BUILD)/tokendef.o: $(LIB)/libtext_processing.a \
 $(BUILD)/token_predicates.o: $(LIB)/libtext_processing.a \
                              $(INCLUDE)/tokenizer/token_predicates.hh \
                              $(INCLUDE)/tokenizer/tokendef.hh \
-                             $(INCLUDE)/tokenizer/syntax_error.hh \
+                             $(INCLUDE)/tokenizer/error.hh \
                              $(SRC)/tokenizer/token_predicates.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_predicates.cc -c -o $(BUILD)/token_predicates.o
 
@@ -74,7 +74,7 @@ $(BUILD)/token_extraction.o: $(LIB)/libtext_processing.a \
                              $(INCLUDE)/tokenizer/token_extraction.hh \
                              $(INCLUDE)/tokenizer/tokendef.hh \
                              $(INCLUDE)/tokenizer/token_predicates.hh \
-                             $(INCLUDE)/tokenizer/syntax_error.hh \
+                             $(INCLUDE)/tokenizer/error.hh \
                              $(SRC)/tokenizer/token_extraction.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_extraction.cc -c -o $(BUILD)/token_extraction.o
 
@@ -84,13 +84,13 @@ $(BUILD)/token_range.o: $(INCLUDE)/tokenizer/tokendef.hh \
 	$(CXX) $(_CXXFLAGS) $(SRC)/tokenizer/token_range.cc -c -o $(BUILD)/token_range.o
 
 $(LIB)/libtokenizer.a: $(INCLUDE)/tokenizer.hh \
-                       $(BUILD)/syntax_error.o \
+                       $(BUILD)/error.o \
                        $(BUILD)/tokendef.o \
                        $(BUILD)/token_predicates.o \
                        $(BUILD)/token_extraction.o \
                        $(BUILD)/token_range.o
 	$(AR) $(_ARFLAGS) $(LIB)/libtokenizer.a \
-                          $(BUILD)/syntax_error.o \
+                          $(BUILD)/error.o \
                           $(BUILD)/tokendef.o \
                           $(BUILD)/token_predicates.o \
                           $(BUILD)/token_extraction.o \

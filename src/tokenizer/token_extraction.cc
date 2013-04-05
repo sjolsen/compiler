@@ -39,7 +39,7 @@ token extract_token (char_range& working_set,
 		}
 	}
 
-	throw syntax_error ("Illegal token", file_position (file, begin (working_set)));
+	throw error ("Illegal token", file_position (file, begin (working_set)));
 }
 
 

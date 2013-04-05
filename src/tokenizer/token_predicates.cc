@@ -29,14 +29,14 @@ matcher identifier_p
 	    char_range file) -> char_range
 	{
 		if (*begin (working_set) == '_')
-			throw syntax_error ("Identifiers may not contain underscores",
+			throw error ("Identifiers may not contain underscores",
 			                    file_position (file, begin (working_set)));
 		if (!isalpha (*begin (working_set)))
 			return char_range ();
 
 		auto token_end = find_if_not (begin (working_set), end (working_set), (int (*) (int)) &isalnum);
 		if (token_end != end (working_set) && *token_end == '_')
-			throw syntax_error ("Identifiers may not contain underscores",
+			throw error ("Identifiers may not contain underscores",
 			                    file_position (file, token_end));
 
 		return char_range (begin (working_set), token_end);
@@ -95,7 +95,7 @@ matcher int_literal_p
 		}
 		catch (const out_of_range& e)
 		{
-			throw syntax_error ("Integer literal exceeds value limits",
+			throw error ("Integer literal exceeds value limits",
 			                    file_position (file, begin (token_range)));
 		}
 
@@ -108,13 +108,13 @@ matcher int_literal_p
 		if (!isdigit (working_set [0]))
 			return char_range ();
 		if (working_set [0] == '0' && working_set.size () > 1 && isdigit (working_set [1]))
-			throw syntax_error ("Multidigit integer literals may not begin with '0'",
+			throw error ("Multidigit integer literals may not begin with '0'",
 			                    file_position (file, begin (working_set)));
 
 		auto token_end = find_if_not (begin (working_set), end (working_set), (int (*) (int)) &isdigit);
 		if (token_end == end (working_set) || !isalpha (*token_end))
 			return char_range (begin (working_set), token_end);
-		throw syntax_error ("Identifiers must begin with a letter",
+		throw error ("Identifiers must begin with a letter",
 		                    file_position (file, begin (working_set)));
 	}
 };
@@ -163,7 +163,7 @@ matcher char_literal_p
 				t.value = token_range [2];
 			break;
 			default:
-				throw syntax_error ("Unrecognized character escape-sequence",
+				throw error ("Unrecognized character escape-sequence",
 				                    file_position (file, begin (token_range) + 1));
 			}
 		else
@@ -178,7 +178,7 @@ matcher char_literal_p
 		if (working_set [0] != '\'')
 			return char_range ();
 		if (working_set.size () < 3 || working_set [1] == '\n')
-			throw syntax_error ("Unterminated character literal",
+			throw error ("Unterminated character literal",
 			                    file_position (file, begin (working_set)));
 
 		// Unescaped character literal
@@ -187,10 +187,10 @@ matcher char_literal_p
 			if (working_set [2] != '\'')
 			{
 				if (working_set [2] == '\n')
-					throw syntax_error ("Unterminated character literal",
+					throw error ("Unterminated character literal",
 					                    file_position (file, begin (working_set)));
 				else
-					throw syntax_error ("Multicharacter characer literal",
+					throw error ("Multicharacter characer literal",
 					                    file_position (file, begin (working_set)));
 			}
 			else
@@ -199,10 +199,10 @@ matcher char_literal_p
 
 		// Escaped character literal
 		if (working_set.size () < 4 || working_set [2] == '\n')
-			throw syntax_error ("Unterminated character literal",
+			throw error ("Unterminated character literal",
 			                    file_position (file, begin (working_set)));
 		if (working_set [3] != '\'')
-			throw syntax_error ("Multicharacter characer literal",
+			throw error ("Multicharacter characer literal",
 			                    file_position (file, begin (working_set)));
 		return char_range (begin (working_set), begin (working_set) + 4);
 	}
@@ -266,7 +266,7 @@ matcher string_literal_p
 				t.str.append (1, token_range [1]);
 			break;
 			default:
-				throw syntax_error ("Unrecognized character escape sequence",
+				throw error ("Unrecognized character escape sequence",
 				                    file_position (file, begin (token_range)));
 			};
 			token_range.drop_front (2);
@@ -297,10 +297,10 @@ matcher string_literal_p
 			str_end = find_if (str_end + 1, end (working_set),
 			                   [] (char c) { return c == '\n' || c == '"'; });
 			if (str_end == end (working_set))
-				throw syntax_error ("Unterminated string literal",
+				throw error ("Unterminated string literal",
 				                    file_position (file, begin (working_set)));
 			if (*str_end == '\n')
-				throw syntax_error ("Line-terminated string literal",
+				throw error ("Line-terminated string literal",
 				                    file_position (file, begin (working_set)));
 		} while (escaped (str_end));
 
@@ -350,7 +350,7 @@ matcher symbol_p
 		case '!':
 		#ifdef __SYNTAX_NO_BANG
 			if (working_set.size () < 2 || working_set [1] != '=')
-				throw syntax_error ("mC does not specify the '!' operator",
+				throw error ("mC does not specify the '!' operator",
 				                    file_position (file, begin (working_set)));
 		#endif
 		case '<':
@@ -423,7 +423,7 @@ matcher comment_p
 		auto comment_close = adjacent_find (begin (working_set), end (working_set),
 		                                    [] (char a, char b) { return a == '*' && b == '/'; });
 		if (comment_close == end (working_set))
-			throw syntax_error ("Unterminated comment",
+			throw error ("Unterminated comment",
 			                    file_position (file, begin (working_set)));
 		return char_range (begin (working_set), comment_close + 2);
 	}

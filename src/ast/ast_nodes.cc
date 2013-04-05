@@ -75,7 +75,7 @@ vector <mc_type> varDecl::get_type () const
 	}
 	catch (const exception&)
 	{
-		throw syntax_error ("Encountered an illegal variable declaration",
+		throw error ("Encountered an illegal variable declaration",
 		                    type_spec->kwd_node->token_ref.pos);
 	}
 }
@@ -168,7 +168,7 @@ vector <mc_type> formalDecl::get_type () const
 	}
 	catch (const exception&)
 	{
-		throw syntax_error ("Encountered an illegal variable declaration",
+		throw error ("Encountered an illegal variable declaration",
 		                    type_spec->kwd_node->token_ref.pos);
 	}
 }
@@ -201,7 +201,7 @@ void populate_table (symbol_table& table,
 	for (const Node <decl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->sub_decl->get_name ()) > 0)
-			throw syntax_error ("Redefined identifier (first defined at " +
+			throw error ("Redefined identifier (first defined at " +
 			                    to_string (table [decl_node->sub_decl->get_name ()].decl_node->pos ()) + ')',
 			                    decl_node->sub_decl->pos ());
 
@@ -217,7 +217,7 @@ void populate_table (symbol_table& table,
 	for (const Node <formalDecl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->get_name ()) > 0)
-			throw syntax_error ("Redefined identifier (first defined at " +
+			throw error ("Redefined identifier (first defined at " +
 			                    to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
 			                    decl_node->pos ());
 
@@ -233,7 +233,7 @@ void populate_table (symbol_table& table,
 	for (const Node <varDecl>& decl_node : decl_list.decls)
 	{
 		if (table.count (decl_node->get_name ()) > 0)
-			throw syntax_error ("Redefined identifier (first defined at " +
+			throw error ("Redefined identifier (first defined at " +
 			                    to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
 			                    decl_node->pos ());
 

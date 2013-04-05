@@ -30,6 +30,8 @@ those constructs intended for use outside the module are listed:
 │   ├── ast.hh                  - Header for the abstract syntax tree
 │   │                             library
 │   │
+│   ├── semantic.hh             - Header for semantic analysis tools
+│   │
 │   ├── text_processing
 │   │   ├── char_range.hh       - Interface for manipulating ranges
 │   │   │                         over a std::string
@@ -42,7 +44,7 @@ those constructs intended for use outside the module are listed:
 │   │                             library
 │   │
 │   ├── tokenizer
-│   │   ├── syntax_error.hh
+│   │   ├── error.hh
 │   │   ├── tokendef.hh         - Basic token definitions
 │   │   │
 │   │   ├── token_extraction.hh - Functionality for tokenizing input
@@ -73,7 +75,7 @@ those constructs intended for use outside the module are listed:
     │   ├── char_range.cc
     │   └── file_position.cc
     └── tokenizer
-        ├── syntax_error.cc
+        ├── error.cc
         ├── tokendef.cc
         ├── token_extraction.cc
         ├── token_predicates.cc

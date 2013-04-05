@@ -2,7 +2,7 @@
 #define TOKEN_PREDICATES_HH
 
 #include <text_processing.hh>
-#include <tokenizer/syntax_error.hh>
+#include <tokenizer/error.hh>
 #include <tokenizer/tokendef.hh>
 
 #include <array>

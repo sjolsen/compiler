@@ -7,16 +7,16 @@
 
 
 
-class syntax_error
+class error
 	: public std::runtime_error
 {
 private:
 	file_position _where_pos;
 
 public:
-	syntax_error (const std::string& what_str,
+	error (const std::string& what_str,
 	              file_position where_pos);
-	syntax_error (const char* const what_str,
+	error (const char* const what_str,
 	              file_position where_pos);
 
 	virtual file_position where () const noexcept;

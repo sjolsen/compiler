@@ -34,7 +34,7 @@ string get_file (const string& filename)
 
 
 
-void print_syntax_error (const syntax_error& e)
+void print_error (const error& e)
 {
 	auto error_point = e.where ();
 	auto line = containing_line (error_point);
@@ -88,9 +88,9 @@ int main (int argc,
 	{
 		tokens = tokenize (text);
 	}
-	catch (const syntax_error& e)
+	catch (const error& e)
 	{
-		print_syntax_error (e);
+		print_error (e);
 		return EXIT_FAILURE;
 	}
 
@@ -108,9 +108,9 @@ int main (int argc,
 	{
 		syntax_tree = program_p (tokens);
 	}
-	catch (const syntax_error& e)
+	catch (const error& e)
 	{
-		print_syntax_error (e);
+		print_error (e);
 		return EXIT_FAILURE;
 	}
 
@@ -126,9 +126,9 @@ int main (int argc,
 	{
 		semantic_check (syntax_tree);
 	}
-	catch (const syntax_error& e)
+	catch (const error& e)
 	{
-		print_syntax_error (e);
+		print_error (e);
 		return EXIT_FAILURE;
 	}
 

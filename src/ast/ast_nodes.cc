@@ -158,7 +158,7 @@ vector <mc_type> formalDecl::get_type () const
 {
 	try
 	{
-		return vector <mc_type> {mc_type (type_map.at (type_spec->kwd_node->token_ref.str), -1)};
+		return vector <mc_type> {mc_type (type_map.at (type_spec->kwd_node->token_ref.str), is_array ? -1 : 0)};
 	}
 	catch (const exception&)
 	{

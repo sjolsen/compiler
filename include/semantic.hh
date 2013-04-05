@@ -72,9 +72,10 @@ mc_type semantic_check (const funcCallExpr& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table);
 
-mc_type semantic_check (const argList& node,
-                        const symbol_table& local_table,
-                        const symbol_table& global_table);
+void semantic_check (const argList& node,
+                     const std::vector <mc_type>& signature,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table);
 
 
 

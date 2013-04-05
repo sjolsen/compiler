@@ -862,7 +862,9 @@ Node <argList> argList_p (token_range& tokens)
 	auto expression_list = make_node <argList> ();
 
 	Node <expression> next_expression = expression_p (working_set);
-	validate (next_expression);
+	if (!next_expression)
+		return expression_list;
+
 	expression_list->args.push_back (move (next_expression));
 
 	AST_node comma_node;

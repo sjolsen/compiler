@@ -2,6 +2,8 @@
 #include <tokenizer.hh>
 
 #include <stdexcept>
+#include <algorithm>
+#include <iterator>
 
 using namespace std;
 
@@ -193,7 +195,7 @@ mc_type semantic_check (const var& node,
 	{
 		try
 		{
-			var_type = local_table.at (node.name->token_ref.str).type [0];
+			var_type = global_table.at (node.name->token_ref.str).type [0];
 		}
 		catch (const out_of_range&)
 		{
@@ -201,6 +203,9 @@ mc_type semantic_check (const var& node,
 			             node.pos ());
 		}
 	}
+
+	if (node.size == nullptr)
+		return var_type;
 
 	if (var_type.size > 0) // Defined locally as an array
 		if (node.size->lhs == nullptr &&
@@ -234,8 +239,6 @@ mc_type semantic_check (const var& node,
 	    var_type.type == basic_mc_type::mc_void) // void array
 		throw error ("Array of void used in expression",
 		             node.pos ());
-
-	return mc_type (var_type.type, 0);
 }
 
 
@@ -270,6 +273,24 @@ mc_type semantic_check (const addExpr& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table)
 {
+	if (!node.lhs)
+		return semantic_check (*node.rhs, local_table, global_table);
+
+	mc_type lhs_type = semantic_check (*node.lhs, local_table, global_table);
+	mc_type rhs_type = semantic_check (*node.rhs, local_table, global_table);
+
+	if ((lhs_type.type != basic_mc_type::mc_int &&
+	     lhs_type.type != basic_mc_type::mc_char) ||
+	    (rhs_type.type != basic_mc_type::mc_int &&
+	     rhs_type.type != basic_mc_type::mc_char)) // One operand is non-integral
+		throw error ("Expression compares non-integral type",
+		             node.op->pos ());
+
+	if (lhs_type.type == basic_mc_type::mc_int ||
+	    rhs_type.type == basic_mc_type::mc_int)
+		return mc_type (basic_mc_type::mc_int, 0); // Widening conversion
+
+	return mc_type (basic_mc_type::mc_char, 0);
 }
 
 
@@ -278,6 +299,24 @@ mc_type semantic_check (const term& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table)
 {
+	if (!node.lhs)
+		return semantic_check (*node.rhs, local_table, global_table);
+
+	mc_type lhs_type = semantic_check (*node.lhs, local_table, global_table);
+	mc_type rhs_type = semantic_check (*node.rhs, local_table, global_table);
+
+	if ((lhs_type.type != basic_mc_type::mc_int &&
+	     lhs_type.type != basic_mc_type::mc_char) ||
+	    (rhs_type.type != basic_mc_type::mc_int &&
+	     rhs_type.type != basic_mc_type::mc_char)) // One operand is non-integral
+		throw error ("Expression compares non-integral type",
+		             node.op->pos ());
+
+	if (lhs_type.type == basic_mc_type::mc_int ||
+	    rhs_type.type == basic_mc_type::mc_int)
+		return mc_type (basic_mc_type::mc_int, 0); // Widening conversion
+
+	return mc_type (basic_mc_type::mc_char, 0);
 }
 
 
@@ -286,6 +325,46 @@ mc_type semantic_check (const factor& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table)
 {
+	mc_type rvalue_type;
+
+	switch (node.rvalue->type)
+	{
+	case AST_type::expression:
+		rvalue_type = semantic_check (reinterpret_cast <const expression&> (*node.rvalue),
+		                       local_table,
+		                       global_table);
+		break;
+
+	case AST_type::funcCallExpr:
+		rvalue_type = semantic_check (reinterpret_cast <const funcCallExpr&> (*node.rvalue),
+		                       local_table,
+		                       global_table);
+		break;
+
+	case AST_type::var:
+		rvalue_type = semantic_check (reinterpret_cast <const var&> (*node.rvalue),
+		                       local_table,
+		                       global_table);
+		break;
+
+	case AST_type::terminal:
+		const token& literal_token = reinterpret_cast <const terminal&> (*node.rvalue).token_ref;
+
+		switch (literal_token.type)
+		{
+		case token_type::int_literal:
+			rvalue_type = mc_type (basic_mc_type::mc_int, 0);
+			break;
+		case token_type::char_literal:
+			rvalue_type = mc_type (basic_mc_type::mc_char, 0);
+			break;
+		default:
+			throw error ("Unsupported literal type",
+			             literal_token.pos);
+		}
+	}
+
+	return rvalue_type;
 }
 
 
@@ -294,12 +373,52 @@ mc_type semantic_check (const funcCallExpr& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table)
 {
+	const vector <mc_type>* p_signature;
+	try
+	{
+		p_signature = &global_table.at (node.name->token_ref.str).type;
+	}
+	catch (const out_of_range&)
+	{
+		throw error ("Undefined function",
+		             node.pos ());
+	}
+
+	semantic_check (*node.arg_list, *p_signature, local_table, global_table);
+	return (*p_signature) [0];
 }
 
 
 
-mc_type semantic_check (const argList& node,
-                        const symbol_table& local_table,
-                        const symbol_table& global_table)
+void semantic_check (const argList& node,
+                     const vector <mc_type>& signature,
+                     const symbol_table& local_table,
+                     const symbol_table& global_table)
 {
+	if (node.args.size () != signature.size () - 1)
+		throw error ("Wrong number of arguments (expected " + to_string (signature.size () - 1) +
+		             "; got" + to_string (node.args.size ()) + ")",
+		             node.parent->pos ());
+
+	vector <mc_type> argument_types;
+	transform (begin (node.args), end (node.args), back_inserter (argument_types),
+	           [&] (const Node <expression>& argument)
+	{
+		return semantic_check (*argument, local_table, global_table);
+	});
+
+	auto bad_argument = mismatch (begin (signature) + 1, end (signature), begin (argument_types),
+	                              [] (mc_type parameter_type, mc_type argument_type)
+	{
+		if ((argument_type.size && !parameter_type.size) ||
+		    (!argument_type.size && parameter_type.size))
+			return false;
+		return argument_type.type == parameter_type.type;
+	});
+
+	if (bad_argument.first != end (signature))
+		throw error ("Invalid argument to parameter " + to_string (bad_argument.first - begin (signature)) +
+		             " of function (expected " + to_string (*bad_argument.first) + "; got " +
+		             to_string (*bad_argument.second) + ")",
+		             node.args [bad_argument.first - begin (signature)]->pos ());
 }

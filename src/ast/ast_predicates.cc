@@ -121,28 +121,28 @@ namespace
 				case symbol::rparen:
 					if (open_tokens.empty ())
 						throw error ("Unmatched ')'",
-						                    tokens [0].pos);
+						             tokens [0].pos);
 					if (open_tokens.top ()->op != symbol::lparen)
 						throw error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
-						                    open_tokens.top ()->pos);
+						             open_tokens.top ()->pos);
 					open_tokens.pop ();
 					break;
 				case symbol::rbrace:
 					if (open_tokens.empty ())
 						throw error ("Unmatched '}'",
-						                    tokens [0].pos);
+						             tokens [0].pos);
 					if (open_tokens.top ()->op != symbol::lbrace)
 						throw error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
-						                    open_tokens.top ()->pos);
+						             open_tokens.top ()->pos);
 					open_tokens.pop ();
 					break;
 				case symbol::rbracket:
 					if (open_tokens.empty ())
 						throw error ("Unmatched ']'",
-						                    tokens [0].pos);
+						             tokens [0].pos);
 					if (open_tokens.top ()->op != symbol::lbracket)
 						throw error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
-						                    open_tokens.top ()->pos);
+						             open_tokens.top ()->pos);
 					open_tokens.pop ();
 					break;
 				default:
@@ -154,7 +154,7 @@ namespace
 
 		if (!open_tokens.empty ())
 			throw error ("Unmatched '" + to_string (open_tokens.top ()->op) + "'",
-			                    open_tokens.top ()->pos);
+			             open_tokens.top ()->pos);
 	}
 }
 
@@ -169,7 +169,7 @@ program program_p (const vector <token>& tokens)
 	Node <declList> decl_list = declList_p (working_set);
 	if (!decl_list || !working_set.empty ())
 		throw error ("Expected a declaration",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	auto prog = program (move (decl_list));
 	prog.parent = nullptr;
@@ -235,12 +235,15 @@ Node <varDecl> varDecl_p (token_range& tokens)
 		num = get_token (working_set, token_type::int_literal);
 		if (!num)
 			throw error ("Expected numeric constant",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
+		if (num->token_ref.value < 1)
+			throw error ("Arrays must have a size of at least one",
+			             begin (working_set)->pos);
 
 		rbracket_node = get_token (working_set, symbol::rbracket);
 		if (!rbracket_node)
 			throw error ("Expected ']'",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 	}
 
 	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
@@ -289,7 +292,7 @@ Node <funDecl> funDecl_p (token_range& tokens)
 	AST_node rparen_node = get_token (working_set, symbol::rparen);
 	if (!rparen_node)
 		throw error ("Expected ')'",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	Node <funBody> function_body = funBody_p (working_set);
 	validate (function_body);
@@ -352,7 +355,7 @@ Node <formalDecl> formalDecl_p (token_range& tokens)
 		rbracket_node = get_token (working_set, symbol::rbracket);
 		if (!rbracket_node)
 			throw error ("Expected ']'",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 	}
 
 	tokens = working_set;
@@ -377,7 +380,7 @@ Node <funBody> funBody_p (token_range& tokens)
 	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
 	if (!rbrace_node)
 		throw error ("Expected '}', declaration, or statement",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	tokens = working_set;
 	return make_node <funBody> (move (decl_list), move (statement_list));
@@ -469,7 +472,7 @@ Node <compoundStmt> compoundStmt_p (token_range& tokens)
 	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
 	if (!rbrace_node)
 		throw error ("Expected '}' or statement",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	tokens = working_set;
 	return make_node <compoundStmt> (move (statement_list));
@@ -519,17 +522,17 @@ Node <condStmt> condStmt_p (token_range& tokens)
 	Node <expression> expression = expression_p (working_set);
 	if (!expression)
 		throw error ("Expected expression",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	AST_node rparen_node = get_token (working_set, symbol::rparen);
 	if (!rparen_node)
 		throw error ("Expected ')'",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	Node <statement> if_statement = statement_p (working_set);
 	if (!if_statement)
 		throw error ("Expected statement",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	AST_node else_node = get_token (working_set, "else");
 	Node <statement> else_statement;
@@ -538,7 +541,7 @@ Node <condStmt> condStmt_p (token_range& tokens)
 		else_statement = statement_p (working_set);
 		if (!else_statement)
 			throw error ("Expected statement",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 	}
 
 	tokens = working_set;
@@ -560,17 +563,17 @@ Node <loopStmt> loopStmt_p (token_range& tokens)
 	Node <expression> expression = expression_p (working_set);
 	if (!expression)
 		throw error ("Expected expression",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	AST_node rparen_node = get_token (working_set, symbol::rparen);
 	if (!rparen_node)
 		throw error ("Expected ')'",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	Node <statement> while_statement = statement_p (working_set);
 	if (!while_statement)
 		throw error ("Expected statement",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	tokens = working_set;
 	return make_node <loopStmt> (move (expression), move (while_statement));
@@ -590,7 +593,7 @@ Node <returnStmt> returnStmt_p (token_range& tokens)
 	AST_node semicolon_node = get_token (working_set, symbol::semicolon);
 	if (!semicolon_node)
 		throw error ("Expected ';'",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	tokens = working_set;
 	return make_node <returnStmt> (move (expression));
@@ -613,12 +616,12 @@ Node <var> var_p (token_range& tokens)
 		add_expr = addExpr_p (working_set);
 		if (!add_expr)
 			throw error ("Expected expression",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 
 		rbracket_node = get_token (working_set, symbol::rbracket);
 		if (!rbracket_node)
 			throw error ("Expected ']'",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 	}
 
 	tokens = working_set;
@@ -794,12 +797,12 @@ Node <factor> factor_p (token_range& tokens)
 		AST_node expression = expression_p (working_set);
 		if (!expression)
 			throw error ("Expected expression",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 
 		AST_node rparen_node = get_token (working_set, symbol::rparen);
 		if (!rparen_node)
 			throw error ("Expected ')'",
-			                    begin (working_set)->pos);
+			             begin (working_set)->pos);
 
 		tokens = working_set;
 		return make_node <factor> (move (expression));
@@ -844,7 +847,7 @@ Node <funcCallExpr> funcCallExpr_p (token_range& tokens)
 	AST_node rparen_node = get_token (working_set, symbol::rparen);
 	if (!rparen_node)
 		throw error ("Expected ')'",
-		                    begin (working_set)->pos);
+		             begin (working_set)->pos);
 
 	tokens = working_set;
 	return make_node <funcCallExpr> (move (ID), move (arg_list));

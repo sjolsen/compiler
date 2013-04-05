@@ -43,13 +43,20 @@ enum class AST_type
 
 
 
-enum class mc_type
+enum class basic_mc_type
 {
 	mc_void,
-	integer,
-	character,
-	int_array,
-	char_array,
+	mc_int,
+	mc_char
+};
+
+struct mc_type
+{
+	basic_mc_type type;
+	int size;
+
+	mc_type (basic_mc_type _type,
+	         int _size = 0);
 };
 
 
@@ -91,6 +98,7 @@ typedef Node <AST> AST_node;
 
 
 
+std::string to_string (basic_mc_type t);
 std::string to_string (mc_type t);
 std::string to_string (const std::vector <mc_type>& parameter_types);
 std::string to_string (const AST& tree,

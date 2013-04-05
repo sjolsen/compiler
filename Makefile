@@ -7,7 +7,7 @@ SRC         := $(PROJECT_DIR)/src
 TEST        := $(PROJECT_DIR)/test
 
 CXX       := g++
-_CXXFLAGS := $(CXXFLAGS) -std=c++0x -I$(INCLUDE) #-Wall -Wextra
+_CXXFLAGS := -std=c++0x -O0 -g -I$(INCLUDE) $(CXXFLAGS) #-Wall -Wextra
 AR        := ar
 _ARFLAGS  := $(ARFLAGS)s
 

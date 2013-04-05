@@ -10,6 +10,15 @@ using namespace std;
 
 
 
+mc_type::mc_type (basic_mc_type _type,
+                  int _size)
+	: type (_type),
+	  size (_size)
+{
+}
+
+
+
 AST::AST ()
 	: parent (nullptr)
 {
@@ -98,23 +107,28 @@ std::string to_string (AST_type type)
 
 
 
-string to_string (mc_type t)
+string to_string (basic_mc_type t)
 {
 	switch (t)
 	{
-	case mc_type::mc_void:
+	case basic_mc_type::mc_void:
 		return "void";
-	case mc_type::integer:
+	case basic_mc_type::mc_int:
 		return "int";
-	case mc_type::character:
+	case basic_mc_type::mc_char:
 		return "char";
-	case mc_type::int_array:
-		return "int []";
-	case mc_type::char_array:
-		return "char []";
 	}
 
 	throw logic_error ("Bad enumeration value (to_string (mc_type))");
+}
+
+
+
+string to_string (mc_type t)
+{
+	if (t.size == 0)
+		return to_string (t.type);
+	return to_string (t.type) + " [" + to_string (t.size) + "]";
 }
 
 

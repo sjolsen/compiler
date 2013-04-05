@@ -7,11 +7,9 @@ using namespace std;
 
 namespace
 {
-	static unordered_map <string, mc_type> var_map = {{"void", mc_type::mc_void},
-	                                                  {"int", mc_type::integer},
-	                                                  {"char", mc_type::character}};
-	static unordered_map <string, mc_type> array_map = {{"int", mc_type::int_array},
-	                                                    {"char", mc_type::char_array}};
+	static unordered_map <string, basic_mc_type> type_map = {{"void", basic_mc_type::mc_void},
+	                                                         {"int", basic_mc_type::mc_int},
+	                                                         {"char", basic_mc_type::mc_char}};
 }
 
 
@@ -69,14 +67,12 @@ vector <mc_type> varDecl::get_type () const
 {
 	try
 	{
-		if (size)
-			return vector <mc_type> {array_map.at (type_spec->kwd_node->token_ref.str)};
-		return vector <mc_type> {var_map.at (type_spec->kwd_node->token_ref.str)};
+		return vector <mc_type> {mc_type (type_map.at (type_spec->kwd_node->token_ref.str), size ? size->token_ref.value : 0)};
 	}
 	catch (const exception&)
 	{
 		throw error ("Encountered an illegal variable declaration",
-		                    type_spec->kwd_node->token_ref.pos);
+		             type_spec->kwd_node->token_ref.pos);
 	}
 }
 
@@ -118,7 +114,7 @@ string funDecl::get_name () const
 
 vector <mc_type> funDecl::get_type () const
 {
-	vector <mc_type> parameter_types {var_map.at (type_spec->kwd_node->token_ref.str)};
+	vector <mc_type> parameter_types {mc_type (type_map.at (type_spec->kwd_node->token_ref.str), 0)};
 
 	if (decl_list)
 		for (const Node <formalDecl>& decl_node : decl_list->decls)
@@ -162,14 +158,12 @@ vector <mc_type> formalDecl::get_type () const
 {
 	try
 	{
-		if (is_array)
-			return vector <mc_type> {array_map.at (type_spec->kwd_node->token_ref.str)};
-		return vector <mc_type> {var_map.at (type_spec->kwd_node->token_ref.str)};
+		return vector <mc_type> {mc_type (type_map.at (type_spec->kwd_node->token_ref.str), -1)};
 	}
 	catch (const exception&)
 	{
 		throw error ("Encountered an illegal variable declaration",
-		                    type_spec->kwd_node->token_ref.pos);
+		             type_spec->kwd_node->token_ref.pos);
 	}
 }
 
@@ -202,8 +196,8 @@ void populate_table (symbol_table& table,
 	{
 		if (table.count (decl_node->sub_decl->get_name ()) > 0)
 			throw error ("Redefined identifier (first defined at " +
-			                    to_string (table [decl_node->sub_decl->get_name ()].decl_node->pos ()) + ')',
-			                    decl_node->sub_decl->pos ());
+			             to_string (table [decl_node->sub_decl->get_name ()].decl_node->pos ()) + ')',
+			             decl_node->sub_decl->pos ());
 
 		table [decl_node->sub_decl->get_name ()] = symbol_entry {decl_node->sub_decl->get_name (),
 		                                                         decl_node->sub_decl->get_type (),
@@ -218,8 +212,8 @@ void populate_table (symbol_table& table,
 	{
 		if (table.count (decl_node->get_name ()) > 0)
 			throw error ("Redefined identifier (first defined at " +
-			                    to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
-			                    decl_node->pos ());
+			             to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
+			             decl_node->pos ());
 
 		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
 		                                               decl_node->get_type (),
@@ -234,8 +228,8 @@ void populate_table (symbol_table& table,
 	{
 		if (table.count (decl_node->get_name ()) > 0)
 			throw error ("Redefined identifier (first defined at " +
-			                    to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
-			                    decl_node->pos ());
+			             to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
+			             decl_node->pos ());
 
 		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
 		                                               decl_node->get_type (),

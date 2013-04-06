@@ -101,7 +101,7 @@ vector <mc_type> varDecl::get_type () const
 
 file_position varDecl::pos () const
 {
-	return type_spec->kwd_node->token_ref.pos;
+	return name->pos ();
 }
 
 
@@ -212,7 +212,14 @@ vector <string> terminal::contents () const
 	return {to_string (token_ref)};
 }
 
+file_position terminal::pos () const
+{
+	return token_ref.pos;
+}
 
+
+
+// --- Symbol table population ---
 
 void populate_table (symbol_table& table,
                      const declList& decl_list)

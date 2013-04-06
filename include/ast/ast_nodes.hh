@@ -123,6 +123,7 @@ struct terminal
 
 	terminal (const token& t);
 	virtual std::vector <std::string> contents () const;
+	virtual file_position pos () const;
 };
 
 

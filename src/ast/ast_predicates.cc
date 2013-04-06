@@ -145,6 +145,9 @@ namespace
 program program_p (const vector <token>& tokens)
 {
 	token_range working_set = tokens;
+	if (working_set.empty ())
+		throw error ("Expected a declaration",
+		             file_position ());
 
 	validate_pairs (working_set);
 
@@ -567,7 +570,7 @@ Node <returnStmt> returnStmt_p (token_range& tokens)
 {
 	token_range working_set = tokens;
 
-	AST_node return_node = get_token (working_set, "return");
+	Node <terminal> return_node = get_token (working_set, "return");
 	validate (return_node);
 
 	Node <expression> expression = expression_p (working_set);
@@ -578,7 +581,7 @@ Node <returnStmt> returnStmt_p (token_range& tokens)
 		             begin (working_set)->pos);
 
 	tokens = working_set;
-	return make_node <returnStmt> (move (expression));
+	return make_node <returnStmt> (move (return_node), move (expression));
 }
 
 
@@ -619,7 +622,7 @@ Node <expression> expression_p (token_range& tokens)
 	Node <addExpr> add_expr = addExpr_p (working_set);
 	validate (add_expr);
 
-	auto handle = make_node <expression> (move (nullptr), move (nullptr), move (add_expr));
+	auto handle = make_node <expression> (nullptr, nullptr, move (add_expr));
 
 	Node <relop> relop;
 	for (;;)
@@ -682,7 +685,7 @@ Node <addExpr> addExpr_p (token_range& tokens)
 	Node <term> term = term_p (working_set);
 	validate (term);
 
-	auto handle = make_node <addExpr> (move (nullptr), move (nullptr), move (term));
+	auto handle = make_node <addExpr> (nullptr, nullptr, move (term));
 
 	Node <addop> addop;
 	for (;;)
@@ -729,7 +732,7 @@ Node <term> term_p (token_range& tokens)
 	Node <factor> factor = factor_p (working_set);
 	validate (factor);
 
-	auto handle = make_node <term> (move (nullptr), move (nullptr), move (factor));
+	auto handle = make_node <term> (nullptr, nullptr, move (factor));
 
 	Node <mulop> mulop;
 	for (;;)

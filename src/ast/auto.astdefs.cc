@@ -34,9 +34,9 @@ vector <string> condStmt::contents () const {return collect (valid (cond_expr) ?
 loopStmt::loopStmt (Node <expression>&& _cond_expr, Node <statement>&& _then_stmt): cond_expr(move (_cond_expr)) , then_stmt(move (_then_stmt)) {type = AST_type::loopStmt;link (this, cond_expr, then_stmt);}
 loopStmt::loopStmt () {type = AST_type::loopStmt;}
 vector <string> loopStmt::contents () const {return collect (valid (cond_expr) ? lines (cond_expr) : vector <string> {} , valid (then_stmt) ? lines (then_stmt) : vector <string> {} ); }
-returnStmt::returnStmt (Node <expression>&& _rtrn_expr): rtrn_expr(move (_rtrn_expr)) {type = AST_type::returnStmt;link (this, rtrn_expr);}
+returnStmt::returnStmt (Node <terminal>&& _rtrn_kwd, Node <expression>&& _rtrn_expr): rtrn_kwd(move (_rtrn_kwd)) , rtrn_expr(move (_rtrn_expr)) {type = AST_type::returnStmt;link (this, rtrn_kwd, rtrn_expr);}
 returnStmt::returnStmt () {type = AST_type::returnStmt;}
-vector <string> returnStmt::contents () const {return collect (valid (rtrn_expr) ? lines (rtrn_expr) : vector <string> {} ); }
+vector <string> returnStmt::contents () const {return collect (valid (rtrn_kwd) ? lines (rtrn_kwd) : vector <string> {} , valid (rtrn_expr) ? lines (rtrn_expr) : vector <string> {} ); }
 var::var (Node <terminal>&& _name, Node <addExpr>&& _size): name(move (_name)) , size(move (_size)) {type = AST_type::var;link (this, name, size);}
 var::var () {type = AST_type::var;}
 vector <string> var::contents () const {return collect (valid (name) ? lines (name) : vector <string> {} , valid (size) ? lines (size) : vector <string> {} ); }

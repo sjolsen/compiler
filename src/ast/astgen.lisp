@@ -11,12 +11,14 @@
       (concatenate 'string (cadar members) " " (caar members) ";"
 		   (make-decls (cdr members)))))
 
-(defun make-classdecl (name members)
+(defun make-classdecl (name members &optional pos)
   (concatenate 'string "struct " name " : AST {"
 	       (make-decls members)
 	       name "();"
 	       name "(" (make-param-list members) ");"
-	       "virtual std::vector <std::string> contents () const ; };"))
+	       "virtual std::vector <std::string> contents () const; "
+	       (if pos "virtual file_position pos () const; " "")
+	       "};"))
 
 (defun make-init-list (members)
   (if members
@@ -95,33 +97,42 @@
 			  ("loopStmt"       (("cond_expr" "Node <expression>")
 					     ("then_stmt" "Node <statement>")))
 
-			  ("returnStmt"     (("rtrn_expr" "Node <expression>")))
+			  ("returnStmt"     (("rtrn_kwd"  "Node <terminal>")
+					     ("rtrn_expr" "Node <expression>"))
+					    pos)
 
 			  ("var"            (("name"      "Node <terminal>")
-					     ("size"      "Node <addExpr>")))
+					     ("size"      "Node <addExpr>"))
+					    pos)
 
 			  ("expression"     (("lhs"       "Node <expression>")
 					     ("op"        "Node <relop>")
-					     ("rhs"       "Node <addExpr>")))
+					     ("rhs"       "Node <addExpr>"))
+					    pos)
 
-			  ("relop"          (("sym"       "Node <terminal>")))
+			  ("relop"          (("sym"       "Node <terminal>"))
+					    pos)
 
 			  ("addExpr"        (("lhs"       "Node <addExpr>")
 					     ("op"        "Node <addop>")
-					     ("rhs"       "Node <term>")))
+					     ("rhs"       "Node <term>"))
+					    pos)
 
-			  ("addop"          (("sym"       "Node <terminal>")))
+			  ("addop"          (("sym"       "Node <terminal>"))
+					    pos)
 
 			  ("term"           (("lhs"       "Node <term>")
 					     ("op"        "Node <mulop>")
 					     ("rhs"       "Node <factor>")))
 
-			  ("mulop"          (("sym"       "Node <terminal>")))
+			  ("mulop"          (("sym"       "Node <terminal>"))
+					    pos)
 
 			  ("factor"         (("rvalue"    "AST_node")))
 
 			  ("funcCallExpr"   (("name"      "Node <terminal>")
-					     ("arg_list"  "Node <argList>")))
+					     ("arg_list"  "Node <argList>"))
+					    pos)
 
 			  ("argList"        (("args"      "std::vector <Node <expression>>")))))
 
@@ -132,7 +143,7 @@
 			    :direction :output)
     (loop for typespec in ast-types do
 	 (write-string (concatenate 'string
-				    (make-classdecl (car typespec) (cadr typespec))
+				    (apply #'make-classdecl typespec)
 				    #(#\Newline))
 		       declfile))))
 

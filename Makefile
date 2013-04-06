@@ -130,16 +130,23 @@ $(BUILD)/ast_predicates.o: $(INCLUDE)/ast/astdef.hh \
                            $(SRC)/ast/ast_predicates.cc
 	$(CXX) $(_CXXFLAGS) $(SRC)/ast/ast_predicates.cc -c -o $(BUILD)/ast_predicates.o
 
+$(BUILD)/ast_pos.o: $(INCLUDE)/ast/astdef.hh \
+                    $(INCLUDE)/ast/ast_nodes.hh \
+                    $(SRC)/ast/ast_pos.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/ast/ast_pos.cc -c -o $(BUILD)/ast_pos.o
+
 $(LIB)/libast.a: $(INCLUDE)/ast.hh \
                  $(BUILD)/astprint.o \
                  $(BUILD)/astdef.o \
                  $(BUILD)/ast_nodes.o \
-                 $(BUILD)/ast_predicates.o
+                 $(BUILD)/ast_predicates.o \
+                 $(BUILD)/ast_pos.o
 	$(AR) $(ARFLAGS) $(LIB)/libast.a \
                          $(BUILD)/astprint.o \
                          $(BUILD)/astdef.o \
                          $(BUILD)/ast_nodes.o \
-                         $(BUILD)/ast_predicates.o
+                         $(BUILD)/ast_predicates.o \
+                         $(BUILD)/ast_pos.o
 
 
 
@@ -147,7 +154,7 @@ $(LIB)/libast.a: $(INCLUDE)/ast.hh \
 
 semantic: $(LIB)/libsemantic.a
 
-$(BUILD)/semantic.o: $(INCLUDE)/ast.hh \
+$(BUILD)/semantic.o: $(LIB)/libast.a \
                      $(INCLUDE)/tokenizer.hh \
                      $(INCLUDE)/semantic.hh \
                      $(SRC)/semantic.cc

@@ -23,7 +23,8 @@ clean:
 	rm -f $(BUILD)/* $(BIN)/* $(LIB)/*
 
 testall: test-scanner \
-         test-parser
+         test-parser \
+         test-semantic
 
 
 
@@ -192,3 +193,6 @@ test-scanner: $(BIN)/mcc
 
 test-parser: $(BIN)/mcc
 	$(TEST)/parser/run_tests.bash
+
+test-semantic: $(BIN)/mcc
+	$(TEST)/semantic/run_tests.bash

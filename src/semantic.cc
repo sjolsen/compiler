@@ -94,6 +94,9 @@ void semantic_check (const statement& node,
 		                local_table,
 		                global_table);
 		break;
+
+	default:
+		throw logic_error ("Bad enumeration value (semantic_check (statement))");
 	}
 }
 
@@ -167,11 +170,13 @@ void semantic_check (const returnStmt& node,
 
 	mc_type return_type = fundeclp->get_type () [0];
 	if (node.rtrn_expr == nullptr)
+	{
 		if (return_type.type == basic_mc_type::mc_void)
 			return;
 		else
 			throw error ("Expected expression in return statement",
 			             node.pos ());
+	}
 
 	mc_type rexpr_type = semantic_check (*node.rtrn_expr, local_table, global_table);
 	if (rexpr_type != return_type)
@@ -186,16 +191,16 @@ mc_type semantic_check (const var& node,
                         const symbol_table& local_table,
                         const symbol_table& global_table)
 {
-	mc_type var_type;
+	symbol_entry var_entry;
 	try
 	{
-		var_type = local_table.at (node.name->token_ref.str).type [0];
+		var_entry = local_table.at (node.name->token_ref.str);
 	}
 	catch (const out_of_range&)
 	{
 		try
 		{
-			var_type = global_table.at (node.name->token_ref.str).type [0];
+			var_entry = global_table.at (node.name->token_ref.str);
 		}
 		catch (const out_of_range&)
 		{
@@ -203,11 +208,17 @@ mc_type semantic_check (const var& node,
 			             node.pos ());
 		}
 	}
+	mc_type var_type = var_entry.type [0];
 
 	if (node.size == nullptr)
 		return var_type;
 
+	if (var_type.size == 0)
+		throw error ("Array declared with size 0",
+		             var_entry.decl_node->pos ());
+
 	if (var_type.size > 0) // Defined locally as an array
+	{
 		if (node.size->lhs == nullptr &&
 		    node.size->rhs->lhs == nullptr &&
 		    node.size->rhs->rhs->rvalue->type == AST_type::terminal) // Single-factor literal expression
@@ -234,11 +245,14 @@ mc_type semantic_check (const var& node,
 				throw error ("Invalid index type (" + to_string (index_type) + ")",
 				             node.size->pos ());
 		}
+	}
 
 	if (var_type.size != 0 &&
 	    var_type.type == basic_mc_type::mc_void) // void array
 		throw error ("Array of void used in expression",
 		             node.pos ());
+
+	return mc_type (var_type.type, 0);
 }
 
 
@@ -331,23 +345,24 @@ mc_type semantic_check (const factor& node,
 	{
 	case AST_type::expression:
 		rvalue_type = semantic_check (reinterpret_cast <const expression&> (*node.rvalue),
-		                       local_table,
-		                       global_table);
+		                              local_table,
+		                              global_table);
 		break;
 
 	case AST_type::funcCallExpr:
 		rvalue_type = semantic_check (reinterpret_cast <const funcCallExpr&> (*node.rvalue),
-		                       local_table,
-		                       global_table);
+		                              local_table,
+		                              global_table);
 		break;
 
 	case AST_type::var:
 		rvalue_type = semantic_check (reinterpret_cast <const var&> (*node.rvalue),
-		                       local_table,
-		                       global_table);
+		                              local_table,
+		                              global_table);
 		break;
 
 	case AST_type::terminal:
+	{
 		const token& literal_token = reinterpret_cast <const terminal&> (*node.rvalue).token_ref;
 
 		switch (literal_token.type)
@@ -362,6 +377,11 @@ mc_type semantic_check (const factor& node,
 			throw error ("Unsupported literal type",
 			             literal_token.pos);
 		}
+		break;
+	}
+
+	default:
+		throw logic_error ("Bad enumeration value (semantic_check (factor))");
 	}
 
 	return rvalue_type;

@@ -440,5 +440,5 @@ void semantic_check (const argList& node,
 		throw error ("Invalid argument to parameter " + to_string (bad_argument.first - begin (signature)) +
 		             " of function (expected " + to_string (*bad_argument.first) + "; got " +
 		             to_string (*bad_argument.second) + ")",
-		             node.args [bad_argument.first - begin (signature)]->pos ());
+		             node.args [bad_argument.second - begin (argument_types)]->pos ());
 }

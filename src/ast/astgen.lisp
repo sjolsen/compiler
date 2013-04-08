@@ -123,12 +123,14 @@
 
 			  ("term"           (("lhs"       "Node <term>")
 					     ("op"        "Node <mulop>")
-					     ("rhs"       "Node <factor>")))
+					     ("rhs"       "Node <factor>"))
+					    pos)
 
 			  ("mulop"          (("sym"       "Node <terminal>"))
 					    pos)
 
-			  ("factor"         (("rvalue"    "AST_node")))
+			  ("factor"         (("rvalue"    "AST_node"))
+					    pos)
 
 			  ("funcCallExpr"   (("name"      "Node <terminal>")
 					     ("arg_list"  "Node <argList>"))

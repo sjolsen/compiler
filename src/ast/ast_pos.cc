@@ -38,9 +38,21 @@ file_position addop::pos () const
 	return sym->pos ();
 }
 
+file_position term::pos () const
+{
+	if (op)
+		return op->pos ();
+	return rhs->pos ();
+}
+
 file_position mulop::pos () const
 {
 	return sym->pos ();
+}
+
+file_position factor::pos () const
+{
+	return rvalue->pos ();
 }
 
 file_position funcCallExpr::pos () const

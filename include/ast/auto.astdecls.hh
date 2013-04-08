@@ -16,8 +16,8 @@ struct expression : AST {Node <expression> lhs;Node <relop> op;Node <addExpr> rh
 struct relop : AST {Node <terminal> sym;relop();relop(Node <terminal>&& _sym);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
 struct addExpr : AST {Node <addExpr> lhs;Node <addop> op;Node <term> rhs;addExpr();addExpr(Node <addExpr>&& _lhs, Node <addop>&& _op, Node <term>&& _rhs);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
 struct addop : AST {Node <terminal> sym;addop();addop(Node <terminal>&& _sym);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
-struct term : AST {Node <term> lhs;Node <mulop> op;Node <factor> rhs;term();term(Node <term>&& _lhs, Node <mulop>&& _op, Node <factor>&& _rhs);virtual std::vector <std::string> contents () const; };
+struct term : AST {Node <term> lhs;Node <mulop> op;Node <factor> rhs;term();term(Node <term>&& _lhs, Node <mulop>&& _op, Node <factor>&& _rhs);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
 struct mulop : AST {Node <terminal> sym;mulop();mulop(Node <terminal>&& _sym);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
-struct factor : AST {AST_node rvalue;factor();factor(AST_node&& _rvalue);virtual std::vector <std::string> contents () const; };
+struct factor : AST {AST_node rvalue;factor();factor(AST_node&& _rvalue);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
 struct funcCallExpr : AST {Node <terminal> name;Node <argList> arg_list;funcCallExpr();funcCallExpr(Node <terminal>&& _name, Node <argList>&& _arg_list);virtual std::vector <std::string> contents () const; virtual file_position pos () const; };
 struct argList : AST {std::vector <Node <expression>> args;argList();argList(std::vector <Node <expression>>&& _args);virtual std::vector <std::string> contents () const; };

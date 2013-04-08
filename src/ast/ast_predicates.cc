@@ -364,8 +364,14 @@ Node <funBody> funBody_p (token_range& tokens)
 
 	AST_node rbrace_node = get_token (working_set, symbol::rbrace);
 	if (!rbrace_node)
-		throw error ("Expected '}', declaration, or statement",
-		             begin (working_set)->pos);
+	{
+		if (statement_list)
+			throw error ("Expected '}' or statement",
+			             begin (working_set)->pos);
+		else
+			throw error ("Expected '}', declaration, or statement",
+			             begin (working_set)->pos);
+	}
 
 	tokens = working_set;
 	return make_node <funBody> (move (decl_list), move (statement_list));

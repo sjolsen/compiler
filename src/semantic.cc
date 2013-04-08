@@ -397,7 +397,7 @@ void semantic_check (const argList& node,
 {
 	if (node.args.size () != signature.size () - 1)
 		throw error ("Wrong number of arguments (expected " + to_string (signature.size () - 1) +
-		             "; got" + to_string (node.args.size ()) + ")",
+		             "; got " + to_string (node.args.size ()) + ")",
 		             node.parent->pos ());
 
 	vector <mc_type> argument_types;

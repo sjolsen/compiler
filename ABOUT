@@ -65,12 +65,14 @@ those constructs intended for use outside the module are listed:
     │   │                         AST node types
     │   │
     │   ├── ast_nodes.cc
+    │   ├── ast_pos.cc          - Functions returning the position
+    │   │                         of AST nodes in source files
     │   ├── ast_predicates.cc
     │   ├── astprint.cc
-    │   └── auto.astdefs.cc
-    ├── mcc.cc
-    ├── symbol
+    │   ├── auto.astdefs.cc
     │   └── symbol_table.cc
+    ├── mcc.cc
+    ├── semantic.cc
     ├── text_processing
     │   ├── char_range.cc
     │   └── file_position.cc

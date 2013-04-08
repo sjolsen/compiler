@@ -13,7 +13,7 @@ using namespace std;
 
 
 const char usage [] =
-	"Usage: mcc [ inputfile | - ] [ -Tscanner ]\n";
+	"Usage: mcc ( inputfile | - ) [ -Tscanner | -Tparser | -Tsemantic ]\n";
 
 
 
@@ -42,7 +42,7 @@ void print_error (const error& e)
 	cerr << "Error: " << e.what () << ' ' << error_point << ':' << endl
 	     << line << endl;
 	transform (line.begin (), error_point._pos, ostream_iterator <char> (cerr),
-	           [] (char c) { return c == '\t'? '\t' : ' '; });
+	           [] (char c) { return c == '\t' ? '\t' : ' '; });
 	cerr << '^' << endl;
 }
 

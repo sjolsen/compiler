@@ -1,29 +1,31 @@
 The project directory is structured as follows:
 
-	./bin       Compiled executables
-	./build     Temporary directory for object files and the like
-	./include   Headers
-	./lib       Object archives for easier dependency management
-	            and library modularity
-	./src       Library source code
-	./test      Contains test input files and scripts for testing
+        ./bin       Compiled executables
+        ./build     Temporary directory for object files and the like
+        ./include   Headers
+        ./lib       Object archives for easier dependency management
+                    and library modularity
+        ./src       Library source code
+        ./test      Contains test input files and scripts for testing
                     component-drivers against those files
 
 The available make targets are:
 
-	all               Builds all library and driver binaries
-	clean             Removes binary and object files
+        all               Builds all library and driver binaries
+        clean             Removes binary and object files
 
-	mcc               Builds the main executable
+        mcc               Builds the main executable
 
-	text_processing   Builds the text processing library
-	tokenizer         Builds the tokenization library (depends
-	                  on the text processing library)
-	ast               Builds the abstract syntax tree library
+        text_processing   Builds the text processing library
+        tokenizer         Builds the tokenization library (depends
+                          on the text processing library)
+        ast               Builds the abstract syntax tree library
 
-	testall           Runs all available top-level tests
-	test-scanner      Runs the test script for the scanner
-	test-parser       Runs the test script for the parser
+        testall           Runs all available top-level tests
+        test-scanner      Runs the test script for the scanner
+        test-parser       Runs the test script for the parser
+        test-semantic     Runs the test script for the semantic
+                          analyser
 
 Additional arguments may be passed to the compiler by setting the
 CXXFLAGS environment variable.
@@ -32,17 +34,34 @@ The main executable takes as its first argument the name of the file
 to be compiled; '-' may be given as the first argument to indicate
 that input should be read from STDIN. Additionally, '-Tscanner' may
 be passed as the second argument to print output from the scanner
-stage, terminating before the parsing stage. If the '-Tscanner'
-argument is not specified, the output of the parser will be printed
-instead as of nested s-expressions of them form:
-
-	(production-rule &rest components)
+stage, terminating before the parsing stage.
 
 The grammar matched by this program is slightly modified, allowing
 lists to be represented as true lists, rather than recursively along
 the tree. This grammar is specified in the file 'GRAMMAR'. The parser
 does do minimal semantic checking, as it constructs the symbol tables
-during parsing.
+during parsing. Passing the '-Tparser' argument causes the program to
+output the syntax tree as a tree of nested s-expressions of the form:
+
+        (production-rule &rest components)
+
+The semantic analysis component of the program, which may be tested
+by passing the '-Tsemantic' argument, performs the following checks:
+
+        - Type checking in assignments (no type promotion)
+        - Conditional expressions of type 'void'
+        - Return types (including 'return;' in non-void functions; no
+          type promotion)
+        - Undefined variables and functions
+        - Multiple declarations of variables and functions
+        - Array bounds access (single-factor literals only; 'int' and
+          'char' literals both allowed)
+        - Array subscript type checking
+        - Arithmetic comparison of non-integral types
+        - Type promotion from 'char' to 'int' in arithmetic
+          expressions
+        - Function argument checking: both number and type (no type
+          promotion)
 
 Testing may be performed through make, or
 'test/[component]/run_tests.bash' may be invoked directly The test

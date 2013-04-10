@@ -38,7 +38,8 @@ void semantic_check (const decl& node,
 void semantic_check (const funDecl& node,
                      const symbol_table& global_table)
 {
-	semantic_check (*node.body, *node.table, global_table);
+	if (node.body)
+		semantic_check (*node.body, *node.table, global_table);
 }
 
 

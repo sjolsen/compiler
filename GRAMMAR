@@ -11,7 +11,7 @@ typeSpecifier  : "int"
                | "char"
                | "void"
 
-funDecl        : typeSpecifier ID "(" formalDeclList? ")" funBody
+funDecl        : typeSpecifier ID "(" formalDeclList? ")" (funBody | ";")
 
 formalDeclList : formalDecl ("," formalDecl)*
 

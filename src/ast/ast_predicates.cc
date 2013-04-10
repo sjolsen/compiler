@@ -280,7 +280,14 @@ Node <funDecl> funDecl_p (token_range& tokens)
 		             begin (working_set)->pos);
 
 	Node <funBody> function_body = funBody_p (working_set);
-	validate (function_body);
+	if (!function_body)
+	{
+		AST_node semicolon_node = get_token (working_set, symbol::semicolon);
+		validate (semicolon_node);
+
+		tokens = working_set;
+		return make_node <funDecl> (move (type_specifier), move (ID), move (decl_list), nullptr);
+	}
 
 	tokens = working_set;
 	auto func = make_node <funDecl> (move (type_specifier), move (ID), move (decl_list), move (function_body));

@@ -171,7 +171,12 @@ $(LIB)/libsemantic.a: $(INCLUDE)/semantic.hh \
 
 mcc: $(BIN)/mcc
 
+$(BUILD)/cmdline.o: $(INCLUDE)/cmdline.hh \
+                    $(SRC)/cmdline.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/cmdline.cc -c -o $(BUILD)/cmdline.o
+
 $(BUILD)/mcc.o: $(SRC)/mcc.cc \
+                $(INCLUDE)/cmdline.hh \
                 $(INCLUDE)/text_processing.hh \
                 $(INCLUDE)/tokenizer.hh \
                 $(INCLUDE)/ast.hh \
@@ -179,11 +184,13 @@ $(BUILD)/mcc.o: $(SRC)/mcc.cc \
 	$(CXX) $(_CXXFLAGS) $(SRC)/mcc.cc -c -o $(BUILD)/mcc.o
 
 $(BIN)/mcc: $(BUILD)/mcc.o \
+            $(BUILD)/cmdline.o \
             $(LIB)/libtext_processing.a \
             $(LIB)/libtokenizer.a \
             $(LIB)/libast.a \
             $(LIB)/libsemantic.a
 	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
+                            $(BUILD)/cmdline.o \
                             -L$(LIB) \
                             -last \
                             -ltokenizer \

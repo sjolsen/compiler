@@ -1,3 +1,4 @@
+#include <cmdline.hh>
 #include <text_processing.hh>
 #include <tokenizer.hh>
 #include <ast.hh>
@@ -9,11 +10,6 @@
 #include <algorithm>
 
 using namespace std;
-
-
-
-const char usage [] =
-	"Usage: mcc ( inputfile | - ) [ -Tscanner | -Tparser | -Tsemantic ]\n";
 
 
 
@@ -53,26 +49,14 @@ int main (int argc,
 {
 	// Process command-line arguments
 
-	if (argc < 2)
-	{
-		cerr << usage;
-		return EXIT_FAILURE;
-	}
-
-	bool test_scanner = false;
-	bool test_parser = false;
-
-	if (find (argv + 2, argv + argc, string ("-Tscanner")) != argv + argc)
-		test_scanner = true;
-	if (find (argv + 2, argv + argc, string ("-Tparser")) != argv + argc)
-		test_parser = true;
+	cmdline_args args (argc, argv);
 
 	// Open the input file
 
 	string file;
 	try
 	{
-		file = get_file (argv [1]);
+		file = get_file (args.input_filename);
 	}
 	catch (const exception& e)
 	{
@@ -94,7 +78,7 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	if (test_scanner)
+	if (args.test_scanner)
 	{
 		for (auto& token : tokens)
 			cout << to_string (token) << endl;
@@ -114,7 +98,7 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	if (test_parser)
+	if (args.test_parser)
 	{
 		cout << to_string (syntax_tree) << endl;
 		return EXIT_SUCCESS;

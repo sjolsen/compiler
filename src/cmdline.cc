@@ -9,7 +9,10 @@ using namespace std;
 
 cmdline_args::cmdline_args (const int argc,
                             const char* const* const argv)
-	: output_type (elf)
+	: test_scanner (false),
+	  test_parser (false),
+	  test_semantic (false),
+	  output_type (elf)
 {
 	string usage = "Usage: " + string (argv [0]) + " ( inputfile | - ) [ -Tscanner | -Tparser | -Tsemantic | -c | -S ] [ -o outputfile ]";
 

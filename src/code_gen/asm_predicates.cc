@@ -65,7 +65,7 @@ vector <string> code_gen (const program& node)
 
 
 vector <string> code_gen (const declList& node,
-                               const symbol_table& global_table)
+                          const symbol_table& global_table)
 {
 	vector <asm_data> data;
 	vector <asm_function> functions;
@@ -95,17 +95,19 @@ vector <string> code_gen (const declList& node,
 
 
 
-void code_gen (const funDecl& node,
-               const symbol_table& global_table)
+asm_function code_gen (const funDecl& node,
+                       const symbol_table& global_table)
 {
+	return asm_function {node.name->token_ref.str,
+	                     code_gen (*node.body, *node.local_table, *node.param_table, global_table)};
 }
 
 
 
-void code_gen (const funBody& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const funBody& node,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
 }
 

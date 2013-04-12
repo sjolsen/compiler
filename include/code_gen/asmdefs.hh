@@ -116,6 +116,9 @@ struct asm_function
 
 
 
+std::string to_string (opname name);
+std::string to_string (real_reg r);
+std::string to_string (const instruction& i);
 std::vector <std::string> lines (asm_type t);
 std::vector <std::string> lines (const asm_data& datum);
 std::vector <std::string> lines (const asm_function& func);

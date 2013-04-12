@@ -77,7 +77,8 @@ struct varDecl
 struct funDecl
 	: basic_decl
 {
-	std::unique_ptr <symbol_table> table;
+	std::unique_ptr <symbol_table> param_table;
+	std::unique_ptr <symbol_table> local_table;
 
 	Node <typeSpecifier> type_spec;
 	Node <terminal> name;
@@ -132,8 +133,9 @@ void populate_table (symbol_table& table,
                      const declList& decl_list);
 void populate_table (symbol_table& table,
                      const formalDeclList& decl_list);
-void populate_table (symbol_table& table,
-                     const localDeclList& decl_list);
+void populate_table (symbol_table& local_table,
+                     const localDeclList& decl_list,
+                     symbol_table& param_table);
 
 
 

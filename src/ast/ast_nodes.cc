@@ -1,6 +1,8 @@
 #include <ast/ast_nodes.hh>
 #include <ast/astprint.hh>
 
+#include <unordered_map>
+
 using namespace std;
 
 
@@ -112,7 +114,8 @@ funDecl::funDecl (Node <typeSpecifier>&& _type_spec,
                   Node <terminal>&& _name,
                   Node <formalDeclList>&& _decl_list,
                   Node <funBody>&& _body)
-	: table (new symbol_table),
+	: param_table (new symbol_table),
+	  local_table (new symbol_table),
 	  type_spec (move (_type_spec)),
 	  name (move (_name)),
 	  decl_list (move (_decl_list)),
@@ -124,7 +127,8 @@ funDecl::funDecl (Node <typeSpecifier>&& _type_spec,
 
 vector <string> funDecl::contents () const
 {
-	return collect (lines (*table),
+	return collect (lines (*param_table),
+	                lines (*local_table),
 	                valid (type_spec) ? lines (type_spec) : vector <string> {},
 	                valid (name) ? lines (name) : vector <string> {},
 	                valid (decl_list) ? lines (decl_list) : vector <string> {},
@@ -253,18 +257,24 @@ void populate_table (symbol_table& table,
 	}
 }
 
-void populate_table (symbol_table& table,
-                     const localDeclList& decl_list)
+void populate_table (symbol_table& local_table,
+                     const localDeclList& decl_list,
+                     symbol_table& param_table)
 {
 	for (const Node <varDecl>& decl_node : decl_list.decls)
 	{
-		if (table.count (decl_node->get_name ()) > 0)
+		if (local_table.count (decl_node->get_name ()) > 0)
 			throw error ("Redefined identifier (first defined at " +
-			             to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',
+			             to_string (local_table [decl_node->get_name ()].decl_node->pos ()) + ')',
 			             decl_node->pos ());
 
-		table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
-		                                               decl_node->get_type (),
-		                                               decl_node.get ()};
+		if (param_table.count (decl_node->get_name ()) > 0)
+			throw error ("Redefined identifier (first defined at " +
+			             to_string (param_table [decl_node->get_name ()].decl_node->pos ()) + ')',
+			             decl_node->pos ());
+
+		local_table [decl_node->get_name ()] = symbol_entry {decl_node->get_name (),
+		                                                     decl_node->get_type (),
+		                                                     decl_node.get ()};
 	}
 }

@@ -292,9 +292,9 @@ Node <funDecl> funDecl_p (token_range& tokens)
 	tokens = working_set;
 	auto func = make_node <funDecl> (move (type_specifier), move (ID), move (decl_list), move (function_body));
 	if (func->decl_list)
-		populate_table (*func->table, *func->decl_list);
+		populate_table (*func->param_table, *func->decl_list);
 	if (func->body->decl_list)
-		populate_table (*func->table, *func->body->decl_list);
+		populate_table (*func->local_table, *func->body->decl_list, *func->param_table);
 
 	return func;
 }

@@ -94,13 +94,16 @@ struct instruction
 
 enum class asm_type
 {
+	mips_word,
+	mips_byte
 };
 
 
 
-struct data_decl
+struct asm_data
 {
-
+	asm_type type;
+	std::string name;
 };
 
 
@@ -110,6 +113,12 @@ struct asm_function
 	std::string name;
 	std::vector <instruction> body;
 };
+
+
+
+std::vector <std::string> lines (asm_type t);
+std::vector <std::string> lines (const asm_data& datum);
+std::vector <std::string> lines (const asm_function& func);
 
 
 

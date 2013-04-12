@@ -4,7 +4,7 @@
 #include <ast/astdef.hh>
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 
@@ -19,7 +19,7 @@ struct symbol_entry
 
 
 struct symbol_table
-	: std::unordered_map <std::string, symbol_entry>
+	: std::map <std::string, symbol_entry>
 {
 };
 

@@ -37,6 +37,23 @@ enum class opname
 
 typedef mips_byte virt_reg; // Virtual register specifier
 
+
+
+class register_pool
+{
+private:
+	std::queue <virt_reg> reg_queue;
+	virt_reg next_register;
+
+public:
+	register_pool ();
+
+	virt_reg get ();
+	void release (virt_reg v);
+}
+
+
+
 enum class real_reg // Physical register
 	: mips_byte
 {

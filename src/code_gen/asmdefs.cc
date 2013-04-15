@@ -6,6 +6,27 @@ using namespace std;
 
 
 
+register_pool::register_pool ()
+	: next_register (0)
+{
+}
+
+virt_reg register_pool::get ()
+{
+	if (reg_queue.empty ())
+		return next_register++;
+	virt_reg reg = reg_queue.front ();
+	reg_queue.pop_front ();
+	return reg;
+}
+
+void register_pool::release (virt_reg v)
+{
+	reg_queue.push_back (v);
+}
+
+
+
 string to_string (opname name)
 {
 	switch (name)

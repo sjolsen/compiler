@@ -109,32 +109,69 @@ vector <instruction> code_gen (const funBody& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
+	register_pool vregs;
+
+	if (!node.stmt_list)
+		return vector <instruction> {"\tjr $ra", "\tnop"};
+
+	return schedule_code (code_gen (*node.stmt_list, vregs, local_table,
+	                                param_table, global_table));
 }
 
 
 
-void code_gen (const statementList& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const statementList& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	vector <instruction> instructions;
+	for (const Node <statement>& stmt : node.stmts)
+	{
+		auto stmt_instructions = code_gen (*stmt, vregs, local_table, param_table, global_table);
+		instructions.insert (end (instructions), begin (stmt_instructions), end (stmt_instructions));
+	}
+	return instructions;
 }
 
 
 
-void code_gen (const statement& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const statement& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	switch (node.type)
+	{
+	case AST_type::compoundStmt:
+		return code_gen (reinterpret_cast <const compoundStmt&> (*node.sub_stmt),
+		                 vregs, local_table, param_table, global_table);
+	case AST_type::compoundStmt:
+		return code_gen (reinterpret_cast <const assignStmt&> (*node.sub_stmt),
+		                 vregs, local_table, param_table, global_table);
+	case AST_type::assignStmt:
+		return code_gen (reinterpret_cast <const condStmt&> (*node.sub_stmt),
+		                 vregs, local_table, param_table, global_table);
+	case AST_type::condStmt:
+		return code_gen (reinterpret_cast <const loopStmt&> (*node.sub_stmt),
+		                 vregs, local_table, param_table, global_table);
+	case AST_type::loopStmt:
+		return code_gen (reinterpret_cast <const returnStmt&> (*node.sub_stmt),
+		                 vregs, local_table, param_table, global_table);
+	default:
+		throw runtime_error ("Bad node type in code_gen (statement)");
+	};
 }
 
 
 
-void code_gen (const compoundStmt& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const compoundStmt& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
 }
 

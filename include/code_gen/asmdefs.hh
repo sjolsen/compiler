@@ -25,6 +25,7 @@ enum class opname
 	lw,
 	mfhi,
 	mflo,
+	move,
 	mult,
 	nop,
 	bit_or,
@@ -44,11 +45,13 @@ class register_pool
 private:
 	std::queue <virt_reg> reg_queue;
 	virt_reg next_register;
+	std::unordered_map <std::string, virt_reg> var_map;
 
 public:
 	register_pool ();
 
 	virt_reg get ();
+	virt_reg get (const std::string& name);
 	void release (virt_reg v);
 }
 
@@ -105,6 +108,14 @@ struct instruction
 	} _1, _2, _3;
 
 	std::string label;
+};
+
+
+
+struct code_and_result
+{
+	std::vector <instruction> code;
+	virt_reg result;
 };
 
 

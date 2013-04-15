@@ -173,15 +173,35 @@ vector <instruction> code_gen (const compoundStmt& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
+	vector <instruction> instructions;
+	for (const Node <statement>& stmt : node.stmt_list)
+	{
+		auto stmt_instructions = code_gen (*stmt, vregs, local_table, param_table, global_table);
+		instructions.insert (end (instructions), begin (stmt_instructions), end (stmt_instructions));
+	}
+	return instructions;
 }
 
 
 
-void code_gen (const assignStmt& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const assignStmt& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	code_and_result lvalue;
+	if (node.lvalue)
+		lvalue = code_gen (*node.lvalue, vregs, local_table, param_table, global_table);
+	else
+		lvalue.result = vregs.get ();
+
+	code_and_result rvalue = code_gen (*node.rvalue, lvalue.result, vregs, local_table, param_table, global_table);
+	if (!node.lvalue)
+		vregs.release (lvalue.result);
+
+	lvalue.code.insert (end (lvalue.code), begin (rvalue.code), end (rvalue.code)); // Re-use this storage
+	return lvalue.code;
 }
 
 

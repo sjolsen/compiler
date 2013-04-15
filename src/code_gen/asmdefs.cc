@@ -20,6 +20,13 @@ virt_reg register_pool::get ()
 	return reg;
 }
 
+virt_reg get (const std::string& name)
+{
+	if (var_map.count (name) == 0)
+		var_map [name] = this->get ();
+	return var_map [name];
+}
+
 void register_pool::release (virt_reg v)
 {
 	reg_queue.push_back (v);
@@ -51,6 +58,8 @@ string to_string (opname name)
 		return "mfhi";
 	case opname::mflo:
 		return "mflo";
+	case opname::move:
+		return "move";
 	case opname::mult:
 		return "mult";
 	case opname::nop:
@@ -160,6 +169,7 @@ string to_string (const instruction& i)
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + i.label;
 
 		case opname::div:
+		case opname::move:
 		case opname::mult:
 			return to_string (i._1.real) + ", " + to_string (i._2.real);
 

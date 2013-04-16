@@ -109,6 +109,12 @@ namespace
 			throw runtime_error ("Bad operator");
 		};
 	}
+
+	string make_label ()
+	{
+		static int number = 0;
+		return ".L" + to_string (number++);
+	}
 }
 
 
@@ -169,7 +175,7 @@ vector <string> code_gen (const declList& node,
 
 	instructions.push_back ("");
 	instructions.push_back ("\t.text");
-	instructions.push_back ("\t.set\tnoreorder");
+//	instructions.push_back ("\t.set\tnoreorder");
 	instructions.push_back ("\t.align\t2");
        	instructions.push_back ("\t.set\tnomips16\n");
 	instructions.push_back ("");
@@ -204,8 +210,8 @@ vector <instruction> code_gen (const funBody& node,
 	if (!node.stmt_list)
 	{
 		vector <instruction> body;
-		body.push_back (instruction {opname::jr, real_reg::ra, 0, 0, ""});
-		body.push_back (instruction {opname::nop, 0, 0, 0, ""});
+		body.push_back (instruction {opname::jr, real_reg::ra, 0, 0});
+		body.push_back (instruction {opname::nop, 0, 0, 0});
 		return body;
 	}
 
@@ -325,11 +331,18 @@ vector <instruction> code_gen (const condStmt& node,
 	if (node.else_stmt)
 		else_code = code_gen (*node.else_stmt, vregs, local_table, param_table, global_table);
 
-	conditional.push_back (instruction {opname::beq, cond_register, real_reg::zero, then_code.size () + 2}); // Skip then-code plus delay no-op and else-skip branch
-	conditional.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	string end_label = make_label ();
+	string else_label;
+	if (node.else_stmt)
+		else_label = make_label ();
+	else
+		else_label = end_label;
+
+	conditional.push_back (instruction {opname::beq, cond_register, real_reg::zero, 0, else_label});
+	conditional.push_back (instruction {opname::nop, 0, 0, 0});
 	conditional.insert (end (conditional), begin (then_code), end (then_code));
-	conditional.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, else_code.size () + 1}); // Skip else-code plus delay no-op
-	conditional.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	conditional.push_back (instruction {opname::b, 0, 0, 0, end_label});
+	conditional.push_back (instruction {opname::nop, 0, 0, 0, else_label});
 	conditional.insert (end (conditional), begin (else_code), end (else_code));
 
 	return conditional;
@@ -347,12 +360,16 @@ vector <instruction> code_gen (const loopStmt& node,
 	vector <instruction> test = code_gen (*node.cond_expr, cond_register, vregs, local_table, param_table, global_table);
 	vregs.release (cond_register);
 
+	string test_label = make_label ();
+	test [0].label = test_label;
+	string end_label = make_label ();
+
 	vector <instruction> body = code_gen (*node.then_stmt, vregs, local_table, param_table, global_table);
 	test.push_back (instruction {opname::beq, cond_register, real_reg::zero, body.size () + 2}); // Skip body-code plus delay no-op and loopback branch
-	test.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	test.push_back (instruction {opname::nop, 0, 0, 0});
 	test.insert (end (test), begin (body), end (body));
-	test.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, 0 - (body.size () + test.size () + 3)}); // Skip back across test and body code, plus this branch and the test-fail branch/no-op
-	test.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	test.push_back (instruction {opname::b, 0, 0, 0, test_label});
+	test.push_back (instruction {opname::nop, 0, 0, 0, end_label});
 
 	return test;
 }
@@ -369,8 +386,8 @@ vector <instruction> code_gen (const returnStmt& node,
 	if (node.rtrn_expr)
 		expr_code = code_gen (*node.rtrn_expr, real_reg::v0, vregs, local_table, param_table, global_table);
 
-	expr_code.push_back (instruction {opname::jr, real_reg::ra, 0, 0, ""}); // Not SysV-compliant. Should replace during scheduling.
-	expr_code.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	expr_code.push_back (instruction {opname::jr, real_reg::ra, 0, 0}); // Not SysV-compliant. Should replace during scheduling.
+	expr_code.push_back (instruction {opname::nop, 0, 0, 0});
 	return expr_code;
 }
 
@@ -425,9 +442,9 @@ vector <instruction> code_gen (const expression& node,
 	virt_reg l = temp_pool.get ();
 	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
 
-	if (lhs_code.size () == 1 &&
-	    rhs_code.size () == 1) // Constant expression
-		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0, ""}};
+	if (lhs_code.size () == 1 && lhs_code [0].op == opname::li &&
+	    rhs_code.size () == 1 && lhs_code [0].op == opname::li) // Constant expression
+	 	return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0}};
 
 	vregs = temp_pool;
 	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
@@ -502,9 +519,9 @@ vector <instruction> code_gen (const addExpr& node,
 	virt_reg l = temp_pool.get ();
 	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
 
-	if (lhs_code.size () == 1 &&
-	    rhs_code.size () == 1) // Constant expression
-		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0, ""}};
+	if (lhs_code.size () == 1 && lhs_code [0].op == opname::li &&
+	    rhs_code.size () == 1 && lhs_code [0].op == opname::li) // Constant expression
+	 	return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0}};
 
 	vregs = temp_pool;
 	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
@@ -534,17 +551,17 @@ vector <instruction> code_gen (const term& node,
 	virt_reg l = temp_pool.get ();
 	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
 
-	if (lhs_code.size () == 1 &&
-	    rhs_code.size () == 1) // Constant expression
-		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0, ""}};
+	if (lhs_code.size () == 1 && lhs_code [0].op == opname::li &&
+	    rhs_code.size () == 1 && lhs_code [0].op == opname::li) // Constant expression
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0}};
 
 	vregs = temp_pool;
 	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
 	if (node.op->sym->token_ref.op == symbol::asterisk)
-		lhs_code.push_back (instruction {opname::mult, l, r, 0, ""});
+		lhs_code.push_back (instruction {opname::mult, l, r, 0});
 	else
-		lhs_code.push_back (instruction {opname::div, l, r, 0, ""});
-	lhs_code.push_back (instruction {opname::mflo, r, 0, 0, ""});
+		lhs_code.push_back (instruction {opname::div, l, r, 0});
+	lhs_code.push_back (instruction {opname::mflo, r, 0, 0});
 
 	vregs.release (l);
 	return lhs_code;
@@ -568,17 +585,19 @@ vector <instruction> code_gen (const factor& node,
 		return code_gen (dynamic_cast <const expression&> (*node.rvalue), r, vregs, local_table, param_table, global_table);
 
 	case AST_type::terminal:
-		return vector <instruction> {instruction {opname::li, r, dynamic_cast <const terminal&> (*node.rvalue).token_ref.value, 0, ""}};
+		return vector <instruction> {instruction {opname::li, r, dynamic_cast <const terminal&> (*node.rvalue).token_ref.value, 0}};
 
 	case AST_type::funcCallExpr:
 		code = code_gen (dynamic_cast <const funcCallExpr&> (*node.rvalue), vregs, local_table, param_table, global_table);
-		code.push_back (instruction {opname::move, r, real_reg::v0, 0, ""});
+		code.push_back (instruction {opname::move, r, real_reg::v0, 0});
+		code.push_back (instruction {opname::jal, 0, 0, 0, dynamic_cast <const funcCallExpr&> (*node.rvalue).name->token_ref.str});
+		code.push_back (instruction {opname::nop, 0, 0, 0});
 		return code;
 
 	case AST_type::var:
 		reference = code_gen (dynamic_cast <const var&> (*node.rvalue), vregs, local_table, param_table, global_table);
 		code = move (reference.load_code);
-		code.push_back (instruction {opname::move, r, reference.data_reg, 0, ""});
+		code.push_back (instruction {opname::move, r, reference.data_reg, 0});
 		if (dynamic_cast <const var&> (*node.rvalue).size)
 		{
 			vregs.release (reference.data_reg);

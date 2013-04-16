@@ -62,6 +62,8 @@ string to_string (opname name)
 	{
 	case opname::add:
 		return "add";
+	case opname::b:
+		return "b";
 	case opname::beq:
 		return "beq";
 	case opname::div:
@@ -187,7 +189,17 @@ string to_string (real_reg r)
 
 string to_string (const instruction& i)
 {
-	return to_string (i.op) + ' ' + [&] () -> string
+	string prefix;
+
+	if (i.op == opname::b ||
+	    i.op == opname::beq ||
+	    i.op == opname::jal ||
+	    i.label == "")
+		prefix = '\t';
+	else
+		prefix = i.label + ":\t";
+
+	return prefix + to_string (i.op) + '\t' + [&] () -> string
 	{
 		switch (i.op)
 		{
@@ -199,6 +211,8 @@ string to_string (const instruction& i)
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.real);
 
 		case opname::beq:
+			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + i.label;
+
 		case opname::sll:
 		case opname::xori:
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.literal);
@@ -208,6 +222,7 @@ string to_string (const instruction& i)
 		case opname::mult:
 			return to_string (i._1.real) + ", " + to_string (i._2.real);
 
+		case opname::b:
 		case opname::jal:
 			return i.label;
 
@@ -265,7 +280,7 @@ vector <string> lines (const asm_function& func)
 		f_lines.push_back (func.name + ':');
 
 		for (const instruction& i : func.body)
-			f_lines.push_back ('\t' + to_string (i));
+			f_lines.push_back (to_string (i));
 
 		f_lines.push_back ("");
 		f_lines.push_back ("\t.end\t" + func.name);

@@ -640,5 +640,14 @@ vector <instruction> schedule_code (vector <instruction> code,
                                     const symbol_table& param_table,
                                     const symbol_table& global_table)
 {
+	string epilogue_label = make_label ();
+
+	for (instruction& i : code)
+		if (i.op == opname::jr &&
+		    i._1.real == real_reg::ra)
+			i = instruction {opname::b, 0, 0, 0, epilogue_label};
+	code.push_back (instruction {opname::jr, real_reg::ra, 0, 0, epilogue_label});
+	code.push_back (instruction {opname::nop, 0, 0, 0});
+
 	return code;
 }

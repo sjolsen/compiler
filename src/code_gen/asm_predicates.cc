@@ -194,8 +194,8 @@ vector <instruction> code_gen (const funBody& node,
 	if (!node.stmt_list)
 		return vector <instruction> {{opname::jr, real_reg::ra}, {opname::nop}};
 
-	return schedule_code (code_gen (*node.stmt_list, vregs, local_table,
-	                                param_table, global_table));
+	return schedule_code (code_gen (*node.stmt_list, vregs, local_table, param_table, global_table),
+	                      vregs, local_table, param_table, global_table);
 }
 
 
@@ -504,37 +504,106 @@ vector <instruction> code_gen (const addExpr& node,
 
 
 
-void code_gen (const term& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const term& node,
+                               mips_register r,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	vector <instruction> rhs_code = code_gen (*node.rhs, r, vregs, local_table, param_table, global_table);
+	if (!node.lhs)
+		return rhs_code;
+
+	register_pool temp_pool = vregs;
+	virt_reg l = temp_pool.get ();
+	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
+
+	if (lhs_code.size () == 1 &&
+	    rhs_code.size () == 1) // Constant expression
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal)}};
+
+	vregs = temp_pool;
+	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
+	if (*node.op->sym->token_ref.op == symbol::asterisk)
+		lhs_code.push_back (instruction {opname::mult, l, r});
+	else
+		lhs_code.push_back (instruction {opname::div, l, r});
+	lhs_code.push_back (instruction {opname::mflo, r});
+
+	vregs.release (l);
+	return lhs_code;
 }
 
 
 
-void code_gen (const factor& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const factor& node,
+                               mips_register r,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	vector <instruction> code;
+
+	switch (node.type)
+	{
+	case AST_type::expression:
+		return code_gen (reinterpret_cast <const expression&> (*node.rvalue), r, vregs, local_table, param_table, global_table);
+
+	case AST_type::terminal:
+		return vector <instruction> {instruction {opname::li, r, reinterpret_cast <const terminal&> (*node.rvalue).token_ref.value}};
+
+	case AST_type::funcCallExpr:
+		code = code_gen (reinterpret_cast <const funcCallExpr&> (*node.rvalue), vregs, local_table, param_table, global_table);
+		code.push_back (instruction {opname::move, r, real_reg::v0});
+		return code;
+
+	case AST_type::var:
+		lvalue_reference reference = code_gen (reinterpret_cast <const var&> (*node.rvalue), vregs, local_table, param_table, global_table);
+		code = move (reference.load_code);
+		code.push_back (instruction {opname::move, r, reference.data_reg});
+		if (reinterpret_cast <const var&> (node.rvalue->size))
+		{
+			vregs.release (lvalue.data_reg);
+			vregs.release (lvalue.address_reg);
+		}
+		return code;
+
+	default:
+		throw runtime_error ("Bad node type in code_gen (factor)");
+	};
 }
 
 
 
-void code_gen (const funcCallExpr& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const funcCallExpr& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	return vector <instruction> ();
 }
 
 
 
-void code_gen (const argList& node,
-               const vector <mc_type>& signature,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const argList& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	return vector <instruction> ()
+}
+
+
+
+vector <instruction> schedule_code (vector <instruction> code,
+                                    register_pool& vregs,
+                                    const symbol_table& local_table,
+                                    const symbol_table& param_table,
+                                    const symbol_table& global_table)
+{
+	return code;
 }

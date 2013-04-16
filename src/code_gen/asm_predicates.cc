@@ -28,6 +28,38 @@ namespace
 			return t.size;
 		return mc_align (t.type);
 	}
+
+	basic_mc_type get_type (const var& v,
+	                        const symbol_table& local_table,
+	                        const symbol_table& param_table,
+	                        const symbol_table& global_table) // Merge with code in semantic_check.cc
+	{
+		symbol_entry var_entry;
+		try
+		{
+			var_entry = local_table.at (node.name->token_ref.str);
+		}
+		catch (const out_of_range&)
+		{
+			try
+			{
+				var_entry = param_table.at (node.name->token_ref.str);
+			}
+			catch (const out_of_range&)
+			{
+				try
+				{
+					var_entry = global_table.at (node.name->token_ref.str);
+				}
+				catch (const out_of_range&)
+				{
+					throw error ("Undefined variable",
+					             node.pos ());
+				}
+			}
+		}
+		return var_entry.type [0];
+	}
 }
 
 
@@ -112,7 +144,7 @@ vector <instruction> code_gen (const funBody& node,
 	register_pool vregs;
 
 	if (!node.stmt_list)
-		return vector <instruction> {"\tjr $ra", "\tnop"};
+		return vector <instruction> {{opname::jr, real_reg::ra}, {opname::nop}};
 
 	return schedule_code (code_gen (*node.stmt_list, vregs, local_table,
 	                                param_table, global_table));
@@ -190,63 +222,140 @@ vector <instruction> code_gen (const assignStmt& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	code_and_result lvalue;
+	lvalue_reference lvalue;
 	if (node.lvalue)
 		lvalue = code_gen (*node.lvalue, vregs, local_table, param_table, global_table);
 	else
-		lvalue.result = vregs.get ();
+		lvalue.data_reg = vregs.get ();
 
-	code_and_result rvalue = code_gen (*node.rvalue, lvalue.result, vregs, local_table, param_table, global_table);
-	if (!node.lvalue)
-		vregs.release (lvalue.result);
+	vector <instruction> rvalue = code_gen (*node.rvalue, lvalue.data_reg, vregs, local_table, param_table, global_table);
+	if (node.lvalue)
+	{
+		if (node.lvalue->size)
+		{
+			vregs.release (lvalue.data_reg);
+			vregs.release (lvalue.address_reg);
+		}
+	}
+	else
+		vregs.release (lvalue.data_reg);
 
-	lvalue.code.insert (end (lvalue.code), begin (rvalue.code), end (rvalue.code)); // Re-use this storage
+	lvalue.load_code.insert (end (lvalue.load_code), begin (rvalue), end (rvalue)); // Re-use this storage
+	lvalue.load_code.insert (end (lvalue.load_code), begin (lvalue.store_code), end (lvalue.store_code));
 	return lvalue.code;
 }
 
 
 
-void code_gen (const condStmt& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const condStmt& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	virt_reg cond_register = vregs.get ();
+	vector <instruction> conditional = code_gen (*node.cond_expr, cond_register, vregs, local_table, param_table, global_table);
+	vregs.release (cond_register);
+
+	vector <instruction> then_code = code_gen (*node.then_stmt, vregs, local_table, param_table, global_table);
+	vector <instruction> else_code;
+	if (node.else_stmt)
+		else_code = code_gen (*node.else_stmt, vregs, local_table, param_table, global_table);
+
+	conditional.push_back (instruction {opname::beq, cond_register, real_reg::zero, 0, then_code.size () + 2}); // Skip then-code plus delay no-op and else-skip branch
+	conditional.push_back (instruction {opname::nop});
+	conditional.insert (end (conditional.code), begin (then_code), end (then_code));
+	conditional.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, 0, else_code.size () + 1}); // Skip else-code plus delay no-op
+	conditional.push_back (instruction {opname::nop});
+	conditional.insert (end (conditional.code), begin (else_code), end (else_code));
+
+	return conditional;
 }
 
 
 
-void code_gen (const loopStmt& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const loopStmt& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	virt_reg cond_register = vregs.get ();
+	vector <instruction> test = code_gen (*node.cond_expr, cond_register, local_table, param_table, global_table);
+	vregs.release (cond_register);
+
+	vector <instruction> body = code_gen (*node.then_stmt, local_table, param_table, global_table);
+	test.push_back (instruction {opname::beq, cond_register, real_reg::zero, 0, body.size () + 2}); // Skip body-code plus delay no-op and loopback branch
+	test.push_back (instruction {opname::nop});
+	test.insert (end (test.code), begin (body), end (body));
+	test.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, 0, 0 - (body.size () + test.size () + 3)}); // Skip back across test and body code, plus this branch and the test-fail branch/no-op
+	test.push_back (instruction {opname::nop});
+
+	return test;
 }
 
 
 
-void code_gen (const returnStmt& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vecotr <instruction> code_gen (const returnStmt& node,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	vector <instruction> expr_code;
+	if (node.rtrn_expr)
+		expr_code = code_gen (*node.rtrn_expr, real_reg::v0, vregs, local_table, param_table, global_table);
+
+	expr_code.push_back (instruction {opname::jr, real_reg::ra}); // Not SysV-compliant. Should replace during scheduling.
+	expr_code.push_back (instruction {opname::nop});
+	return expr_code;
 }
 
 
 
-void code_gen (const var& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+lvalue_reference code_gen (const var& node,
+                           register_pool& vregs,
+                           const symbol_table& local_table,
+                           const symbol_table& param_table,
+                           const symbol_table& global_table)
 {
+	virt_reg name = vregs.get (node.name->token_ref.str);
+	if (!node.size)
+		return lvalue_reference {name};
+
+	// Load code
+	lvalue_reference reference = {vregs.get (), vregs.get ()};
+	reference.load_code = code_gen (*node.size, reference.address_reg, vregs, local_table, param_table, global_table);
+
+	if (get_type (node, local_table, param_table, global_table) == basic_mc_type::mc_int)
+		reference.load_code.push_back (instruction {opname::sll, reference.address_reg, reference.address_reg, 2}); // 4-byte ints
+	reference.load_code.push_back (instruction {opname::add, reference.address_reg, reference.address_reg, name}); // Add offset to array start
+
+	if (get_type (node, local_table, param_table, global_table) == basic_mc_type::mc_int)
+		reference.load_code.push_back (instruction {opname::lw, reference.data_reg, 0, reference.address_reg});
+	else
+		reference.load_code.push_back (instruction {opname::lb, reference.data_reg, 0, reference.address_reg});
+
+	// Store code
+	if (get_type (node, local_table, param_table, global_table) == basic_mc_type::mc_int)
+		reference.load_code.push_back (instruction {opname::sw, reference.data_reg, 0, reference.address_reg});
+	else
+		reference.load_code.push_back (instruction {opname::sb, reference.data_reg, 0, reference.address_reg});
+
+	return reference;
 }
 
 
 
-void code_gen (const expression& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const expression& node,
+                               mips_register r,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
 {
+	if (!node.lhs)
+		return code_gen (*node.rhs, r, vregs, local_table, param_table, global_table);
 }
 
 

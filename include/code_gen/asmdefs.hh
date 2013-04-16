@@ -30,32 +30,14 @@ enum class opname
 	nop,
 	bit_or,
 	sb,
+	sll,
 	sub,
 	sw
 };
 
 
 
-typedef mips_byte virt_reg; // Virtual register specifier
-
-
-
-class register_pool
-{
-private:
-	std::queue <virt_reg> reg_queue;
-	virt_reg next_register;
-	std::unordered_map <std::string, virt_reg> var_map;
-
-public:
-	register_pool ();
-
-	virt_reg get ();
-	virt_reg get (const std::string& name);
-	void release (virt_reg v);
-}
-
-
+typedef int virt_reg; // Virtual register specifier
 
 enum class real_reg // Physical register
 	: mips_byte
@@ -94,6 +76,28 @@ enum class real_reg // Physical register
 	ra = 31
 };
 
+class register_pool
+{
+private:
+	std::queue <virt_reg> reg_queue;
+	virt_reg next_register;
+	std::unordered_map <std::string, virt_reg> var_map;
+
+public:
+	register_pool ();
+
+	virt_reg get ();
+	virt_reg get (const std::string& name);
+	void release (virt_reg v);
+	int max_live () const;
+};
+
+union mips_register
+{
+	real_reg real;
+	virt_reg virt;
+};
+
 
 
 struct instruction
@@ -112,10 +116,12 @@ struct instruction
 
 
 
-struct code_and_result
+struct lvalue_reference
 {
-	std::vector <instruction> code;
-	virt_reg result;
+	mips_register data_reg;
+	mips_register address_reg;
+	std::vector <instruction> load_code;
+	std::vector <instruction> store_code;
 };
 
 

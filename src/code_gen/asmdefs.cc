@@ -7,7 +7,7 @@ using namespace std;
 
 
 register_pool::register_pool ()
-	: next_register (0)
+	: next_register (32) // Disjunction with real-register designators
 {
 }
 
@@ -20,7 +20,7 @@ virt_reg register_pool::get ()
 	return reg;
 }
 
-virt_reg get (const std::string& name)
+virt_reg register_pool::get (const std::string& name)
 {
 	if (var_map.count (name) == 0)
 		var_map [name] = this->get ();
@@ -30,6 +30,11 @@ virt_reg get (const std::string& name)
 void register_pool::release (virt_reg v)
 {
 	reg_queue.push_back (v);
+}
+
+int register_pool::max_live () const
+{
+	return next_register - 32;
 }
 
 
@@ -68,6 +73,8 @@ string to_string (opname name)
 		return "bit_or";
 	case opname::sb:
 		return "sb";
+	case opname::sll:
+		return "sll";
 	case opname::sub:
 		return "sub";
 	case opname::sw:
@@ -166,7 +173,8 @@ string to_string (const instruction& i)
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.real);
 
 		case opname::beq:
-			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + i.label;
+		case opname::sll:
+			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.literal);
 
 		case opname::div:
 		case opname::move:
@@ -185,7 +193,7 @@ string to_string (const instruction& i)
 		case opname::lw:
 		case opname::sb:
 		case opname::sw:
-			return to_string (i._1.real) + ", " + to_string (i._2.literal) + '(' + to_string (i._3..real) + ')';
+			return to_string (i._1.real) + ", " + to_string (i._2.literal) + '(' + to_string (i._3.real) + ')';
 
 		case opname::lui:
 			return to_string (i._1.real) + ", " + to_string (i._2.literal);

@@ -17,8 +17,8 @@ using namespace std;
 string get_file (const string& filename)
 {
 	if (filename == "-")
-			return string (istreambuf_iterator <char> (cin),
-			               istreambuf_iterator <char> ());
+		return string (istreambuf_iterator <char> (cin),
+		               istreambuf_iterator <char> ());
 
 	ifstream fin (filename);
 
@@ -48,86 +48,94 @@ void print_error (const error& e)
 int main (int argc,
           char** argv)
 {
-	// Process command-line arguments
-
-	cmdline_args args (argc, argv);
-
-	// Open the input file
-
-	string file;
 	try
 	{
-		file = get_file (args.input_filename);
+		// Process command-line arguments
+
+		cmdline_args args (argc, argv);
+
+		// Open the input file
+
+		string file;
+		try
+		{
+			file = get_file (args.input_filename);
+		}
+		catch (const exception& e)
+		{
+			cerr << e.what () << endl;
+			return EXIT_FAILURE;
+		}
+		char_range text (file);
+
+		// Tokenize the input file
+
+		vector <token> tokens;
+		try
+		{
+			tokens = tokenize (text);
+		}
+		catch (const error& e)
+		{
+			print_error (e);
+			return EXIT_FAILURE;
+		}
+
+		if (args.test_scanner)
+		{
+			for (auto& token : tokens)
+				cout << to_string (token) << endl;
+			return EXIT_SUCCESS;
+		}
+
+		// Parse the program
+
+		program syntax_tree;
+		try
+		{
+			syntax_tree = program_p (tokens);
+		}
+		catch (const error& e)
+		{
+			print_error (e);
+			return EXIT_FAILURE;
+		}
+
+		if (args.test_parser)
+		{
+			cout << to_string (syntax_tree) << endl;
+			return EXIT_SUCCESS;
+		}
+
+		// Perform static analysis
+
+		try
+		{
+			semantic_check (syntax_tree);
+		}
+		catch (const error& e)
+		{
+			print_error (e);
+			return EXIT_FAILURE;
+		}
+
+		if (args.test_semantic)
+		{
+			cout << to_string (syntax_tree) << endl;
+			return EXIT_SUCCESS;
+		}
+
+		// Generate code
+
+		vector <string> assembly = code_gen (syntax_tree);
+		for (const string& line : assembly)
+			cout << line << '\n';
+
+		return EXIT_SUCCESS;
 	}
 	catch (const exception& e)
 	{
 		cerr << e.what () << endl;
 		return EXIT_FAILURE;
 	}
-	char_range text (file);
-
-	// Tokenize the input file
-
-	vector <token> tokens;
-	try
-	{
-		tokens = tokenize (text);
-	}
-	catch (const error& e)
-	{
-		print_error (e);
-		return EXIT_FAILURE;
-	}
-
-	if (args.test_scanner)
-	{
-		for (auto& token : tokens)
-			cout << to_string (token) << endl;
-		return EXIT_SUCCESS;
-	}
-
-	// Parse the program
-
-	program syntax_tree;
-	try
-	{
-		syntax_tree = program_p (tokens);
-	}
-	catch (const error& e)
-	{
-		print_error (e);
-		return EXIT_FAILURE;
-	}
-
-	if (args.test_parser)
-	{
-		cout << to_string (syntax_tree) << endl;
-		return EXIT_SUCCESS;
-	}
-
-	// Perform static analysis
-
-	try
-	{
-		semantic_check (syntax_tree);
-	}
-	catch (const error& e)
-	{
-		print_error (e);
-		return EXIT_FAILURE;
-	}
-
-	if (args.test_semantic)
-	{
-		cout << to_string (syntax_tree) << endl;
-		return EXIT_SUCCESS;
-	}
-
-	// Generate code
-
-	vector <string> assembly = code_gen (syntax_tree);
-	for (const string& line : assembly)
-		cout << line << '\n';
-
-	return EXIT_SUCCESS;
 }

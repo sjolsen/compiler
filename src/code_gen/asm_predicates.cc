@@ -154,11 +154,11 @@ vector <string> code_gen (const declList& node,
 	for (const Node <decl>& top_level_decl : node.decls)
 	{
 		if (top_level_decl->sub_decl->type == AST_type::varDecl)
-			// data.push_back (code_gen (reinterpret_cast <const varDecl&> (*top_level_decl->sub_decl),
+			// data.push_back (code_gen (dynamic_cast <const varDecl&> (*top_level_decl->sub_decl),
 			//                           global_table));
 			;
 		else
-			functions.push_back (code_gen (reinterpret_cast <const funDecl&> (*top_level_decl->sub_decl),
+			functions.push_back (code_gen (dynamic_cast <const funDecl&> (*top_level_decl->sub_decl),
 			                               global_table));
 	}
 
@@ -186,8 +186,10 @@ vector <string> code_gen (const declList& node,
 asm_function code_gen (const funDecl& node,
                        const symbol_table& global_table)
 {
-	return asm_function {node.name->token_ref.str,
-	                     code_gen (*node.body, *node.local_table, *node.param_table, global_table)};
+	if (node.body)
+		return asm_function {node.name->token_ref.str,
+		                     code_gen (*node.body, *node.local_table, *node.param_table, global_table)};
+	return asm_function {node.name->token_ref.str, vector <instruction> ()};
 }
 
 
@@ -239,19 +241,19 @@ vector <instruction> code_gen (const statement& node,
 	switch (node.sub_stmt->type)
 	{
 	case AST_type::compoundStmt:
-		return code_gen (reinterpret_cast <const compoundStmt&> (*node.sub_stmt),
+		return code_gen (dynamic_cast <const compoundStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
 	case AST_type::assignStmt:
-		return code_gen (reinterpret_cast <const assignStmt&> (*node.sub_stmt),
+		return code_gen (dynamic_cast <const assignStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
 	case AST_type::condStmt:
-		return code_gen (reinterpret_cast <const condStmt&> (*node.sub_stmt),
+		return code_gen (dynamic_cast <const condStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
 	case AST_type::loopStmt:
-		return code_gen (reinterpret_cast <const loopStmt&> (*node.sub_stmt),
+		return code_gen (dynamic_cast <const loopStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
 	case AST_type::returnStmt:
-		return code_gen (reinterpret_cast <const returnStmt&> (*node.sub_stmt),
+		return code_gen (dynamic_cast <const returnStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
 	default:
 		throw runtime_error ("Bad node type in code_gen (statement)");
@@ -563,21 +565,21 @@ vector <instruction> code_gen (const factor& node,
 	switch (node.rvalue->type)
 	{
 	case AST_type::expression:
-		return code_gen (reinterpret_cast <const expression&> (*node.rvalue), r, vregs, local_table, param_table, global_table);
+		return code_gen (dynamic_cast <const expression&> (*node.rvalue), r, vregs, local_table, param_table, global_table);
 
 	case AST_type::terminal:
-		return vector <instruction> {instruction {opname::li, r, reinterpret_cast <const terminal&> (*node.rvalue).token_ref.value, 0, ""}};
+		return vector <instruction> {instruction {opname::li, r, dynamic_cast <const terminal&> (*node.rvalue).token_ref.value, 0, ""}};
 
 	case AST_type::funcCallExpr:
-		code = code_gen (reinterpret_cast <const funcCallExpr&> (*node.rvalue), vregs, local_table, param_table, global_table);
+		code = code_gen (dynamic_cast <const funcCallExpr&> (*node.rvalue), vregs, local_table, param_table, global_table);
 		code.push_back (instruction {opname::move, r, real_reg::v0, 0, ""});
 		return code;
 
 	case AST_type::var:
-		reference = code_gen (reinterpret_cast <const var&> (*node.rvalue), vregs, local_table, param_table, global_table);
+		reference = code_gen (dynamic_cast <const var&> (*node.rvalue), vregs, local_table, param_table, global_table);
 		code = move (reference.load_code);
 		code.push_back (instruction {opname::move, r, reference.data_reg, 0, ""});
-		if (reinterpret_cast <const var&> (*node.rvalue).size)
+		if (dynamic_cast <const var&> (*node.rvalue).size)
 		{
 			vregs.release (reference.data_reg);
 			vregs.release (reference.address_reg);

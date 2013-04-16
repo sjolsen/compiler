@@ -29,7 +29,7 @@ void semantic_check (const decl& node,
                      const symbol_table& global_table)
 {
 	if (node.sub_decl->type == AST_type::funDecl)
-		semantic_check (reinterpret_cast <const funDecl&> (*node.sub_decl),
+		semantic_check (dynamic_cast <const funDecl&> (*node.sub_decl),
 		                global_table);
 }
 
@@ -74,31 +74,31 @@ void semantic_check (const statement& node,
 	switch (node.sub_stmt->type)
 	{
 	case AST_type::compoundStmt:
-		semantic_check (reinterpret_cast <const compoundStmt&> (*node.sub_stmt),
+		semantic_check (dynamic_cast <const compoundStmt&> (*node.sub_stmt),
 		                local_table,
 		                param_table,
 		                global_table);
 		break;
 	case AST_type::assignStmt:
-		semantic_check (reinterpret_cast <const assignStmt&> (*node.sub_stmt),
+		semantic_check (dynamic_cast <const assignStmt&> (*node.sub_stmt),
 		                local_table,
 		                param_table,
 		                global_table);
 		break;
 	case AST_type::condStmt:
-		semantic_check (reinterpret_cast <const condStmt&> (*node.sub_stmt),
+		semantic_check (dynamic_cast <const condStmt&> (*node.sub_stmt),
 		                local_table,
 		                param_table,
 		                global_table);
 		break;
 	case AST_type::loopStmt:
-		semantic_check (reinterpret_cast <const loopStmt&> (*node.sub_stmt),
+		semantic_check (dynamic_cast <const loopStmt&> (*node.sub_stmt),
 		                local_table,
 		                param_table,
 		                global_table);
 		break;
 	case AST_type::returnStmt:
-		semantic_check (reinterpret_cast <const returnStmt&> (*node.sub_stmt),
+		semantic_check (dynamic_cast <const returnStmt&> (*node.sub_stmt),
 		                local_table,
 		                param_table,
 		                global_table);
@@ -245,7 +245,7 @@ mc_type semantic_check (const var& node,
 		    node.size->rhs->lhs == nullptr &&
 		    node.size->rhs->rhs->rvalue->type == AST_type::terminal) // Single-factor literal expression
 		{
-			const token& literal_token = reinterpret_cast <const terminal&> (*node.size->rhs->rhs->rvalue).token_ref;
+			const token& literal_token = dynamic_cast <const terminal&> (*node.size->rhs->rhs->rvalue).token_ref;
 
 			if (literal_token.type == token_type::int_literal ||
 			    literal_token.type == token_type::char_literal)
@@ -370,21 +370,21 @@ mc_type semantic_check (const factor& node,
 	switch (node.rvalue->type)
 	{
 	case AST_type::expression:
-		rvalue_type = semantic_check (reinterpret_cast <const expression&> (*node.rvalue),
+		rvalue_type = semantic_check (dynamic_cast <const expression&> (*node.rvalue),
 		                              local_table,
 		                              param_table,
 		                              global_table);
 		break;
 
 	case AST_type::funcCallExpr:
-		rvalue_type = semantic_check (reinterpret_cast <const funcCallExpr&> (*node.rvalue),
+		rvalue_type = semantic_check (dynamic_cast <const funcCallExpr&> (*node.rvalue),
 		                              local_table,
 		                              param_table,
 		                              global_table);
 		break;
 
 	case AST_type::var:
-		rvalue_type = semantic_check (reinterpret_cast <const var&> (*node.rvalue),
+		rvalue_type = semantic_check (dynamic_cast <const var&> (*node.rvalue),
 		                              local_table,
 		                              param_table,
 		                              global_table);
@@ -392,7 +392,7 @@ mc_type semantic_check (const factor& node,
 
 	case AST_type::terminal:
 	{
-		const token& literal_token = reinterpret_cast <const terminal&> (*node.rvalue).token_ref;
+		const token& literal_token = dynamic_cast <const terminal&> (*node.rvalue).token_ref;
 
 		switch (literal_token.type)
 		{

@@ -128,7 +128,7 @@ local_var_layout::local_var_layout (typename vector <mc_type>::const_iterator fi
                                     typename vector <mc_type>::const_iterator last)
 	: size (last - first)
 {
-	typename decltype (offsets)::value_type current_offset = 0;
+	int current_offset = 0;
 
 	for (auto i = first; i != last; ++i)
 	{

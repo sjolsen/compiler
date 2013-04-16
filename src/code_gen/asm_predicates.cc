@@ -618,7 +618,7 @@ vector <instruction> code_gen (const funcCallExpr& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	return vector <instruction> ();
+	vector <instruction> call_code = {instruction {opname::sub, real_reg::sp, real_reg::sp, 4 * min (node.argList->args.size (), 4)}};
 }
 
 

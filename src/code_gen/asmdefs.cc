@@ -39,6 +39,23 @@ int register_pool::max_live () const
 
 
 
+mips_register::mips_register (real_reg r)
+	: real (r)
+{
+}
+
+mips_register::mips_register (virt_reg r)
+	: virt (r)
+{
+}
+
+// mips_register::mips_register (int i)
+// 	: literal (i)
+// {
+// }
+
+
+
 string to_string (opname name)
 {
 	switch (name)
@@ -219,7 +236,7 @@ vector <string> lines (asm_type t)
 {
 	if (t == asm_type::mips_byte)
 		return vector <string > {"\t.byte"};
-	return vector <string> ("\t.align", "\t.word");
+	return vector <string> {"\t.align", "\t.word"};
 }
 
 

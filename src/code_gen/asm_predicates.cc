@@ -1,5 +1,7 @@
 #include <code_gen/asm_predicates.hh>
 
+#include <functional>
+
 using namespace std;
 
 
@@ -29,7 +31,7 @@ namespace
 		return mc_align (t.type);
 	}
 
-	basic_mc_type get_type (const var& v,
+	basic_mc_type get_type (const var& node,
 	                        const symbol_table& local_table,
 	                        const symbol_table& param_table,
 	                        const symbol_table& global_table) // Merge with code in semantic_check.cc
@@ -58,12 +60,12 @@ namespace
 				}
 			}
 		}
-		return var_entry.type [0];
+		return var_entry.type [0].type;
 	}
 
-	int (*(*operator_from_node) (const relop& op)) (int, int)
+	function <int (int, int)> operator_from_node (const relop& op)
 	{
-		switch (op->sym->token_ref.op)
+		switch (op.sym->token_ref.op)
 		{
 		case symbol::less_than:
 			return [] (int a, int b) { return a < b; };
@@ -82,9 +84,9 @@ namespace
 		};
 	}
 
-	int (*(*operator_from_node) (const addop& op)) (int, int)
+	function <int (int, int)> operator_from_node (const addop& op)
 	{
-		switch (op->sym->token_ref.op)
+		switch (op.sym->token_ref.op)
 		{
 		case symbol::plus:
 			return [] (int a, int b) { return a + b; };
@@ -95,9 +97,9 @@ namespace
 		};
 	}
 
-	int (*(*operator_from_node) (const mulop& op)) (int, int)
+	function <int (int, int)> operator_from_node (const mulop& op)
 	{
-		switch (op->sym->token_ref.op)
+		switch (op.sym->token_ref.op)
 		{
 		case symbol::asterisk:
 			return [] (int a, int b) { return a * b; };
@@ -120,7 +122,7 @@ local_var_layout::local_var_layout (typename vector <mc_type>::const_iterator fi
                                     typename vector <mc_type>::const_iterator last)
 	: size (last - first)
 {
-	typename offsets::value_type current_offset = 0;
+	typename decltype (offsets)::value_type current_offset = 0;
 
 	for (auto i = first; i != last; ++i)
 	{
@@ -138,7 +140,7 @@ local_var_layout::local_var_layout (typename vector <mc_type>::const_iterator fi
 
 vector <string> code_gen (const program& node)
 {
-	return code_gen (*p.decl_list, *p.table);
+	return code_gen (*node.decl_list, *node.table);
 }
 
 
@@ -149,26 +151,29 @@ vector <string> code_gen (const declList& node,
 	vector <asm_data> data;
 	vector <asm_function> functions;
 
-	for (const Node <decl>& top_level_decl : *node.decls)
+	for (const Node <decl>& top_level_decl : node.decls)
 	{
 		if (top_level_decl->sub_decl->type == AST_type::varDecl)
-			data.push_back (code_gen (reinterpret_cast <const varDecl&> (*top_level_decl->sub_decl),
-			                          global_table));
+			// data.push_back (code_gen (reinterpret_cast <const varDecl&> (*top_level_decl->sub_decl),
+			//                           global_table));
+			;
 		else
 			functions.push_back (code_gen (reinterpret_cast <const funDecl&> (*top_level_decl->sub_decl),
 			                               global_table));
 	}
 
-	vector <instruction> instructions = {"data:"};
+	vector <string> instructions = {"data:"};
 	for (const asm_data& datum : data)
-		instructions.push_back (lines (datum));
+		for (string& line : lines (datum))
+			instructions.push_back (move (line));
 
 	instructions.push_back ("text:");
 	instructions.push_back ("\t.set\tnoreorder");
 	instructions.push_back ("\t.align\t2");
        	instructions.push_back ("\t.set\tnomips16");
 	for (const asm_function& func : functions)
-		instructions.push_back (lines (func));
+		for (string& line : lines (func))
+			instructions.push_back (move (line));
 
 	return instructions;
 }
@@ -192,7 +197,12 @@ vector <instruction> code_gen (const funBody& node,
 	register_pool vregs;
 
 	if (!node.stmt_list)
-		return vector <instruction> {{opname::jr, real_reg::ra}, {opname::nop}};
+	{
+		vector <instruction> body;
+		body.push_back (instruction {opname::jr, real_reg::ra, 0, 0, ""});
+		body.push_back (instruction {opname::nop, 0, 0, 0, ""});
+		return body;
+	}
 
 	return schedule_code (code_gen (*node.stmt_list, vregs, local_table, param_table, global_table),
 	                      vregs, local_table, param_table, global_table);
@@ -228,16 +238,16 @@ vector <instruction> code_gen (const statement& node,
 	case AST_type::compoundStmt:
 		return code_gen (reinterpret_cast <const compoundStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
-	case AST_type::compoundStmt:
+	case AST_type::assignStmt:
 		return code_gen (reinterpret_cast <const assignStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
-	case AST_type::assignStmt:
+	case AST_type::condStmt:
 		return code_gen (reinterpret_cast <const condStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
-	case AST_type::condStmt:
+	case AST_type::loopStmt:
 		return code_gen (reinterpret_cast <const loopStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
-	case AST_type::loopStmt:
+	case AST_type::returnStmt:
 		return code_gen (reinterpret_cast <const returnStmt&> (*node.sub_stmt),
 		                 vregs, local_table, param_table, global_table);
 	default:
@@ -254,7 +264,7 @@ vector <instruction> code_gen (const compoundStmt& node,
                                const symbol_table& global_table)
 {
 	vector <instruction> instructions;
-	for (const Node <statement>& stmt : node.stmt_list)
+	for (const Node <statement>& stmt : node.stmt_list->stmts)
 	{
 		auto stmt_instructions = code_gen (*stmt, vregs, local_table, param_table, global_table);
 		instructions.insert (end (instructions), begin (stmt_instructions), end (stmt_instructions));
@@ -290,7 +300,7 @@ vector <instruction> code_gen (const assignStmt& node,
 
 	lvalue.load_code.insert (end (lvalue.load_code), begin (rvalue), end (rvalue)); // Re-use this storage
 	lvalue.load_code.insert (end (lvalue.load_code), begin (lvalue.store_code), end (lvalue.store_code));
-	return lvalue.code;
+	return lvalue.load_code;
 }
 
 
@@ -310,12 +320,12 @@ vector <instruction> code_gen (const condStmt& node,
 	if (node.else_stmt)
 		else_code = code_gen (*node.else_stmt, vregs, local_table, param_table, global_table);
 
-	conditional.push_back (instruction {opname::beq, cond_register, real_reg::zero, 0, then_code.size () + 2}); // Skip then-code plus delay no-op and else-skip branch
-	conditional.push_back (instruction {opname::nop});
-	conditional.insert (end (conditional.code), begin (then_code), end (then_code));
-	conditional.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, 0, else_code.size () + 1}); // Skip else-code plus delay no-op
-	conditional.push_back (instruction {opname::nop});
-	conditional.insert (end (conditional.code), begin (else_code), end (else_code));
+	conditional.push_back (instruction {opname::beq, cond_register, real_reg::zero, then_code.size () + 2}); // Skip then-code plus delay no-op and else-skip branch
+	conditional.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	conditional.insert (end (conditional), begin (then_code), end (then_code));
+	conditional.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, else_code.size () + 1}); // Skip else-code plus delay no-op
+	conditional.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	conditional.insert (end (conditional), begin (else_code), end (else_code));
 
 	return conditional;
 }
@@ -329,22 +339,22 @@ vector <instruction> code_gen (const loopStmt& node,
                                const symbol_table& global_table)
 {
 	virt_reg cond_register = vregs.get ();
-	vector <instruction> test = code_gen (*node.cond_expr, cond_register, local_table, param_table, global_table);
+	vector <instruction> test = code_gen (*node.cond_expr, cond_register, vregs, local_table, param_table, global_table);
 	vregs.release (cond_register);
 
-	vector <instruction> body = code_gen (*node.then_stmt, local_table, param_table, global_table);
-	test.push_back (instruction {opname::beq, cond_register, real_reg::zero, 0, body.size () + 2}); // Skip body-code plus delay no-op and loopback branch
-	test.push_back (instruction {opname::nop});
-	test.insert (end (test.code), begin (body), end (body));
-	test.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, 0, 0 - (body.size () + test.size () + 3)}); // Skip back across test and body code, plus this branch and the test-fail branch/no-op
-	test.push_back (instruction {opname::nop});
+	vector <instruction> body = code_gen (*node.then_stmt, vregs, local_table, param_table, global_table);
+	test.push_back (instruction {opname::beq, cond_register, real_reg::zero, body.size () + 2}); // Skip body-code plus delay no-op and loopback branch
+	test.push_back (instruction {opname::nop, 0, 0, 0, ""});
+	test.insert (end (test), begin (body), end (body));
+	test.push_back (instruction {opname::beq, real_reg::zero, real_reg::zero, 0 - (body.size () + test.size () + 3)}); // Skip back across test and body code, plus this branch and the test-fail branch/no-op
+	test.push_back (instruction {opname::nop, 0, 0, 0, ""});
 
 	return test;
 }
 
 
 
-vecotr <instruction> code_gen (const returnStmt& node,
+vector <instruction> code_gen (const returnStmt& node,
                                register_pool& vregs,
                                const symbol_table& local_table,
                                const symbol_table& param_table,
@@ -354,8 +364,8 @@ vecotr <instruction> code_gen (const returnStmt& node,
 	if (node.rtrn_expr)
 		expr_code = code_gen (*node.rtrn_expr, real_reg::v0, vregs, local_table, param_table, global_table);
 
-	expr_code.push_back (instruction {opname::jr, real_reg::ra}); // Not SysV-compliant. Should replace during scheduling.
-	expr_code.push_back (instruction {opname::nop});
+	expr_code.push_back (instruction {opname::jr, real_reg::ra, 0, 0, ""}); // Not SysV-compliant. Should replace during scheduling.
+	expr_code.push_back (instruction {opname::nop, 0, 0, 0, ""});
 	return expr_code;
 }
 
@@ -412,7 +422,7 @@ vector <instruction> code_gen (const expression& node,
 
 	if (lhs_code.size () == 1 &&
 	    rhs_code.size () == 1) // Constant expression
-		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal)}};
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0, ""}};
 
 	vregs = temp_pool;
 	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
@@ -431,7 +441,7 @@ vector <instruction> code_gen (const relop& op,
 {
 	vector <instruction> code;
 
-	switch (op->sym->token_ref.op)
+	switch (op.sym->token_ref.op)
 	{
 	case symbol::less_than:
 		code.push_back (instruction {opname::slt, r, l, r});
@@ -489,11 +499,11 @@ vector <instruction> code_gen (const addExpr& node,
 
 	if (lhs_code.size () == 1 &&
 	    rhs_code.size () == 1) // Constant expression
-		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal)}};
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0, ""}};
 
 	vregs = temp_pool;
 	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
-	if (*node.op->sym->token_ref.op == symbol::plus)
+	if (node.op->sym->token_ref.op == symbol::plus)
 		lhs_code.push_back (instruction {opname::add, r, l, r});
 	else
 		lhs_code.push_back (instruction {opname::sub, r, l, r});
@@ -521,15 +531,15 @@ vector <instruction> code_gen (const term& node,
 
 	if (lhs_code.size () == 1 &&
 	    rhs_code.size () == 1) // Constant expression
-		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal)}};
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0, ""}};
 
 	vregs = temp_pool;
 	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
-	if (*node.op->sym->token_ref.op == symbol::asterisk)
-		lhs_code.push_back (instruction {opname::mult, l, r});
+	if (node.op->sym->token_ref.op == symbol::asterisk)
+		lhs_code.push_back (instruction {opname::mult, l, r, 0, ""});
 	else
-		lhs_code.push_back (instruction {opname::div, l, r});
-	lhs_code.push_back (instruction {opname::mflo, r});
+		lhs_code.push_back (instruction {opname::div, l, r, 0, ""});
+	lhs_code.push_back (instruction {opname::mflo, r, 0, 0, ""});
 
 	vregs.release (l);
 	return lhs_code;
@@ -545,6 +555,7 @@ vector <instruction> code_gen (const factor& node,
                                const symbol_table& global_table)
 {
 	vector <instruction> code;
+	lvalue_reference reference;
 
 	switch (node.type)
 	{
@@ -552,21 +563,21 @@ vector <instruction> code_gen (const factor& node,
 		return code_gen (reinterpret_cast <const expression&> (*node.rvalue), r, vregs, local_table, param_table, global_table);
 
 	case AST_type::terminal:
-		return vector <instruction> {instruction {opname::li, r, reinterpret_cast <const terminal&> (*node.rvalue).token_ref.value}};
+		return vector <instruction> {instruction {opname::li, r, reinterpret_cast <const terminal&> (*node.rvalue).token_ref.value, 0, ""}};
 
 	case AST_type::funcCallExpr:
 		code = code_gen (reinterpret_cast <const funcCallExpr&> (*node.rvalue), vregs, local_table, param_table, global_table);
-		code.push_back (instruction {opname::move, r, real_reg::v0});
+		code.push_back (instruction {opname::move, r, real_reg::v0, 0, ""});
 		return code;
 
 	case AST_type::var:
-		lvalue_reference reference = code_gen (reinterpret_cast <const var&> (*node.rvalue), vregs, local_table, param_table, global_table);
+		reference = code_gen (reinterpret_cast <const var&> (*node.rvalue), vregs, local_table, param_table, global_table);
 		code = move (reference.load_code);
-		code.push_back (instruction {opname::move, r, reference.data_reg});
-		if (reinterpret_cast <const var&> (node.rvalue->size))
+		code.push_back (instruction {opname::move, r, reference.data_reg, 0, ""});
+		if (reinterpret_cast <const var&> (*node.rvalue).size)
 		{
-			vregs.release (lvalue.data_reg);
-			vregs.release (lvalue.address_reg);
+			vregs.release (reference.data_reg);
+			vregs.release (reference.address_reg);
 		}
 		return code;
 
@@ -594,7 +605,7 @@ vector <instruction> code_gen (const argList& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	return vector <instruction> ()
+	return vector <instruction> ();
 }
 
 

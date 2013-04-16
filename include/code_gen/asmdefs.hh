@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <deque>
+#include <unordered_map>
 
 
 
@@ -82,7 +84,7 @@ enum class real_reg // Physical register
 class register_pool
 {
 private:
-	std::queue <virt_reg> reg_queue;
+	std::deque <virt_reg> reg_queue;
 	virt_reg next_register;
 	std::unordered_map <std::string, virt_reg> var_map;
 
@@ -99,6 +101,11 @@ union mips_register
 {
 	real_reg real;
 	virt_reg virt;
+	int literal;
+
+	mips_register (real_reg r);
+	mips_register (virt_reg r);
+	// mips_register (int i);
 };
 
 
@@ -107,12 +114,9 @@ struct instruction
 {
 	opname op;
 
-	union
-	{
-		real_reg real;
-		virt_reg virt;
-		int literal;
-	} _1, _2, _3;
+	mips_register _1;
+	mips_register _2;
+	mips_register _3;
 
 	std::string label;
 };
@@ -121,8 +125,8 @@ struct instruction
 
 struct lvalue_reference
 {
-	mips_register data_reg;
-	mips_register address_reg;
+	virt_reg data_reg;
+	virt_reg address_reg;
 	std::vector <instruction> load_code;
 	std::vector <instruction> store_code;
 };

@@ -17,6 +17,7 @@ all: text_processing \
      tokenizer \
      ast \
      semantic \
+     code_gen \
      mcc
 
 clean:
@@ -167,6 +168,34 @@ $(LIB)/libsemantic.a: $(INCLUDE)/semantic.hh \
 
 
 
+# Build the code generation facilities
+
+code_gen: $(LIB)/libcode_gen.a
+
+$(BUILD)/asmdefs.o: $(LIB)/libsemantic.a \
+                    $(LIB)/libast.a \
+                    $(LIB)/libtokenizer.a \
+                    $(INCLUDE)/code_gen/asmdefs.hh \
+                    $(SRC)/code_gen/asmdefs.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/code_gen/asmdefs.cc -c -o $(BUILD)/asmdefs.o
+
+$(BUILD)/asm_predicates.o: $(LIB)/libsemantic.a \
+                           $(LIB)/libast.a \
+                           $(LIB)/libtokenizer.a \
+                           $(INCLUDE)/code_gen/asmdefs.hh \
+                           $(INCLUDE)/code_gen/asm_predicates.hh \
+                           $(SRC)/code_gen/asm_predicates.cc
+	$(CXX) $(_CXXFLAGS) $(SRC)/code_gen/asm_predicates.cc -c -o $(BUILD)/asm_predicates.o
+
+$(LIB)/libcode_gen.a: $(INCLUDE)/code_gen.hh \
+                      $(BUILD)/asmdefs.o \
+                      $(BUILD)/asm_predicates.o
+	$(AR) $(ARFLAGS) $(LIB)/libcode_gen.a \
+                         $(BUILD)/asmdefs.o \
+                         $(BUILD)/asm_predicates.o
+
+
+
 # Build the main executable
 
 mcc: $(BIN)/mcc
@@ -177,18 +206,15 @@ $(BUILD)/cmdline.o: $(INCLUDE)/cmdline.hh \
 
 $(BUILD)/mcc.o: $(SRC)/mcc.cc \
                 $(INCLUDE)/cmdline.hh \
-                $(INCLUDE)/text_processing.hh \
-                $(INCLUDE)/tokenizer.hh \
-                $(INCLUDE)/ast.hh \
-                $(INCLUDE)/semantic.hh
+                $(LIB)/libtext_processing.a \
+                $(LIB)/libtokenizer.a \
+                $(LIB)/libast.a \
+                $(LIB)/libsemantic.a \
+                $(LIB)/libcode_gen.a
 	$(CXX) $(_CXXFLAGS) $(SRC)/mcc.cc -c -o $(BUILD)/mcc.o
 
 $(BIN)/mcc: $(BUILD)/mcc.o \
-            $(BUILD)/cmdline.o \
-            $(LIB)/libtext_processing.a \
-            $(LIB)/libtokenizer.a \
-            $(LIB)/libast.a \
-            $(LIB)/libsemantic.a
+            $(BUILD)/cmdline.o
 	$(CXX) $(_CXXFLAGS) $(BUILD)/mcc.o \
                             $(BUILD)/cmdline.o \
                             -L$(LIB) \
@@ -196,6 +222,7 @@ $(BIN)/mcc: $(BUILD)/mcc.o \
                             -ltokenizer \
                             -ltext_processing \
                             -lsemantic \
+                            -lcode_gen \
                             -o $(BIN)/mcc
 
 

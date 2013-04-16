@@ -55,8 +55,8 @@ string to_string (opname name)
 		return "jr";
 	case opname::lb:
 		return "lb";
-	case opname::lui:
-		return "lui";
+	case opname::li:
+		return "li";
 	case opname::lw:
 		return "lw";
 	case opname::mfhi:
@@ -69,16 +69,22 @@ string to_string (opname name)
 		return "mult";
 	case opname::nop:
 		return "nop";
+	case opname::nor:
+		return "nor";
 	case opname::bit_or:
 		return "bit_or";
 	case opname::sb:
 		return "sb";
 	case opname::sll:
 		return "sll";
+	case opname::slt:
+		return "slt";
 	case opname::sub:
 		return "sub";
 	case opname::sw:
 		return "sw";
+	case opname::xori:
+		return "xori";
 	default:
 		throw runtime_error ("Invalid opname");
 	};
@@ -169,11 +175,14 @@ string to_string (const instruction& i)
 		{
 		case opname::add:
 		case opname::bit_or:
+		case opname::nor:
+		case opname::slt:
 		case opname::sub:
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.real);
 
 		case opname::beq:
 		case opname::sll:
+		case opname::xori:
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.literal);
 
 		case opname::div:
@@ -195,8 +204,8 @@ string to_string (const instruction& i)
 		case opname::sw:
 			return to_string (i._1.real) + ", " + to_string (i._2.literal) + '(' + to_string (i._3.real) + ')';
 
-		case opname::lui:
-			return to_string (i._1.real) + ", " + to_string (i._2.literal);
+		case opname::li:
+		 	return to_string (i._1.real) + ", " + to_string (i._2.literal);
 
 		default:
 			return "";

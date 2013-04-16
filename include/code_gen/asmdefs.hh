@@ -21,18 +21,21 @@ enum class opname
 	jal,
 	jr,
 	lb,
-	lui,
+	li,
 	lw,
 	mfhi,
 	mflo,
 	move,
 	mult,
 	nop,
+	nor,
 	bit_or,
 	sb,
 	sll,
+	slt,
 	sub,
-	sw
+	sw,
+	xori
 };
 
 

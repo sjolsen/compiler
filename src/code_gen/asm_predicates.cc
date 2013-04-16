@@ -60,6 +60,53 @@ namespace
 		}
 		return var_entry.type [0];
 	}
+
+	int (*(*operator_from_node) (const relop& op)) (int, int)
+	{
+		switch (op->sym->token_ref.op)
+		{
+		case symbol::less_than:
+			return [] (int a, int b) { return a < b; };
+		case symbol::greater_than:
+			return [] (int a, int b) { return a > b; };
+		case symbol::lt_equiv:
+			return [] (int a, int b) { return a <= b; };
+		case symbol::gt_equiv:
+			return [] (int a, int b) { return a >= b; };
+		case symbol::equivalent:
+			return [] (int a, int b) { return a == b; };
+		case symbol::not_equiv:
+			return [] (int a, int b) { return a != b; };
+		default:
+			throw runtime_error ("Bad operator");
+		};
+	}
+
+	int (*(*operator_from_node) (const addop& op)) (int, int)
+	{
+		switch (op->sym->token_ref.op)
+		{
+		case symbol::plus:
+			return [] (int a, int b) { return a + b; };
+		case symbol::minus:
+			return [] (int a, int b) { return a - b; };
+		default:
+			throw runtime_error ("Bad operator");
+		};
+	}
+
+	int (*(*operator_from_node) (const mulop& op)) (int, int)
+	{
+		switch (op->sym->token_ref.op)
+		{
+		case symbol::asterisk:
+			return [] (int a, int b) { return a * b; };
+		case symbol::solidus:
+			return [] (int a, int b) { return a / b; };
+		default:
+			throw runtime_error ("Bad operator");
+		};
+	}
 }
 
 
@@ -117,6 +164,7 @@ vector <string> code_gen (const declList& node,
 		instructions.push_back (lines (datum));
 
 	instructions.push_back ("text:");
+	instructions.push_back ("\t.set\tnoreorder");
 	instructions.push_back ("\t.align\t2");
        	instructions.push_back ("\t.set\tnomips16");
 	for (const asm_function& func : functions)
@@ -354,17 +402,104 @@ vector <instruction> code_gen (const expression& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
+	vector <instruction> rhs_code = code_gen (*node.rhs, r, vregs, local_table, param_table, global_table);
 	if (!node.lhs)
-		return code_gen (*node.rhs, r, vregs, local_table, param_table, global_table);
+		return rhs_code;
+
+	register_pool temp_pool = vregs;
+	virt_reg l = temp_pool.get ();
+	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
+
+	if (lhs_code.size () == 1 &&
+	    rhs_code.size () == 1) // Constant expression
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal)}};
+
+	vregs = temp_pool;
+	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
+	vector <instruction> relop_code = code_gen (*node.op, l, r);
+	lhs_code.insert (end (lhs_code), begin (relop_code), end (relop_code));
+
+	vregs.release (l);
+	return lhs_code;
 }
 
 
 
-void code_gen (const addExpr& node,
-               const symbol_table& local_table,
-               const symbol_table& param_table,
-               const symbol_table& global_table)
+vector <instruction> code_gen (const relop& op,
+                               mips_register l,
+                               mips_register r)
 {
+	vector <instruction> code;
+
+	switch (op->sym->token_ref.op)
+	{
+	case symbol::less_than:
+		code.push_back (instruction {opname::slt, r, l, r});
+		break;
+
+	case symbol::greater_than:
+		code.push_back (instruction {opname::slt, r, r, l});
+		break;
+
+	case symbol::lt_equiv:
+		code.push_back (instruction {opname::slt, r, r, l});
+		code.push_back (instruction {opname::xori, r, r, 1}); // Xor with the number 1 for boolean negation
+		break;
+
+	case symbol::gt_equiv:
+		code.push_back (instruction {opname::slt, r, l, r});
+		code.push_back (instruction {opname::xori, r, r, 1}); // Xor with the number 1 for boolean negation
+		break;
+
+	case symbol::equivalent:
+		code.push_back (instruction {opname::slt, real_reg::at, r, l});
+		code.push_back (instruction {opname::slt, r, l, r});
+		code.push_back (instruction {opname::nor, r, real_reg::at, r});
+		break;
+
+	case symbol::not_equiv:
+		code.push_back (instruction {opname::slt, real_reg::at, r, l});
+		code.push_back (instruction {opname::slt, r, l, r});
+		code.push_back (instruction {opname::bit_or, r, real_reg::at, r});
+		break;
+
+	default:
+		throw runtime_error ("Bad operator");
+	};
+
+	return code;
+}
+
+
+
+vector <instruction> code_gen (const addExpr& node,
+                               mips_register r,
+                               register_pool& vregs,
+                               const symbol_table& local_table,
+                               const symbol_table& param_table,
+                               const symbol_table& global_table)
+{
+	vector <instruction> rhs_code = code_gen (*node.rhs, r, vregs, local_table, param_table, global_table);
+	if (!node.lhs)
+		return rhs_code;
+
+	register_pool temp_pool = vregs;
+	virt_reg l = temp_pool.get ();
+	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
+
+	if (lhs_code.size () == 1 &&
+	    rhs_code.size () == 1) // Constant expression
+		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal)}};
+
+	vregs = temp_pool;
+	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
+	if (*node.op->sym->token_ref.op == symbol::plus)
+		lhs_code.push_back (instruction {opname::add, r, l, r});
+	else
+		lhs_code.push_back (instruction {opname::sub, r, l, r});
+
+	vregs.release (l);
+	return lhs_code;
 }
 
 

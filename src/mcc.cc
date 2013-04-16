@@ -3,6 +3,7 @@
 #include <tokenizer.hh>
 #include <ast.hh>
 #include <semantic.hh>
+#include <code_gen.hh>
 
 #include <fstream>
 #include <iostream>
@@ -116,7 +117,17 @@ int main (int argc,
 		return EXIT_FAILURE;
 	}
 
-	cout << to_string (syntax_tree) << endl;
+	if (args.test_semantic)
+	{
+		cout << to_string (syntax_tree) << endl;
+		return EXIT_SUCCESS;
+	}
+
+	// Generate code
+
+	vector <string> assembly = code_gen (syntax_tree);
+	for (const string& line : assembly)
+		cout << line << '\n';
 
 	return EXIT_SUCCESS;
 }

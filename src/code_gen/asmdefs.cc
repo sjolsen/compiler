@@ -178,7 +178,8 @@ string to_string (real_reg r)
 	case real_reg::ra:
 		return "$ra";
 	default:
-		throw runtime_error ("Invalid physical register");
+//		throw runtime_error ("Invalid physical register");
+		return to_string (static_cast <int> (r));
 	};
 }
 
@@ -261,10 +262,12 @@ vector <string> lines (const asm_function& func)
 	                         func.name + ':'};
 
 	for (const instruction& i : func.body)
-		f_lines.push_back (to_string (i));
+		f_lines.push_back ('\t' + to_string (i));
 
-	f_lines.push_back (".end\t" + func.name);
-	f_lines.push_back (".size\t" + func.name + ", .-" + func.name);
+	f_lines.push_back ("");
+	f_lines.push_back ("\t.end\t" + func.name);
+	f_lines.push_back ("\t.size\t" + func.name + ", .-" + func.name);
+	f_lines.push_back ("");
 
 	return f_lines;
 }

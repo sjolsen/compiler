@@ -162,15 +162,18 @@ vector <string> code_gen (const declList& node,
 			                               global_table));
 	}
 
-	vector <string> instructions = {"data:"};
+	vector <string> instructions = {"\t.data"};
 	for (const asm_data& datum : data)
 		for (string& line : lines (datum))
 			instructions.push_back (move (line));
 
-	instructions.push_back ("text:");
+	instructions.push_back ("");
+	instructions.push_back ("\t.text");
 	instructions.push_back ("\t.set\tnoreorder");
 	instructions.push_back ("\t.align\t2");
-       	instructions.push_back ("\t.set\tnomips16");
+       	instructions.push_back ("\t.set\tnomips16\n");
+	instructions.push_back ("");
+
 	for (const asm_function& func : functions)
 		for (string& line : lines (func))
 			instructions.push_back (move (line));
@@ -233,7 +236,7 @@ vector <instruction> code_gen (const statement& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	switch (node.type)
+	switch (node.sub_stmt->type)
 	{
 	case AST_type::compoundStmt:
 		return code_gen (reinterpret_cast <const compoundStmt&> (*node.sub_stmt),
@@ -557,7 +560,7 @@ vector <instruction> code_gen (const factor& node,
 	vector <instruction> code;
 	lvalue_reference reference;
 
-	switch (node.type)
+	switch (node.rvalue->type)
 	{
 	case AST_type::expression:
 		return code_gen (reinterpret_cast <const expression&> (*node.rvalue), r, vregs, local_table, param_table, global_table);

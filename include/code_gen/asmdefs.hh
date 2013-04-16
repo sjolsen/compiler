@@ -18,6 +18,7 @@ typedef std::uint64_t mips_dword;
 enum class opname
 {
 	add,
+	addi,
 	b,
 	beq,
 	div,

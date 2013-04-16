@@ -154,14 +154,6 @@ std::vector <instruction> code_gen (const funcCallExpr& node,
 
 
 
-std::vector <instruction> code_gen (const argList& node,
-                                    register_pool& vregs,
-                                    const symbol_table& local_table,
-                                    const symbol_table& param_table,
-                                    const symbol_table& global_table);
-
-
-
 std::vector <instruction> schedule_code (std::vector <instruction> code,
                                          register_pool& vregs,
                                          const symbol_table& local_table,

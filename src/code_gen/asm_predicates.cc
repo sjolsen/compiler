@@ -590,8 +590,6 @@ vector <instruction> code_gen (const factor& node,
 	case AST_type::funcCallExpr:
 		code = code_gen (dynamic_cast <const funcCallExpr&> (*node.rvalue), vregs, local_table, param_table, global_table);
 		code.push_back (instruction {opname::move, r, real_reg::v0, 0});
-		code.push_back (instruction {opname::jal, 0, 0, 0, dynamic_cast <const funcCallExpr&> (*node.rvalue).name->token_ref.str});
-		code.push_back (instruction {opname::nop, 0, 0, 0});
 		return code;
 
 	case AST_type::var:
@@ -618,18 +616,37 @@ vector <instruction> code_gen (const funcCallExpr& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	vector <instruction> call_code = {instruction {opname::sub, real_reg::sp, real_reg::sp, 4 * min (node.argList->args.size (), 4)}};
-}
+	if (!node.arg_list)
+		return vector <instruction> {instruction {opname::jal, 0, 0, 0, node.name->token_ref.str}, instruction {opname::nop, 0, 0, 0}};
 
+	const vector <Node <expression>>& args = node.arg_list->args;
+	int build_space_size = 4 * min (static_cast <int> (args.size ()), 4);
 
+	vector <instruction> call_code = {instruction {opname::addi, real_reg::sp, real_reg::sp, 0 - build_space_size}};
 
-vector <instruction> code_gen (const argList& node,
-                               register_pool& vregs,
-                               const symbol_table& local_table,
-                               const symbol_table& param_table,
-                               const symbol_table& global_table)
-{
-	return vector <instruction> ();
+	virt_reg build_register = 0;
+	if (args.size () > 4)
+		build_register = vregs.get ();
+	for (int i = 0; i < args.size (); ++i)
+	{
+		vector <instruction> expr_code;
+		if (i < 4)
+			expr_code = code_gen (*args [i], static_cast <int> (real_reg::a0) + i, vregs, local_table, param_table, global_table);
+		else
+		{
+			expr_code = code_gen (*args [i], build_register, vregs, local_table, param_table, global_table);
+			expr_code.push_back (instruction {opname::sw, build_register, 4 * i, real_reg::sp});
+		}
+		call_code.insert (end (call_code), begin (expr_code), end (expr_code));
+	}
+	if (args.size () > 4)
+		vregs.release (build_register);
+
+	call_code.push_back (instruction {opname::jal, 0, 0, 0, node.name->token_ref.str});
+	call_code.push_back (instruction {opname::nop, 0, 0, 0});
+	call_code.push_back (instruction {opname::addi, real_reg::sp, real_reg::sp, build_space_size});
+
+	return call_code;
 }
 
 

@@ -62,6 +62,8 @@ string to_string (opname name)
 	{
 	case opname::add:
 		return "add";
+	case opname::addi:
+		return "addi";
 	case opname::b:
 		return "b";
 	case opname::beq:
@@ -213,6 +215,7 @@ string to_string (const instruction& i)
 		case opname::beq:
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + i.label;
 
+		case opname::addi:
 		case opname::sll:
 		case opname::xori:
 			return to_string (i._1.real) + ", " + to_string (i._2.real) + ", " + to_string (i._3.literal);

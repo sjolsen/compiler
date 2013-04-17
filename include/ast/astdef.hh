@@ -58,8 +58,8 @@ struct mc_type
 	mc_type (basic_mc_type _type = basic_mc_type::mc_void,
 	         int _size = 0);
 
-	bool operator == (const mc_type& other);
-	bool operator != (const mc_type& other);
+	bool operator == (const mc_type& other) const;
+	bool operator != (const mc_type& other) const;
 };
 
 

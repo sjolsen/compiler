@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <deque>
+#include <stack>
 #include <unordered_map>
 
 
@@ -39,7 +39,11 @@ enum class opname
 	slt,
 	sub,
 	sw,
-	xori
+	xori,
+
+	// Internal pseudo-ops
+	store_frame,
+	load_frame
 };
 
 
@@ -86,7 +90,7 @@ enum class real_reg // Physical register
 class register_pool
 {
 private:
-	std::deque <virt_reg> reg_queue;
+	std::stack <virt_reg> reg_queue;
 	virt_reg next_register;
 	std::unordered_map <std::string, virt_reg> var_map;
 

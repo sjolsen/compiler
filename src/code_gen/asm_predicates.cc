@@ -616,35 +616,35 @@ vector <instruction> code_gen (const funcCallExpr& node,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	if (!node.arg_list)
-		return vector <instruction> {instruction {opname::jal, 0, 0, 0, node.name->token_ref.str}, instruction {opname::nop, 0, 0, 0}};
+	vector <instruction> call_code;
 
-	const vector <Node <expression>>& args = node.arg_list->args;
-	int build_space_size = 4 * min (static_cast <int> (args.size ()), 4);
-
-	vector <instruction> call_code = {instruction {opname::addi, real_reg::sp, real_reg::sp, 0 - build_space_size}};
-
-	virt_reg build_register = 0;
-	if (args.size () > 4)
-		build_register = vregs.get ();
-	for (int i = 0; i < args.size (); ++i)
+	if (node.arg_list)
 	{
-		vector <instruction> expr_code;
-		if (i < 4)
-			expr_code = code_gen (*args [i], static_cast <int> (real_reg::a0) + i, vregs, local_table, param_table, global_table);
-		else
-		{
-			expr_code = code_gen (*args [i], build_register, vregs, local_table, param_table, global_table);
-			expr_code.push_back (instruction {opname::sw, build_register, 4 * i, real_reg::sp});
-		}
-		call_code.insert (end (call_code), begin (expr_code), end (expr_code));
-	}
-	if (args.size () > 4)
-		vregs.release (build_register);
+		const vector <Node <expression>>& args = node.arg_list->args;
+		virt_reg build_register = 0;
 
+		if (args.size () > 4)
+			build_register = vregs.get ();
+		for (int i = 0; i < args.size (); ++i)
+		{
+			vector <instruction> expr_code;
+			if (i < 4)
+				expr_code = code_gen (*args [i], static_cast <int> (real_reg::a0) + i, vregs, local_table, param_table, global_table);
+			else
+			{
+				expr_code = code_gen (*args [i], build_register, vregs, local_table, param_table, global_table);
+				expr_code.push_back (instruction {opname::sw, build_register, 4 * i, real_reg::sp});
+			}
+			call_code.insert (end (call_code), begin (expr_code), end (expr_code));
+		}
+		if (args.size () > 4)
+			vregs.release (build_register);
+	}
+
+	call_code.push_back (instruction {opname::store_frame, 0, 0, 0});
 	call_code.push_back (instruction {opname::jal, 0, 0, 0, node.name->token_ref.str});
 	call_code.push_back (instruction {opname::nop, 0, 0, 0});
-	call_code.push_back (instruction {opname::addi, real_reg::sp, real_reg::sp, build_space_size});
+	call_code.push_back (instruction {opname::load_frame, 0, 0, 0});
 
 	return call_code;
 }

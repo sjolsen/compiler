@@ -17,12 +17,12 @@ mc_type::mc_type (basic_mc_type _type,
 {
 }
 
-bool mc_type::operator == (const mc_type& other)
+bool mc_type::operator == (const mc_type& other) const
 {
 	return type == other.type && size == other.size;
 }
 
-bool mc_type::operator != (const mc_type& other)
+bool mc_type::operator != (const mc_type& other) const
 {
 	return !(*this == other);
 }

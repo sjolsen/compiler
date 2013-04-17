@@ -9,6 +9,21 @@ using namespace std;
 
 
 
+namespace
+{
+	bool promotable (const mc_type& from,
+	                 const mc_type& to)
+	{
+		if (from.size != 0)
+			return to.size == -1;
+		if (to.type == basic_mc_type::mc_int)
+			return to.type != basic_mc_type::mc_void;
+		return to == from;
+	}
+}
+
+
+
 void semantic_check (const program& p)
 {
 	semantic_check (*p.decl_list, *p.table);
@@ -135,7 +150,7 @@ void semantic_check (const assignStmt& node,
 	mc_type lvalue_type = semantic_check (*node.lvalue, local_table, param_table, global_table);
 	mc_type rvalue_type = semantic_check (*node.rvalue, local_table, param_table, global_table);
 
-	if (lvalue_type != rvalue_type)
+	if (!promotable (rvalue_type, lvalue_type))
 		throw error ("Type mismatch in assignment (expected " + to_string (lvalue_type) +
 		             "; got " + to_string (rvalue_type) + ")",
 		             node.rvalue->pos ());
@@ -148,8 +163,8 @@ void semantic_check (const condStmt& node,
                      const symbol_table& param_table,
                      const symbol_table& global_table)
 {
-	if (semantic_check (*node.cond_expr, local_table, param_table, global_table).type == basic_mc_type::mc_void)
-		throw error ("Conditional expression must be non-void",
+	if (!promotable (semantic_check (*node.cond_expr, local_table, param_table, global_table), mc_type {basic_mc_type::mc_int, 0}))
+		throw error ("Conditional expression must be integral",
 		             node.cond_expr->pos ());
 
 	semantic_check (*node.then_stmt, local_table, param_table, global_table);
@@ -164,8 +179,8 @@ void semantic_check (const loopStmt& node,
                      const symbol_table& param_table,
                      const symbol_table& global_table)
 {
-	if (semantic_check (*node.cond_expr, local_table, param_table, global_table).type == basic_mc_type::mc_void)
-		throw error ("Conditional expression must be non-void",
+	if (!promotable (semantic_check (*node.cond_expr, local_table, param_table, global_table), mc_type {basic_mc_type::mc_int, 0}))
+		throw error ("Conditional expression must be integral",
 		             node.cond_expr->pos ());
 
 	semantic_check (*node.then_stmt, local_table, param_table, global_table);
@@ -183,17 +198,11 @@ void semantic_check (const returnStmt& node,
 		fundeclp = fundeclp->parent;
 
 	mc_type return_type = fundeclp->get_type () [0];
-	if (node.rtrn_expr == nullptr)
-	{
-		if (return_type.type == basic_mc_type::mc_void)
-			return;
-		else
-			throw error ("Expected expression in return statement",
-			             node.pos ());
-	}
+	mc_type rexpr_type = mc_type {basic_mc_type::mc_void, 0};
+	if (node.rtrn_expr != nullptr)
+		rexpr_type = semantic_check (*node.rtrn_expr, local_table, param_table, global_table);
 
-	mc_type rexpr_type = semantic_check (*node.rtrn_expr, local_table, param_table, global_table);
-	if (rexpr_type != return_type)
+	if (!promotable (rexpr_type, return_type))
 		throw error ("Type mismatch in return statement (expected " + to_string (return_type) +
 		             "; got " + to_string (rexpr_type) + ")",
 		             node.rtrn_expr->pos ());
@@ -262,8 +271,7 @@ mc_type semantic_check (const var& node,
 		{
 			mc_type index_type = semantic_check (*node.size, local_table, param_table, global_table);
 
-			if (index_type.type != basic_mc_type::mc_int &&
-			    index_type.type != basic_mc_type::mc_char) // Invalid index type
+			if (!promotable (index_type, mc_type {basic_mc_type::mc_int, 0}))
 				throw error ("Invalid index type (" + to_string (index_type) + ")",
 				             node.size->pos ());
 		}
@@ -461,10 +469,7 @@ void semantic_check (const argList& node,
 	auto bad_argument = mismatch (begin (signature) + 1, end (signature), begin (argument_types),
 	                              [] (mc_type parameter_type, mc_type argument_type)
 	                              {
-		                              if ((argument_type.size && !parameter_type.size) ||
-		                                  (!argument_type.size && parameter_type.size))
-			                              return false;
-		                              return argument_type.type == parameter_type.type;
+		                              return promotable (argument_type, parameter_type);
 	                              });
 
 	if (bad_argument.first != end (signature))

@@ -15,8 +15,8 @@ virt_reg register_pool::get ()
 {
 	if (reg_queue.empty ())
 		return next_register++;
-	virt_reg reg = reg_queue.front ();
-	reg_queue.pop_front ();
+	virt_reg reg = reg_queue.top ();
+	reg_queue.pop ();
 	return reg;
 }
 
@@ -29,7 +29,7 @@ virt_reg register_pool::get (const std::string& name)
 
 void register_pool::release (virt_reg v)
 {
-	reg_queue.push_back (v);
+	reg_queue.push (v);
 }
 
 int register_pool::max_live () const
@@ -106,6 +106,12 @@ string to_string (opname name)
 		return "sw";
 	case opname::xori:
 		return "xori";
+
+	case opname::load_frame:
+		return "load_frame";
+	case opname::store_frame:
+		return "store_frame";
+
 	default:
 		throw runtime_error ("Invalid opname");
 	};

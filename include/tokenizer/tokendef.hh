@@ -40,7 +40,8 @@ enum class symbol
 	lparen,
 	rparen,
 	comma,
-	semicolon
+	semicolon,
+	ellipsis
 };
 
 

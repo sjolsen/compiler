@@ -73,6 +73,8 @@ string to_string (symbol s)
 		return ",";
 	case symbol::semicolon:
 		return ";";
+	case symbol::ellipsis:
+		return "...";
 	};
 
 	throw logic_error ("Bad enumeration value (to_string (symbol))");

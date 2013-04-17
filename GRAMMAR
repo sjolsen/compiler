@@ -13,7 +13,7 @@ typeSpecifier  : "int"
 
 funDecl        : typeSpecifier ID "(" formalDeclList? ")" (funBody | ";")
 
-formalDeclList : formalDecl ("," formalDecl)*
+formalDeclList : formalDecl ("," formalDecl)* ("," "...")?
 
 formalDecl     : typeSpecifier ID ("[" "]")?
 

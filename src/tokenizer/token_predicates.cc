@@ -310,26 +310,30 @@ matcher string_literal_p
 
 
 
-unordered_map <string, symbol> symbol_map = {{"+",  symbol::plus},
-                                             {"-",  symbol::minus},
-                                             {"*",  symbol::asterisk},
-                                             {"/",  symbol::solidus},
-                                             {"<",  symbol::less_than},
-                                             {">",  symbol::greater_than},
-                                             {"<=", symbol::lt_equiv},
-                                             {">=", symbol::gt_equiv},
-                                             {"==", symbol::equivalent},
-                                             {"!=", symbol::not_equiv},
-                                             {"=",  symbol::equal},
-                                             {"!",  symbol::bang},
-                                             {"[",  symbol::lbracket},
-                                             {"]",  symbol::rbracket},
-                                             {"{",  symbol::lbrace},
-                                             {"}",  symbol::rbrace},
-                                             {"(",  symbol::lparen},
-                                             {")",  symbol::rparen},
-                                             {",",  symbol::comma},
-                                             {";",  symbol::semicolon}};
+namespace
+{
+	unordered_map <string, symbol> symbol_map = {{"+",   symbol::plus},
+	                                             {"-",   symbol::minus},
+	                                             {"*",   symbol::asterisk},
+	                                             {"/",   symbol::solidus},
+	                                             {"<",   symbol::less_than},
+	                                             {">",   symbol::greater_than},
+	                                             {"<=",  symbol::lt_equiv},
+	                                             {">=",  symbol::gt_equiv},
+	                                             {"==",  symbol::equivalent},
+	                                             {"!=",  symbol::not_equiv},
+	                                             {"=",   symbol::equal},
+	                                             {"!",   symbol::bang},
+	                                             {"[",   symbol::lbracket},
+	                                             {"]",   symbol::rbracket},
+	                                             {"{",   symbol::lbrace},
+	                                             {"}",   symbol::rbrace},
+	                                             {"(",   symbol::lparen},
+	                                             {")",   symbol::rparen},
+	                                             {",",   symbol::comma},
+	                                             {";",   symbol::semicolon},
+	                                             {"...", symbol::ellipsis}};
+}
 
 matcher symbol_p
 {
@@ -371,6 +375,9 @@ matcher symbol_p
 		case ',':
 		case ';':
 			return char_range (begin (working_set), begin (working_set) + 1);
+		case '.':
+			if (working_set.size () >= 3 && working_set [1] == '.' && working_set [2] == '.')
+				return char_range (begin (working_set), begin (working_set) + 3);
 		default:
 			return char_range ();
 		}

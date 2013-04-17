@@ -418,9 +418,9 @@ lvalue_reference code_gen (const var& node,
 
 	// Store code
 	if (get_type (node, local_table, param_table, global_table) == basic_mc_type::mc_int)
-		reference.load_code.push_back (instruction {opname::sw, reference.data_reg, 0, reference.address_reg});
+		reference.store_code.push_back (instruction {opname::sw, reference.data_reg, 0, reference.address_reg});
 	else
-		reference.load_code.push_back (instruction {opname::sb, reference.data_reg, 0, reference.address_reg});
+		reference.store_code.push_back (instruction {opname::sb, reference.data_reg, 0, reference.address_reg});
 
 	return reference;
 }

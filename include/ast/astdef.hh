@@ -47,7 +47,8 @@ enum class basic_mc_type
 {
 	mc_void,
 	mc_int,
-	mc_char
+	mc_char,
+	va_args
 };
 
 struct mc_type

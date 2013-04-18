@@ -280,13 +280,13 @@ vector <string> lines (const asm_data& datum)
 
 vector <string> lines (const asm_function& func)
 {
-	vector <string> f_lines {"\t.globl\t" + func.name,
-	                         "\t.ent\t" + func.name,
-	                         "\t.type\t" + func.name + ", @function"};
+	vector <string> f_lines {"\t.globl\t" + func.name};
 
 	if (!func.body.empty ())
 	{
 		f_lines.push_back (func.name + ':');
+		f_lines.push_back ("\t.ent\t" + func.name);
+		f_lines.push_back ("\t.type\t" + func.name + ", @function");
 
 		for (const instruction& i : func.body)
 			f_lines.push_back (to_string (i));

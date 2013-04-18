@@ -324,6 +324,17 @@ Node <formalDeclList> formalDeclList_p (token_range& tokens)
 		decl_list.push_back (move (next_decl));
 	}
 
+	if (comma_node)
+	{
+		Node <terminal> ellipsis_node = get_token (working_set, symbol::ellipsis);
+		if (ellipsis_node)
+		{
+			Node <terminal> ellipsis_name (new terminal (ellipsis_node->token_ref));
+			decl_list.push_back (make_node <formalDecl> (make_node <typeSpecifier> (move (ellipsis_node)),
+			                                             move (ellipsis_name), false));
+		}
+	}
+
 	tokens = working_set;
 	return make_node <formalDeclList> (move (decl_list));
 }

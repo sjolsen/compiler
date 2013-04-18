@@ -127,6 +127,8 @@ string to_string (basic_mc_type t)
 		return "int";
 	case basic_mc_type::mc_char:
 		return "char";
+	case basic_mc_type::va_args:
+		return "...";
 	}
 
 	throw logic_error ("Bad enumeration value (to_string (mc_type))");

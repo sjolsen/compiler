@@ -187,6 +187,10 @@ vector <mc_type> formalDecl::get_type () const
 {
 	try
 	{
+		if (type_spec->kwd_node->token_ref.type == token_type::symbol &&
+		    type_spec->kwd_node->token_ref.op == symbol::ellipsis)
+			return vector <mc_type> {mc_type (basic_mc_type::va_args, 0)};
+
 		return vector <mc_type> {mc_type (type_map.at (type_spec->kwd_node->token_ref.str), is_array ? -1 : 0)};
 	}
 	catch (const exception&)
@@ -246,6 +250,9 @@ void populate_table (symbol_table& table,
 {
 	for (const Node <formalDecl>& decl_node : decl_list.decls)
 	{
+		if (decl_node->get_name () == "")
+			continue;
+
 		if (table.count (decl_node->get_name ()) > 0)
 			throw error ("Redefined identifier (first defined at " +
 			             to_string (table [decl_node->get_name ()].decl_node->pos ()) + ')',

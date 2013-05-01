@@ -6,7 +6,7 @@ LIB         := $(PROJECT_DIR)/lib
 SRC         := $(PROJECT_DIR)/src
 TEST        := $(PROJECT_DIR)/test
 
-CXX       := g++
+CXX       := c++
 _CXXFLAGS := -std=c++0x -O0 -g -I$(INCLUDE) $(CXXFLAGS) #-Wall -Wextra
 AR        := ar
 _ARFLAGS  := $(ARFLAGS)s

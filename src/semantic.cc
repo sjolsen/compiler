@@ -473,6 +473,7 @@ void semantic_check (const argList& node,
 	                              });
 
 	if (bad_argument.first != end (signature))
+		if (bad_argument.first->type != basic_mc_type::va_args)
 		throw error ("Invalid argument to parameter " + to_string (bad_argument.first - begin (signature)) +
 		             " of function (expected " + to_string (*bad_argument.first) + "; got " +
 		             to_string (*bad_argument.second) + ")",

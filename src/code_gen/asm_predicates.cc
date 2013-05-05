@@ -27,8 +27,8 @@ namespace
 	mips_byte mc_size (mc_type t)
 	{
 		if (t.size != 0) // Array)
-			return t.size;
-		return mc_align (t.type);
+			return t.size * mc_size (t.type);
+		return mc_size (t.type);
 	}
 
 	basic_mc_type get_type (const var& node,
@@ -115,6 +115,8 @@ namespace
 		static int number = 0;
 		return ".L" + to_string (number++);
 	}
+
+	int max_callee_args;
 }
 
 
@@ -193,6 +195,7 @@ vector <string> code_gen (const declList& node,
 asm_function code_gen (const funDecl& node,
                        const symbol_table& global_table)
 {
+	max_callee_args = 0;
 	if (node.body)
 		return asm_function {node.name->token_ref.str,
 		                     code_gen (*node.body, *node.local_table, *node.param_table, global_table)};
@@ -622,32 +625,52 @@ vector <instruction> code_gen (const funcCallExpr& node,
 	if (node.arg_list)
 	{
 		const vector <Node <expression>>& args = node.arg_list->args;
-		virt_reg build_register = 0;
+		vector <virt_reg> build_registers;
 
-		if (args.size () > 4)
-			build_register = vregs.get ();
+		// Construct arguments
+
 		for (int i = 0; i < args.size (); ++i)
 		{
-			vector <instruction> expr_code;
-			if (i < 4)
-				expr_code = code_gen (*args [i], static_cast <int> (real_reg::a0) + i, vregs, local_table, param_table, global_table);
-			else
-			{
-				expr_code = code_gen (*args [i], build_register, vregs, local_table, param_table, global_table);
-				expr_code.push_back (instruction {opname::sw, build_register, 4 * i, real_reg::sp});
-			}
+			virt_reg build_register = vregs.get ();
+			build_registers.push_back (build_register);
+
+			vector <instruction> expr_code = code_gen (*args [i], build_register, vregs, local_table, param_table, global_table);
 			call_code.insert (end (call_code), begin (expr_code), end (expr_code));
 		}
-		if (args.size () > 4)
-			vregs.release (build_register);
+
+		// Store arguments
+
+		call_code.push_back (instruction {opname::store_frame, 0, 0, 0});
+
+		for (int i = 0; i < 4 && i < args.size (); ++i)
+		{
+			call_code.push_back (instruction {opname::move, static_cast <int> (real_reg::a0) + i, build_registers [i], 0});
+			vregs.release (build_registers [i]);
+		}
+		for (int i = 4; i < args.size (); ++i)
+		{
+			call_code.push_back (instruction {opname::sw, build_registers [i], 4 * i, real_reg::sp});
+			vregs.release (build_registers [i]);
+		}
+
+		max_callee_args = max (max_callee_args, args.size () ? max <int> (args.size (), 4) : 0);
 	}
 
-	call_code.push_back (instruction {opname::store_frame, 0, 0, 0});
 	call_code.push_back (instruction {opname::jal, 0, 0, 0, node.name->token_ref.str});
 	call_code.push_back (instruction {opname::nop, 0, 0, 0});
 	call_code.push_back (instruction {opname::load_frame, 0, 0, 0});
 
 	return call_code;
+}
+
+
+
+namespace
+{
+	inline int dword_align (int bytes)
+	{
+		return ((bytes + 7) / 8) * 8;
+	}
 }
 
 
@@ -660,6 +683,8 @@ vector <instruction> schedule_code (vector <instruction> code,
 {
 	string epilogue_label = make_label ();
 
+	// SysV function returns
+
 	for (instruction& i : code)
 		if (i.op == opname::jr &&
 		    i._1.real == real_reg::ra)
@@ -667,5 +692,41 @@ vector <instruction> schedule_code (vector <instruction> code,
 	code.push_back (instruction {opname::jr, real_reg::ra, 0, 0, epilogue_label});
 	code.push_back (instruction {opname::nop, 0, 0, 0});
 
+	// Stack frame
+
+	vector <mc_type> local_types;
+	for (const auto& pair : local_table)
+		local_types.push_back (pair.second.type [0]);
+
+	local_var_layout layout (begin (local_types), end (local_types));
+	const int local_offset = dword_align (4 * max_callee_args); // Start of local variable storage
+	int stack_size = dword_align (layout.size + 8) + local_offset; // Add frame pointer and return address
+
+	vector <instruction> store_code = {instruction {opname::sw, real_reg::a0, stack_size, real_reg::sp},
+	                                   instruction {opname::sw, real_reg::a1, stack_size + 4, real_reg::sp},
+	                                   instruction {opname::sw, real_reg::a2, stack_size + 8, real_reg::sp},
+	                                   instruction {opname::sw, real_reg::a3, stack_size + 12, real_reg::sp}};
+
+	vector <instruction> load_code = {instruction {opname::lw, real_reg::a0, stack_size, real_reg::sp},
+	                                  instruction {opname::lw, real_reg::a1, stack_size + 4, real_reg::sp},
+	                                  instruction {opname::lw, real_reg::a2, stack_size + 8, real_reg::sp},
+	                                  instruction {opname::lw, real_reg::a3, stack_size + 12, real_reg::sp}};
+/*
+	for (auto i = begin (code); i != end (code); ++i)
+	{
+		if (i->op == opname::store_frame)
+		{
+			while (i->op == opname::store_frame)
+				code.erase (i);
+			code.insert (i, begin (store_code), end (store_code));
+		}
+		else if (i->op == opname::load_frame)
+		{
+			while (i->op == opname::load_frame)
+				code.erase (i);
+			code.insert (i, begin (load_code), end (load_code));
+		}
+	}
+*/
 	return code;
 }

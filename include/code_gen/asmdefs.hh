@@ -24,6 +24,7 @@ enum class opname
 	div,
 	jal,
 	jr,
+	la,
 	lb,
 	li,
 	lw,

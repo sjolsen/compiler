@@ -74,6 +74,8 @@ string to_string (opname name)
 		return "jal";
 	case opname::jr:
 		return "jr";
+	case opname::la:
+		return "la";
 	case opname::lb:
 		return "lb";
 	case opname::li:
@@ -239,6 +241,9 @@ string to_string (const instruction& i)
 		case opname::mfhi:
 		case opname::mflo:
 			return to_string (i._1.real);
+
+		case opname::la:
+			return to_string (i._1.real) + ", " + i.label;
 
 		case opname::lb:
 		case opname::lw:

@@ -174,6 +174,7 @@ vector <string> code_gen (const declList& node,
 			instructions.push_back (move (line));
 
 	instructions.push_back ("");
+	instructions.push_back ("\t.abicalls");
 	instructions.push_back ("\t.text");
 //	instructions.push_back ("\t.set\tnoreorder");
 	instructions.push_back ("\t.align\t2");

@@ -101,6 +101,7 @@ public:
 
 	virt_reg get ();
 	virt_reg get (const std::string& name);
+	void set (const std::string& name, real_reg r);
 	void release (virt_reg v);
 	int max_live () const;
 };

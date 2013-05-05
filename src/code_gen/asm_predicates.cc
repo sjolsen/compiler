@@ -195,22 +195,39 @@ vector <string> code_gen (const declList& node,
 asm_function code_gen (const funDecl& node,
                        const symbol_table& global_table)
 {
+	register_pool vregs;
+
+	code_gen (*node.decl_list, vregs);
+
 	max_callee_args = 0;
 	if (node.body)
 		return asm_function {node.name->token_ref.str,
-		                     code_gen (*node.body, *node.local_table, *node.param_table, global_table)};
+		                     code_gen (*node.body, vregs, *node.local_table, *node.param_table, global_table)};
 	return asm_function {node.name->token_ref.str, vector <instruction> ()};
 }
 
 
 
+void code_gen (const formalDeclList& node,
+               register_pool& vregs)
+{
+	for (const Node <formalDecl>& decl : node.decls)
+		for (int decl = 0; decl < node.decls.size (); ++decl)
+		{
+			if (decl < 4)
+				vregs.set (node.decls [decl]->get_name (), static_cast <real_reg> (static_cast <int> (real_reg::a0) + decl));
+			vregs.get (node.decls [decl]->get_name ());
+		}
+}
+
+
+
 vector <instruction> code_gen (const funBody& node,
+                               register_pool& vregs,
                                const symbol_table& local_table,
                                const symbol_table& param_table,
                                const symbol_table& global_table)
 {
-	register_pool vregs;
-
 	if (!node.stmt_list)
 	{
 		vector <instruction> body;

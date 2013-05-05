@@ -33,7 +33,13 @@ asm_function code_gen (const funDecl& node,
 
 
 
+void code_gen (const formalDeclList& node,
+               register_pool& vregs);
+
+
+
 std::vector <instruction> code_gen (const funBody& node,
+                                    register_pool& vregs,
                                     const symbol_table& local_table,
                                     const symbol_table& param_table,
                                     const symbol_table& global_table);

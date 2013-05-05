@@ -27,6 +27,11 @@ virt_reg register_pool::get (const std::string& name)
 	return var_map [name];
 }
 
+void register_pool::set (const std::string& name, real_reg r)
+{
+	var_map [name] = static_cast <virt_reg> (r);
+}
+
 void register_pool::release (virt_reg v)
 {
 	reg_queue.push (v);

@@ -720,9 +720,13 @@ vector <instruction> schedule_code (vector <instruction> code,
 	for (const auto& pair : local_table)
 		local_types.push_back (pair.second.type [0]);
 
-	local_var_layout layout (begin (local_types), end (local_types));
+	// local_var_layout layout (begin (local_types), end (local_types));
+	// const int local_offset = dword_align (4 * max_callee_args); // Start of local variable storage
+	// const int stack_size = dword_align (layout.size + 8) + local_offset; // Add frame pointer and return address
+
+	int local_storage_size = 4 * vregs.max_live ();
 	const int local_offset = dword_align (4 * max_callee_args); // Start of local variable storage
-	const int stack_size = dword_align (layout.size + 8) + local_offset; // Add frame pointer and return address
+	const int stack_size = dword_align (local_storage_size + 8) + local_offset; // Add frame pointer and return address
 
 	vector <instruction> store_code, load_code;
 
@@ -732,11 +736,15 @@ vector <instruction> schedule_code (vector <instruction> code,
 		store_code.push_back (instruction {opname::sw, real_reg::a1, stack_size + 4, real_reg::sp});
 		store_code.push_back (instruction {opname::sw, real_reg::a2, stack_size + 8, real_reg::sp});
 		store_code.push_back (instruction {opname::sw, real_reg::a3, stack_size + 12, real_reg::sp});
+		for (int i = 0; i < vregs.max_live (); ++i)
+			store_code.push_back (instruction {opname::sw, 32 + i, local_offset + 4 * i, real_reg::sp});
 
 		load_code.push_back (instruction {opname::lw, real_reg::a0, stack_size, real_reg::sp});
 		load_code.push_back (instruction {opname::lw, real_reg::a1, stack_size + 4, real_reg::sp});
 		load_code.push_back (instruction {opname::lw, real_reg::a2, stack_size + 8, real_reg::sp});
 		load_code.push_back (instruction {opname::lw, real_reg::a3, stack_size + 12, real_reg::sp});
+		for (int i = 0; i < vregs.max_live (); ++i)
+			load_code.push_back (instruction {opname::lw, 32 + i, local_offset + 4 * i, real_reg::sp});
 	}
 
 	for (auto i = 0; i != code.size (); ++i)

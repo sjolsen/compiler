@@ -405,7 +405,12 @@ vector <instruction> code_gen (const returnStmt& node,
 {
 	vector <instruction> expr_code;
 	if (node.rtrn_expr)
-		expr_code = code_gen (*node.rtrn_expr, real_reg::v0, vregs, local_table, param_table, global_table);
+	{
+		virt_reg result = vregs.get ();
+		expr_code = code_gen (*node.rtrn_expr, result, vregs, local_table, param_table, global_table);
+		expr_code.push_back (instruction {opname::move, real_reg::v0, result, 0});
+		vregs.release (result);
+	}
 
 	expr_code.push_back (instruction {opname::jr, real_reg::ra, 0, 0}); // Not SysV-compliant. Should replace during scheduling.
 	expr_code.push_back (instruction {opname::nop, 0, 0, 0});
@@ -461,19 +466,19 @@ vector <instruction> code_gen (const expression& node,
 
 	register_pool temp_pool = vregs;
 	virt_reg l = temp_pool.get ();
-	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
+	vector <instruction> lhs_code = code_gen (*node.lhs, l, temp_pool, local_table, param_table, global_table);
 
 	if (lhs_code.size () == 1 && lhs_code [0].op == opname::li &&
 	    rhs_code.size () == 1 && lhs_code [0].op == opname::li) // Constant expression
 	 	return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0}};
 
 	vregs = temp_pool;
-	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
+	rhs_code.insert (end (rhs_code), begin (lhs_code), end (lhs_code)); // Reuse
 	vector <instruction> relop_code = code_gen (*node.op, l, r);
-	lhs_code.insert (end (lhs_code), begin (relop_code), end (relop_code));
+	rhs_code.insert (end (rhs_code), begin (relop_code), end (relop_code));
 
 	vregs.release (l);
-	return lhs_code;
+	return rhs_code;
 }
 
 
@@ -538,21 +543,21 @@ vector <instruction> code_gen (const addExpr& node,
 
 	register_pool temp_pool = vregs;
 	virt_reg l = temp_pool.get ();
-	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
+	vector <instruction> lhs_code = code_gen (*node.lhs, l, temp_pool, local_table, param_table, global_table);
 
 	if (lhs_code.size () == 1 && lhs_code [0].op == opname::li &&
 	    rhs_code.size () == 1 && lhs_code [0].op == opname::li) // Constant expression
 	 	return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0}};
 
 	vregs = temp_pool;
-	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
+	rhs_code.insert (end (rhs_code), begin (lhs_code), end (lhs_code)); // Reuse
 	if (node.op->sym->token_ref.op == symbol::plus)
-		lhs_code.push_back (instruction {opname::add, r, l, r});
+		rhs_code.push_back (instruction {opname::add, r, l, r});
 	else
-		lhs_code.push_back (instruction {opname::sub, r, l, r});
+		rhs_code.push_back (instruction {opname::sub, r, l, r});
 
 	vregs.release (l);
-	return lhs_code;
+	return rhs_code;
 }
 
 
@@ -570,22 +575,22 @@ vector <instruction> code_gen (const term& node,
 
 	register_pool temp_pool = vregs;
 	virt_reg l = temp_pool.get ();
-	vector <instruction> lhs_code = code_gen (*node.lhs, l, vregs, local_table, param_table, global_table);
+	vector <instruction> lhs_code = code_gen (*node.lhs, l, temp_pool, local_table, param_table, global_table);
 
 	if (lhs_code.size () == 1 && lhs_code [0].op == opname::li &&
 	    rhs_code.size () == 1 && lhs_code [0].op == opname::li) // Constant expression
 		return vector <instruction> {instruction {opname::li, r, operator_from_node (*node.op) (lhs_code [0]._2.literal, rhs_code [0]._2.literal), 0}};
 
 	vregs = temp_pool;
-	lhs_code.insert (end (lhs_code), begin (rhs_code), end (rhs_code)); // Reuse
+	rhs_code.insert (end (rhs_code), begin (lhs_code), end (lhs_code)); // Reuse
 	if (node.op->sym->token_ref.op == symbol::asterisk)
-		lhs_code.push_back (instruction {opname::mult, l, r, 0});
+		rhs_code.push_back (instruction {opname::mult, l, r, 0});
 	else
-		lhs_code.push_back (instruction {opname::div, l, r, 0});
-	lhs_code.push_back (instruction {opname::mflo, r, 0, 0});
+		rhs_code.push_back (instruction {opname::div, l, r, 0});
+	rhs_code.push_back (instruction {opname::mflo, r, 0, 0});
 
 	vregs.release (l);
-	return lhs_code;
+	return rhs_code;
 }
 
 

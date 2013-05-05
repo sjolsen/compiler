@@ -44,7 +44,8 @@ enum class opname
 
 	// Internal pseudo-ops
 	store_frame,
-	load_frame
+	load_frame,
+	text
 };
 
 

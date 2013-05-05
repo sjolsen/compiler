@@ -656,8 +656,10 @@ vector <instruction> code_gen (const funcCallExpr& node,
 		max_callee_args = max (max_callee_args, args.size () ? max <int> (args.size (), 4) : 0);
 	}
 
+	call_code.push_back (instruction {opname::text, 0, 0, 0, "\t.option pic0"});
 	call_code.push_back (instruction {opname::jal, 0, 0, 0, node.name->token_ref.str});
 	call_code.push_back (instruction {opname::nop, 0, 0, 0});
+	call_code.push_back (instruction {opname::text, 0, 0, 0, "\t.option pic2"});
 	call_code.push_back (instruction {opname::load_frame, 0, 0, 0});
 
 	return call_code;
@@ -700,10 +702,7 @@ vector <instruction> schedule_code (vector <instruction> code,
 	const int local_offset = dword_align (4 * max_callee_args); // Start of local variable storage
 	const int stack_size = dword_align (layout.size + 8) + local_offset; // Add frame pointer and return address
 
-	vector <instruction> store_code = {instruction {opname::sw, real_reg::ra, stack_size - 8, real_reg::sp},
-	                                   instruction {opname::sw, real_reg::fp, stack_size - 4, real_reg::sp}};
-	vector <instruction> load_code = {instruction {opname::lw, real_reg::ra, stack_size - 8, real_reg::sp},
-	                                  instruction {opname::lw, real_reg::fp, stack_size - 4, real_reg::sp}};
+	vector <instruction> store_code, load_code;
 
 	if (param_table.size () != 0)
 	{
@@ -736,10 +735,22 @@ vector <instruction> schedule_code (vector <instruction> code,
 		}
 	}
 
-	code.insert (begin (code), instruction {opname::addi, real_reg::sp, real_reg::sp, 0 - stack_size});
-	code.push_back (instruction {opname::addi, real_reg::sp, real_reg::sp, stack_size, epilogue_label});
-	code.push_back (instruction {opname::jr, real_reg::ra, 0, 0});
-	code.push_back (instruction {opname::nop, 0, 0, 0});
+	// Function prologue
+
+	vector <instruction> prologue = {instruction {opname::addi, real_reg::sp, real_reg::sp, 0 - stack_size},
+	                                 instruction {opname::sw, real_reg::ra, stack_size - 4, real_reg::sp},
+	                                 instruction {opname::sw, real_reg::fp, stack_size - 8, real_reg::sp},
+	                                 instruction {opname::move, real_reg::fp, real_reg::sp, 0}};
+
+	vector <instruction> epilogue = {instruction {opname::move, real_reg::sp, real_reg::fp, 0, epilogue_label},
+	                                 instruction {opname::lw, real_reg::ra, stack_size - 4, real_reg::sp},
+	                                 instruction {opname::lw, real_reg::fp, stack_size - 8, real_reg::sp},
+	                                 instruction {opname::addi, real_reg::sp, real_reg::sp, stack_size},
+	                                 instruction {opname::jr, real_reg::ra, 0, 0},
+	                                 instruction {opname::nop, 0, 0, 0}};
+
+	code.insert (begin (code), begin (prologue), end (prologue));
+	code.insert (end (code), begin (epilogue), end (epilogue));
 
 	return code;
 }

@@ -113,6 +113,8 @@ string to_string (opname name)
 		return "load_frame";
 	case opname::store_frame:
 		return "store_frame";
+	case opname::text:
+		return "";
 
 	default:
 		throw runtime_error ("Invalid opname");
@@ -200,6 +202,9 @@ string to_string (real_reg r)
 string to_string (const instruction& i)
 {
 	string prefix;
+
+	if (i.op == opname::text)
+		return i.label;
 
 	if (i.op == opname::b ||
 	    i.op == opname::beq ||

@@ -191,7 +191,7 @@ string to_string (real_reg r)
 		return "$ra";
 	default:
 //		throw runtime_error ("Invalid physical register");
-		return to_string (static_cast <int> (r));
+		return to_string (static_cast <real_reg> (static_cast <int> (r) - 32 + static_cast <int> (real_reg::t0)));
 	};
 }
 

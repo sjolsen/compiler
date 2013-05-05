@@ -179,7 +179,7 @@ vector <string> code_gen (const declList& node,
 	instructions.push_back ("\t.abicalls");
 	instructions.push_back ("\t.text");
 //	instructions.push_back ("\t.set\tnoreorder");
-	instructions.push_back ("\t.align\t2");
+//	instructions.push_back ("\t.align\t2");
        	instructions.push_back ("\t.set\tnomips16\n");
 	instructions.push_back ("");
 
@@ -689,8 +689,6 @@ vector <instruction> schedule_code (vector <instruction> code,
 		if (i.op == opname::jr &&
 		    i._1.real == real_reg::ra)
 			i = instruction {opname::b, 0, 0, 0, epilogue_label};
-	code.push_back (instruction {opname::jr, real_reg::ra, 0, 0, epilogue_label});
-	code.push_back (instruction {opname::nop, 0, 0, 0});
 
 	// Stack frame
 
@@ -700,33 +698,48 @@ vector <instruction> schedule_code (vector <instruction> code,
 
 	local_var_layout layout (begin (local_types), end (local_types));
 	const int local_offset = dword_align (4 * max_callee_args); // Start of local variable storage
-	int stack_size = dword_align (layout.size + 8) + local_offset; // Add frame pointer and return address
+	const int stack_size = dword_align (layout.size + 8) + local_offset; // Add frame pointer and return address
 
-	vector <instruction> store_code = {instruction {opname::sw, real_reg::a0, stack_size, real_reg::sp},
-	                                   instruction {opname::sw, real_reg::a1, stack_size + 4, real_reg::sp},
-	                                   instruction {opname::sw, real_reg::a2, stack_size + 8, real_reg::sp},
-	                                   instruction {opname::sw, real_reg::a3, stack_size + 12, real_reg::sp}};
+	vector <instruction> store_code = {instruction {opname::sw, real_reg::ra, stack_size - 8, real_reg::sp},
+	                                   instruction {opname::sw, real_reg::fp, stack_size - 4, real_reg::sp}};
+	vector <instruction> load_code = {instruction {opname::lw, real_reg::ra, stack_size - 8, real_reg::sp},
+	                                  instruction {opname::lw, real_reg::fp, stack_size - 4, real_reg::sp}};
 
-	vector <instruction> load_code = {instruction {opname::lw, real_reg::a0, stack_size, real_reg::sp},
-	                                  instruction {opname::lw, real_reg::a1, stack_size + 4, real_reg::sp},
-	                                  instruction {opname::lw, real_reg::a2, stack_size + 8, real_reg::sp},
-	                                  instruction {opname::lw, real_reg::a3, stack_size + 12, real_reg::sp}};
-/*
-	for (auto i = begin (code); i != end (code); ++i)
+	if (param_table.size () != 0)
 	{
-		if (i->op == opname::store_frame)
+		store_code.push_back (instruction {opname::sw, real_reg::a0, stack_size, real_reg::sp});
+		store_code.push_back (instruction {opname::sw, real_reg::a1, stack_size + 4, real_reg::sp});
+		store_code.push_back (instruction {opname::sw, real_reg::a2, stack_size + 8, real_reg::sp});
+		store_code.push_back (instruction {opname::sw, real_reg::a3, stack_size + 12, real_reg::sp});
+
+		load_code.push_back (instruction {opname::lw, real_reg::a0, stack_size, real_reg::sp});
+		load_code.push_back (instruction {opname::lw, real_reg::a1, stack_size + 4, real_reg::sp});
+		load_code.push_back (instruction {opname::lw, real_reg::a2, stack_size + 8, real_reg::sp});
+		load_code.push_back (instruction {opname::lw, real_reg::a3, stack_size + 12, real_reg::sp});
+	}
+
+	for (auto i = 0; i != code.size (); ++i)
+	{
+		if (code [i].op == opname::store_frame)
 		{
-			while (i->op == opname::store_frame)
-				code.erase (i);
-			code.insert (i, begin (store_code), end (store_code));
+			while (code [i].op == opname::store_frame ||
+			       code [i].op == opname::load_frame)
+				code.erase (begin (code) + i);
+			code.insert (begin (code) + i, begin (store_code), end (store_code));
 		}
-		else if (i->op == opname::load_frame)
+		else if (code [i].op == opname::load_frame)
 		{
-			while (i->op == opname::load_frame)
-				code.erase (i);
-			code.insert (i, begin (load_code), end (load_code));
+			while (code [i].op == opname::store_frame ||
+			       code [i].op == opname::load_frame)
+				code.erase (begin (code) + i);
+			code.insert (begin (code) + i, begin (load_code), end (load_code));
 		}
 	}
-*/
+
+	code.insert (begin (code), instruction {opname::addi, real_reg::sp, real_reg::sp, 0 - stack_size});
+	code.push_back (instruction {opname::addi, real_reg::sp, real_reg::sp, stack_size, epilogue_label});
+	code.push_back (instruction {opname::jr, real_reg::ra, 0, 0});
+	code.push_back (instruction {opname::nop, 0, 0, 0});
+
 	return code;
 }

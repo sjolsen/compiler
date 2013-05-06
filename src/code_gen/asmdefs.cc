@@ -197,7 +197,8 @@ string to_string (real_reg r)
 	case real_reg::ra:
 		return "$ra";
 	default:
-//		throw runtime_error ("Invalid physical register");
+		if (static_cast <int> (r) >= 40)
+			throw runtime_error ("Register limit exceeded");
 		return to_string (static_cast <real_reg> (static_cast <int> (r) - 32 + static_cast <int> (real_reg::t0)));
 	};
 }

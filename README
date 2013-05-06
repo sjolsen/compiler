@@ -65,13 +65,13 @@ by passing the '-Tsemantic' argument, performs the following checks:
         - Function argument checking: both number and type (no type
           promotion)
 
-The code generator performs constant folding. Recursion is supported.
-Global variables and arrays are as of yet only partially implemented.
-Using the GNU toolchain, the assembly produced by the compiler may be
-linked with C, provided the appropriate forward declarations are
-made. Along with the support for variable arguments, this makes it
-possible, e.g., to use printf from the C standard library, given the
-following forward declaration:
+The code generator performs constant folding. Recursion is supported,
+Global variables, arrays, and functions with more than four arguments
+are as of yet only partially implemented. Using the GNU toolchain,
+the assembly produced by the compiler may be linked with C, provided
+the appropriate forward declarations are made. Along with the support
+for variable arguments, this makes it possible, e.g., to use printf
+from the C standard library, given the following forward declaration:
 
         int printf (char fmt [], ...);
 

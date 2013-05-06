@@ -197,7 +197,8 @@ asm_function code_gen (const funDecl& node,
 {
 	register_pool vregs;
 
-	code_gen (*node.decl_list, vregs);
+	if (node.decl_list != nullptr)
+		code_gen (*node.decl_list, vregs);
 
 	max_callee_args = 0;
 	if (node.body)

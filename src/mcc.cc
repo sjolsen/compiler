@@ -56,10 +56,10 @@ int main (int argc,
 
 		// Open the input file
 
-		string file;
+		string file = "void output (int n);";
 		try
 		{
-			file = get_file (args.input_filename);
+			file += get_file (args.input_filename);
 		}
 		catch (const exception& e)
 		{

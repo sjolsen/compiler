@@ -21,7 +21,7 @@ all: text_processing \
      mcc
 
 clean:
-	rm -f $(BUILD)/* $(BIN)/* $(LIB)/*
+	rm -f $(BUILD)/*.o $(BIN)/mcc $(LIB)/*.a
 
 testall: test-scanner \
          test-parser \

@@ -7,11 +7,11 @@
 
 using namespace std;
 
-
+
 
 #define validate(node) if (!node) return nullptr;
 
-
+
 
 namespace
 {
@@ -140,7 +140,7 @@ namespace
 	}
 }
 
-
+
 
 program program_p (const vector <token>& tokens)
 {
@@ -163,7 +163,7 @@ program program_p (const vector <token>& tokens)
 	return prog;
 }
 
-
+
 
 Node <declList> declList_p (token_range& tokens)
 {
@@ -188,7 +188,7 @@ Node <declList> declList_p (token_range& tokens)
 	}
 }
 
-
+
 
 Node <decl> decl_p (token_range& tokens)
 {
@@ -200,7 +200,7 @@ Node <decl> decl_p (token_range& tokens)
 	return make_node <decl> (move (sub_decl));
 }
 
-
+
 
 Node <varDecl> varDecl_p (token_range& tokens)
 {
@@ -238,7 +238,7 @@ Node <varDecl> varDecl_p (token_range& tokens)
 	return make_node <varDecl> (move (type_specifier), move (ID), move (num));
 }
 
-
+
 
 Node <typeSpecifier> typeSpecifier_p (token_range& tokens)
 {
@@ -257,7 +257,7 @@ Node <typeSpecifier> typeSpecifier_p (token_range& tokens)
 	return nullptr;
 }
 
-
+
 
 Node <funDecl> funDecl_p (token_range& tokens)
 {
@@ -299,7 +299,7 @@ Node <funDecl> funDecl_p (token_range& tokens)
 	return func;
 }
 
-
+
 
 Node <formalDeclList> formalDeclList_p (token_range& tokens)
 {
@@ -339,7 +339,7 @@ Node <formalDeclList> formalDeclList_p (token_range& tokens)
 	return make_node <formalDeclList> (move (decl_list));
 }
 
-
+
 
 Node <formalDecl> formalDecl_p (token_range& tokens)
 {
@@ -365,7 +365,7 @@ Node <formalDecl> formalDecl_p (token_range& tokens)
 	return make_node <formalDecl> (move (type_specifier), move (ID), move ((bool) lbracket_node));
 }
 
-
+
 
 Node <funBody> funBody_p (token_range& tokens)
 {
@@ -395,7 +395,7 @@ Node <funBody> funBody_p (token_range& tokens)
 	return make_node <funBody> (move (decl_list), move (statement_list));
 }
 
-
+
 
 Node <localDeclList> localDeclList_p (token_range& tokens)
 {
@@ -417,7 +417,7 @@ Node <localDeclList> localDeclList_p (token_range& tokens)
 	}
 }
 
-
+
 
 Node <statementList> statementList_p (token_range& tokens)
 {
@@ -439,7 +439,7 @@ Node <statementList> statementList_p (token_range& tokens)
 	}
 }
 
-
+
 
 Node <statement> statement_p (token_range& tokens)
 {
@@ -466,7 +466,7 @@ Node <statement> statement_p (token_range& tokens)
 	return nullptr;
 }
 
-
+
 
 Node <compoundStmt> compoundStmt_p (token_range& tokens)
 {
@@ -487,7 +487,7 @@ Node <compoundStmt> compoundStmt_p (token_range& tokens)
 	return make_node <compoundStmt> (move (statement_list));
 }
 
-
+
 
 Node <assignStmt> assignStmt_p (token_range& tokens)
 {
@@ -516,7 +516,7 @@ Node <assignStmt> assignStmt_p (token_range& tokens)
 	return make_node <assignStmt> (move (lvalue), move (rvalue));
 }
 
-
+
 
 Node <condStmt> condStmt_p (token_range& tokens)
 {
@@ -557,7 +557,7 @@ Node <condStmt> condStmt_p (token_range& tokens)
 	return make_node <condStmt> (move (expression), move (if_statement), move (else_statement));
 }
 
-
+
 
 Node <loopStmt> loopStmt_p (token_range& tokens)
 {
@@ -588,7 +588,7 @@ Node <loopStmt> loopStmt_p (token_range& tokens)
 	return make_node <loopStmt> (move (expression), move (while_statement));
 }
 
-
+
 
 Node <returnStmt> returnStmt_p (token_range& tokens)
 {
@@ -608,7 +608,7 @@ Node <returnStmt> returnStmt_p (token_range& tokens)
 	return make_node <returnStmt> (move (return_node), move (expression));
 }
 
-
+
 
 Node <var> var_p (token_range& tokens)
 {
@@ -637,7 +637,7 @@ Node <var> var_p (token_range& tokens)
 	return make_node <var> (move (ID), move (add_expr));
 }
 
-
+
 
 Node <expression> expression_p (token_range& tokens)
 {
@@ -669,7 +669,7 @@ Node <expression> expression_p (token_range& tokens)
 	return handle;
 }
 
-
+
 
 Node <relop> relop_p (token_range& tokens)
 {
@@ -700,7 +700,7 @@ Node <relop> relop_p (token_range& tokens)
 	return nullptr;
 }
 
-
+
 
 Node <addExpr> addExpr_p (token_range& tokens)
 {
@@ -732,7 +732,7 @@ Node <addExpr> addExpr_p (token_range& tokens)
 	return handle;
 }
 
-
+
 
 Node <addop> addop_p (token_range& tokens)
 {
@@ -747,7 +747,7 @@ Node <addop> addop_p (token_range& tokens)
 	return nullptr;
 }
 
-
+
 
 Node <term> term_p (token_range& tokens)
 {
@@ -779,7 +779,7 @@ Node <term> term_p (token_range& tokens)
 	return handle;
 }
 
-
+
 
 Node <mulop> mulop_p (token_range& tokens)
 {
@@ -794,7 +794,7 @@ Node <mulop> mulop_p (token_range& tokens)
 	return nullptr;
 }
 
-
+
 
 Node <factor> factor_p (token_range& tokens)
 {
@@ -840,7 +840,7 @@ Node <factor> factor_p (token_range& tokens)
 	return nullptr;
 }
 
-
+
 
 Node <funcCallExpr> funcCallExpr_p (token_range& tokens)
 {
@@ -862,7 +862,7 @@ Node <funcCallExpr> funcCallExpr_p (token_range& tokens)
 	return make_node <funcCallExpr> (move (ID), move (arg_list));
 }
 
-
+
 
 Node <argList> argList_p (token_range& tokens)
 {
